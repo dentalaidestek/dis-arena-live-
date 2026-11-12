@@ -37,7 +37,7 @@
 ## Diş sahiplenme
 - Sahiplenme 32 dişle sınırlıdır, diş seçimi yayıncı test panelinden simüle edilir.
 - Ücretsiz sahiplenme ve yerel test modu mevcut. Ön kesiciler için premium hediye fikri gerçek fiyat veya etkin TikTok eşlemesi değildir.
-- Çekilen diş son 8'e kadar implantla 50 HP ile geri dönebilir ve aynı kullanıcıya ait kalır. Son 8'de implant yasaktır.
+- Çekilen diş 17 veya daha fazla aktif diş varken farklı bir kullanıcı tarafından daha yüksek maliyet kategorisindeki implantla devralınabilir. Eski sahip elenir, yeni sahip tek diş hakkını kullanır ve diş 50 HP ile geri döner. Son 16'da yeni kullanıcıyla devralma yasaktır. Son 8'de bütün implantlar yasaktır.
 - Kazanan son aktif dişin sahibidir; diş sahipsizse kullanıcı şampiyonluğu verilmez.
 - Ücretli hediye üzerinden sahiplenme, satın alma, ödül veya şans oyunu entegrasyonu platform/hukuk kontrolü olmadan açılmaz.
 
