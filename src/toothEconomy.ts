@@ -8,7 +8,7 @@ export function toothPriceBand(id:number):ToothPriceBand{
  return 'back'; // posterior molarlar
 }
 export const TOOTH_PRICE={front:20,middle:5,back:1} as const;
-export function claimPrice(id:number):number{return TOOTH_PRICE[toothPriceBand(id)];}
+export function claimPrice(id:number):number{const slot=id%16;return slot===7||slot===8?50:TOOTH_PRICE[toothPriceBand(id)];}
 export function procedurePrice(id:number,action:string):number{
  const base=claimPrice(id);
  if(action==='implant')return Math.max(30,base*2);
