@@ -1,3 +1,5 @@
+import type {AnimationCue} from './ActionAnimation';
+import {doctorRole} from './ActionAnimation';
 import {DoctorPortrait} from './DoctorPortrait';
 import {GIFT_CATALOG} from './giftClaims';
 
@@ -10,12 +12,12 @@ const cast=[
  {name:'Dr. Ekstraksiyon',job:'ÇEKİM',gift:'Doughnut',side:'bad' as const},
 ];
 /** Stage-only gift hints; final LIVE action prices must come from server-side mapping. */
-export function OpeningStage(){
+export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
  const good=cast.filter(c=>c.side==='good'),bad=cast.filter(c=>c.side==='bad');
  const group=(items:typeof cast,side:'good'|'bad')=><div className={'opening-cast '+side}>
   <h2>{side==='good'?'✚ İYİ EKİP':'☣ KÖTÜ EKİP'}</h2>
-  {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);return <div className="opening-doctor" key={person.name}>
-   <DoctorPortrait side={side}/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small>🎁 {gift?.name} · {gift?.coins} coin</small></div>
+  {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);const current=cues.find(c=>doctorRole(c.action)===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
+   <DoctorPortrait side={side}/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small>🎁 {gift?.name} · {gift?.coins} coin <em>ÖRNEK</em></small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
   </div>})}
  </div>;
  return <section className="opening-stage" aria-label="Diş Arena canlı yayın açılış sahnesi">
