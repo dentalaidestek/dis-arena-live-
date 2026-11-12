@@ -24,3 +24,5 @@ button:focus-visible{outline:3px solid #f9d17b;outline-offset:2px}
 .comment-demo small{display:block;margin-top:7px;color:#9db5c8;font-size:10px}
 
 .replacement{margin-top:9px;display:flex;flex-direction:column;gap:5px}.replacement button{background:#62411b;border-color:#dfb45f;min-height:42px}.replacement button:disabled{opacity:.4;cursor:not-allowed}
+
+.comment-demo select{flex:1;min-width:0;background:#091525;color:#fff;border:1px solid #6488a9;border-radius:8px;padding:10px;font-size:13px}
