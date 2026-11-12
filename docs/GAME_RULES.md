@@ -1,4 +1,4 @@
-# DİŞ ARENA — OYUN KURALLARI (v0.2, yerel demo)
+# DİŞ ARENA — OYUN KURALLARI (v0.3, yerel demo)
 
 ## Kesinleşen temel kurallar
 - Dikey 9:16 yayın, merkezde anatomik 32 dişli ağız; büyük gerçekçi insan yüzü yok.
@@ -22,6 +22,17 @@
 - Yeni bir çekim olduğunda baskı sayacı sıfırlanır. Tedavi veya kalkan işlemi sayacı sıfırlamaz.
 - Baskı sisteminin başlaması bir çekim garantisi değildir: dişin çekimi yine ayrı bir eylem gerektirir.
 - Yayın öncesinde bu mekanik izleyiciye açıkça gösterilmeli; otomatik ücretli hediye eşlemesi yapılmamalı.
+
+## Turnuva evreleri
+- 32 → 16 → 8 → 4 → 2 → 1 aktif diş. Bunlar eleme sayacı eşikleridir; eşleşmeli futbol fikstürü değildir.
+- Son 8'e girince implant yasaktır; son iki dişte büyük final, tek dişte şampiyonluk ekranı gösterilir.
+- Tüm kulüplerin bir dişle temsil edilmesi zorunludur. Süper Lig'deki tüm takımlar ve alt liglerden taraftar kitlesi güçlü takımlar 32 kontenjana yerleşir; resmi sezon kadrosu doğrulanmadan örnek liste kesin kabul edilmez.
+
+## Eş zamanlı eylem ve animasyon
+- Olaylar tekil kimlik ile oyun durumuna geliş sırasıyla uygulanır. Aynı dişte önce kalkan sonra saldırı ile önce saldırı sonra kalkan farklı sonuç verir.
+- İyi ve kötü ekipler aynı anda sahneye çıkabilir: her tarafta en fazla iki hekim, toplam dört hekim.
+- Farklı dişlere eş zamanlı görsel işlem yapılabilir. Aynı dişin animasyonları geliş sırasını korur.
+- Kuyruk doluluğunda görsel işlemler sessizce silinmez. Bu bir prototip uygulamasıdır; kalıcı sunucu kuyruğu ve yük testleri yayından önce gereklidir.
 
 ## Platform ve yayın sınırı
 Gerçek TikTok hediye eşlemesi kapalıdır. Yetkili olay erişimi ve güncel platform politikaları doğrulanmadan hediyelerin sonucu değiştirmesi etkinleştirilmeyecek. Bahis, ödül karşılığı hediye ve yanıltıcı hediye teşviki yoktur.
