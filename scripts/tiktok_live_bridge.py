@@ -94,7 +94,18 @@ async def main():
             except Exception as exc:
                 LIVE_STATE.update({'state': 'live-disconnected'})
                 await broadcast(LIVE_STATE)
-                print('LIVE connection error:', type(exc).__name__, str(exc)[:200], flush=True)
+                details = str(exc)
+                print('LIVE connection error:', type(exc).__name__, details[:200], flush=True)
+                if isinstance(exc, ValueError) and 'invalid literal for int()' in details:
+                    print('TikTok oda kimliği boş döndü. Yayın aktif değil veya TikTokLive oda kimliğini çözemiyor. 60 saniye sonra tekrar denenecek.', flush=True)
+                    await asyncio.sleep(60)
+                    retry = 0
+                    continue
+                if type(exc).__name__ in ('UserNotFoundError', 'UserOfflineError'):
+                    print('Yayıncı bulunamadı veya LIVE kapalı. Kullanıcı adını ve yayının açık olduğunu kontrol edin. 60 saniye sonra tekrar denenecek.', flush=True)
+                    await asyncio.sleep(60)
+                    retry = 0
+                    continue
             retry += 1
             delay = min(60, 2 ** min(retry, 5)) + random.uniform(0, 1)
             await asyncio.sleep(delay)
