@@ -3,7 +3,9 @@ export type Tooth = {id:number;team:string;hp:number;decayShields:number;fractur
 export type GameEvent={id:string;user:string;teamId:number;action:Action;timestamp:number};
 export type EventResult={tooth:Tooth;message:string;blocked:boolean};
 export const TEAMS=['Galatasaray','Fenerbahçe','Beşiktaş','Trabzonspor','Başakşehir','Samsunspor','Göztepe','Konyaspor','Rizespor','Antalyaspor','Kasımpaşa','Alanyaspor','Kayserispor','Gaziantep FK','Eyüpspor','Gençlerbirliği','Amedspor','Ankaragücü','Sakaryaspor','Kocaelispor','Erzurumspor','Boluspor','Bandırmaspor','Çorum FK','Iğdır FK','Sivasspor','Adana Demirspor','Hatayspor','Pendikspor','Ümraniyespor','Manisa FK','İstanbulspor'];
-export const initialTeeth=():Tooth[]=>TEAMS.map((team,id)=>({id,team,hp:100,decayShields:0,fractureShields:0,extracted:false,decayHits:0,fractureHits:0}));
+export const WISDOM_TOOTH_IDS=new Set([0,15,16,31]);
+export const PLAYABLE_TOOTH_COUNT=28;
+export const initialTeeth=():Tooth[]=>TEAMS.map((team,id)=>({id,team,hp:WISDOM_TOOTH_IDS.has(id)?0:100,decayShields:0,fractureShields:0,extracted:WISDOM_TOOTH_IDS.has(id),decayHits:0,fractureHits:0}));
 export function applyAction(original:Tooth,action:Action):EventResult{
  const tooth={...original};let blocked=false;let message='';
  if(action==='implant'){if(!tooth.extracted)return {tooth,blocked:true,message:'Diş henüz çekilmedi'};tooth.extracted=false;tooth.hp=50;tooth.decayHits=0;tooth.fractureHits=0;tooth.decayShields=0;tooth.fractureShields=0;return {tooth,blocked:false,message:'İmplantla geri döndü'};}
