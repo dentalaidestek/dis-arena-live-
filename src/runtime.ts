@@ -42,6 +42,7 @@ export function createRound(roundId:string,now=Date.now()):ArenaSnapshot{
 }
 export function claim(snapshot:ArenaSnapshot,toothId:number,userId:string,username:string,now=Date.now()):{snapshot:ArenaSnapshot}&ClaimResult{
  if(roundPhase(snapshot.teeth)==='finished')return {snapshot,accepted:false,message:'Tur tamamlandı',owners:snapshot.owners,toothId:null};
+ if(replacementLocked(snapshot.teeth))return {snapshot,accepted:false,message:'Son 16: yeni oyuncu girişi kapalı',owners:snapshot.owners,toothId:null};
  const result=claimTooth(snapshot.owners,toothId,userId,username,now,snapshot.teeth[toothId]?.extracted??true);
  if(!result.accepted)return {snapshot,...result};
  return {snapshot:{...snapshot,owners:result.owners,history:[{id:'claim-'+userId+'-'+now,user:'@'+result.owners[toothId].username,team:'DİŞ '+(toothId+1),message:'Diş sahiplenildi',blocked:false,at:now},...snapshot.history].slice(0,MAX_HISTORY)},...result};
