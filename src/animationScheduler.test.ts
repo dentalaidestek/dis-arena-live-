@@ -99,3 +99,22 @@ describe('hekim tekilliği ve kuyruk adaleti',()=>{
   assert.deepEqual(s.active.map(c=>c.id),[303]);
  });
 });
+
+describe('yük altında uzman bazlı işlem sırası',()=>{
+ it('120 olaydan hiçbiri düşmez ve uzman eş zamanlı kopyalanmaz',()=>{
+  const actions:AnimationCue['action'][]=['heal','implant','decay','fracture','extract','decayShield'];
+  let s=emptyAnimationState();
+  for(let i=0;i<120;i++)s=enqueueAnimation(s,cue(i+1000,actions[i%actions.length],i%32));
+  let completed=0;
+  while(s.active.length){
+   assert.ok(s.active.length<=4);
+   assert.ok(new Set(s.active.map(c=>c.action==='decayShield'||c.action==='fractureShield'?'protection':c.action)).size===s.active.length);
+   assert.ok(new Set(s.active.map(c=>c.targetId)).size===s.active.length);
+   s=finishAnimation(s,s.active[0].id);
+   completed++;
+   assert.ok(completed<=120);
+  }
+  assert.equal(completed,120);
+  assert.equal(s.waiting.length,0);
+ });
+});
