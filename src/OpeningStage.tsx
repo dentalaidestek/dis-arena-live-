@@ -3,7 +3,7 @@ import {doctorRole} from './ActionAnimation';
 import {DoctorPortrait} from './DoctorPortrait';
 import {GIFT_CATALOG} from './giftClaims';
 
-const cast=[
+export const OPENING_CAST=[
  {name:'Dr. Restorasyon',job:'TEDAVİ',gift:'Finger Heart',side:'good' as const},
  {name:'Dr. Periodonti',job:'KORUMA',gift:'Rose',side:'good' as const},
  {name:'Dr. İmplant',job:'İMPLANT',gift:'Doughnut',side:'good' as const},
@@ -13,16 +13,16 @@ const cast=[
 ];
 /** Stage-only gift hints; final LIVE action prices must come from server-side mapping. */
 export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
- const good=cast.filter(c=>c.side==='good'),bad=cast.filter(c=>c.side==='bad');
- const group=(items:typeof cast,side:'good'|'bad')=><div className={'opening-cast '+side}>
+ const good=OPENING_CAST.filter(c=>c.side==='good'),bad=OPENING_CAST.filter(c=>c.side==='bad');
+ const group=(items:typeof OPENING_CAST,side:'good'|'bad')=><div className={'opening-cast '+side}>
   <h2>{side==='good'?'✚ İYİ EKİP':'☣ KÖTÜ EKİP'}</h2>
   {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);const current=cues.find(c=>doctorRole(c.action)===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
-   <DoctorPortrait side={side}/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small>🎁 {gift?.name} · {gift?.coins} coin <em>ÖRNEK</em></small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
+   <DoctorPortrait side={side} role={current?.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 {gift?.name} · {gift?.coins} coin <em>ÖRNEK</em></small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
   </div>})}
  </div>;
  return <section className="opening-stage" aria-label="Diş Arena canlı yayın açılış sahnesi">
   {group(good,'good')}
-  <div className="opening-patient" aria-label="Koltuğa uzanmış, ağzı açık hasta">
+  <div className={'opening-patient'+(cues.length?' opening-patient-busy':'')} aria-label="Koltuğa uzanmış, ağzı açık hasta">
    <div className="opening-patient-title">DİŞ ARENA<small>SON DİŞ AYAKTA</small></div>
    <svg viewBox="0 0 230 270" role="img" aria-label="Diş koltuğunda başı geriye yaslanmış, ağzı açık hasta">
     <defs><radialGradient id="patient-skin"><stop stopColor="#f3c6a5"/><stop offset="1" stopColor="#ad6b59"/></radialGradient><linearGradient id="patient-chair" x2="1" y2="1"><stop stopColor="#4185b0"/><stop offset="1" stopColor="#112b4c"/></linearGradient></defs>
@@ -39,7 +39,7 @@ export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
     <path d="M87 163 Q115 157 143 163" stroke="#d96d83" strokeWidth="2" fill="none"/>
     <path d="M56 216 Q115 188 175 216" stroke="#69b9e5" strokeWidth="5" fill="none"/>
    </svg>
-   <div className="opening-patient-caption">AĞIZ AÇIK · 32 DİŞ YARIŞIYOR</div>
+   <div className="opening-patient-caption">{cues.length?`${cues.length} HEKİM MÜDAHALE EDİYOR`:"AĞIZ AÇIK · 32 DİŞ YARIŞIYOR"}</div>
   </div>
   {group(bad,'bad')}
  </section>;
