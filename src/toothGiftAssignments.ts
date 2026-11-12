@@ -1,4 +1,4 @@
-import {SCREENSHOT_GIFTS,claimPrice} from './toothEconomy';
+import {SCREENSHOT_GIFTS,claimPrice,toothPriceBand} from './toothEconomy';
 /** Explicit one-gift-to-one-tooth mapping. No random assignment or reused gift names. */
 export type ToothGiftAssignment={toothId:number;giftName:string;coins:number};
 export function validateToothGiftAssignments(input:unknown):ToothGiftAssignment[]{
@@ -21,16 +21,17 @@ export function findAssignedTooth(assignments:ToothGiftAssignment[],giftName:str
  return a?.toothId??null;
 }
 
-/** Assign each distinct pictured gift to at most one tooth; unmatched teeth stay locked. */
+/** 32 fixed tooth IDs, one distinct gift each; no runtime greedy reassignment. */
 export function initialToothGiftAssignments():ToothGiftAssignment[]{
- const gifts=[...SCREENSHOT_GIFTS].sort((a,b)=>b.coins-a.coins);
- const teeth=Array.from({length:32},(_,i)=>i).sort((a,b)=>claimPrice(b)-claimPrice(a));
- const used=new Set<number>();
- const proposed:ToothGiftAssignment[]=[];
- for(const gift of gifts){
-  const toothId=teeth.find(id=>!used.has(id)&&gift.coins>=claimPrice(id));
-  if(toothId===undefined)continue;
-  used.add(toothId);proposed.push({toothId,giftName:gift.name,coins:gift.coins});
- }
- return validateToothGiftAssignments(proposed);
+ const front=['Parfüm','LOL','Minik Allık','Donat','Çay','Harika','Şapka ve Bıyık','Konfeti'];
+ const middle=['Finger Heart','Aşırı tepki','Aşk Kokusu','Dondurma','Tamam','Şeftali','Kalp','Ağır çekim','Meraklı Twinkle','Dostluk Kolyesi','Yıldızıma Tebrikler','Bravo!'];
+ const back=['Gül','GG','Dondurma Külahı','TikTok','Lale','Göz kırpma','Süpersin','Deniz Kabuğu','Denizyıldızı','Rüzgâr gülü','Hazine Yoncası','Karşılama Kahvesi'];
+ const catalog=new Map<string,number>(SCREENSHOT_GIFTS.map(g=>[g.name,g.coins]));
+ const counters={front:0,middle:0,back:0};
+ const names={front,middle,back};
+ return validateToothGiftAssignments(Array.from({length:32},(_,toothId)=>{
+  const band=toothPriceBand(toothId);
+  const giftName=names[band][counters[band]++];
+  return {toothId,giftName,coins:catalog.get(giftName)??0};
+ }));
 }
