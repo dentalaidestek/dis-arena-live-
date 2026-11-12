@@ -20,8 +20,8 @@ function ToothMesh({tooth,index,selected,attacked,select,owner}:{tooth:Tooth;ind
  return <group ref={ref} position={[x,y,z]} rotation={[0,-angle,0]} onClick={e=>{e.stopPropagation();select(tooth.id)}}>
  {attacked&&<><mesh position={[0,0,.03]}><torusGeometry args={[.53,.045,10,40]}/><meshBasicMaterial color="#ffd25a" transparent opacity={.92}/></mesh><pointLight position={[0,0,.8]} intensity={2.8} distance={2.5} color="#ffce55"/></>}
  {/* Anatomical crown: four cusps, cervical neck and tapered separated roots */}
- <mesh scale={[.42,.43,.37]} position={[0,top?.08:-.08,0]}><sphereGeometry args={[1,24,18]}/><meshPhysicalMaterial color={tooth.extracted?'#384153':color} transparent opacity={tooth.extracted?.13:1} roughness={.28} clearcoat={.5}/></mesh>
- {!tooth.extracted&&<>
+ {tooth.extracted?<group><mesh position={[0,0,-.04]} scale={[.39,.22,.3]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#471e2e" roughness={.95}/></mesh><mesh position={[0,0,.05]}><torusGeometry args={[.38,.06,8,28]}/><meshStandardMaterial color="#b55d74" roughness={.65}/></mesh><Text position={[0,0,.18]} fontSize={.28} color="#ff677a" anchorX="center">✕</Text></group>:<>
+ <mesh scale={[.42,.43,.37]} position={[0,top?.08:-.08,0]}><sphereGeometry args={[1,24,18]}/><meshPhysicalMaterial color={color} roughness={.28} clearcoat={.5}/></mesh>
   {[-1,1].map(s=><React.Fragment key={s}>
    <mesh position={[s*.19,top?.37:-.37,.13]} scale={[.21,.19,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color={color} roughness={.3}/></mesh>
    <mesh position={[s*.16,top?-.37:.37,-.02]} rotation={[0,0,s*.12]} scale={[.15,.37,.16]}><coneGeometry args={[1,1,16]}/><meshStandardMaterial color="#ded3bf" roughness={.48}/></mesh>
