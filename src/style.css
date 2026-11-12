@@ -211,3 +211,5 @@ body{margin:0;background:#08071e}
 
 .coin-fx-layer:not(.is-active){visibility:hidden}
 .coin-fx-layer.is-active canvas{opacity:1}
+
+.coin-tea{flex-wrap:wrap}.implant-icon{font-size:clamp(26px,3vw,45px);filter:drop-shadow(0 0 8px #c979ff)}.coin-tea>div:last-child{flex:1 1 140px}.coin-tea>div:nth-child(2){flex:1 1 140px}
