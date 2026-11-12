@@ -97,3 +97,6 @@ header{position:relative;z-index:2}
 .arena .leader small{font-size:10px;font-weight:650;color:#ffcf8c}
 @media(max-width:420px){.procedure-broadcast{top:63px;gap:4px}.procedure-broadcast-card{padding:5px}.procedure-broadcast-heading span{font-size:8px}.procedure-broadcast-heading strong{font-size:8px}.procedure-outcome{font-size:8px;max-width:55px}.procedure-target-icon{font-size:18px}.procedure-broadcast-target b{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.procedure-broadcast-card,.procedure-timeline span{animation:none}}
+
+.showcase-active{transform:translateY(-4px) scale(1.035);border-color:#fff0a6;box-shadow:0 0 22px #f5e6a488,inset 0 0 16px #fff3b02e;transition:transform .18s ease-out;z-index:1}
+@media(prefers-reduced-motion:reduce){.showcase-active{transform:none}}
