@@ -178,3 +178,5 @@ header{position:relative;z-index:2}
 @media(max-width:780px){.coin-main{display:block}.coin-mouth{height:clamp(360px,85vw,540px)}.coin-side{margin-top:10px;max-height:250px}.coin-bottom{grid-template-columns:1fr 1fr}.coin-prizes{grid-column:1/-1}.coin-header{padding:10px 7px;gap:6px}.coin-logo{font-size:18px}.coin-clock{font-size:25px}.coin-live{font-size:11px}}
 @media(max-width:420px){.coin-mouth{height:380px}.coin-mouth-label{font-size:10px}.coin-bottom{grid-template-columns:1fr}.coin-prizes{grid-column:auto}.coin-side{max-height:220px}}
 @media(prefers-reduced-motion:reduce){.coin-app *{animation:none!important;transition:none!important}}
+
+.coin-mouth > div:nth-child(2){height:100%;width:100%}
