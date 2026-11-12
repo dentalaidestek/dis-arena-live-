@@ -21,21 +21,19 @@ export function findAssignedTooth(assignments:ToothGiftAssignment[],giftName:str
  return a?.toothId??null;
 }
 
-/** Symmetric jaw pricing: each mirrored upper/lower tooth has the same gift price.
- * There are fewer verified distinct gifts at the exact low-price bands than 32
- * unique slots. Leave unmatched slots unassigned rather than overcharging.
- */
+/** Fixed assignments. Each upper tooth has a lower counterpart of equal coin price. */
 export function initialToothGiftAssignments():ToothGiftAssignment[]{
- const front=['Parfüm','LOL','Minik Allık','Buket'];
- const middle=['Finger Heart','Aşırı tepki','Aşk Kokusu','Dondurma','Tamam','Şeftali'];
- const back=['Gül','GG','Dondurma Külahı','TikTok','Lale','Göz kırpma'];
- const catalog=new Map<string,number>(SCREENSHOT_GIFTS.map(g=>[g.name,g.coins]));
- const counters={front:0,middle:0,back:0};
- const names={front,middle,back};
- const proposed=Array.from({length:32},(_,toothId)=>{
-  const band=toothPriceBand(toothId);
-  const giftName=names[band][counters[band]++];
-  return giftName?{toothId,giftName,coins:catalog.get(giftName)??0}:null;
- }).filter((x):x is ToothGiftAssignment=>x!==null);
- return validateToothGiftAssignments(proposed.filter(x=>x.coins===claimPrice(x.toothId)));
+ const pairs:[number,number,string,string][]=[
+  [0,16,'Gül','GG'],[1,17,'Dondurma Külahı','Lale'],[2,18,'Göz kırpma','Rüzgâr gülü'],
+  [3,19,'Finger Heart','Aşırı tepki'],[4,20,'Aşk Kokusu','Bir Daha Bileti'],[5,21,'Dönen Top','İsimle selamlama'],
+  [6,22,'Parfüm','LOL'],[7,23,'Minik Allık','Buket'],[8,24,'Konfeti','Elle Kalp'],[9,25,'Öpücük','Sceptre'],
+  [10,26,'Kalp','Meraklı Twinkle'],[11,27,'Ağır çekim','Rosa'],[12,28,'Yıldızıma Tebrikler','Bravo!'],
+  [13,29,'Pasta Dilimi','Blue Bead'],[14,30,'Pati','Parlıyorsun!'],[15,31,'Karşılama Kahvesi','Denizyıldızı']
+ ];
+ const prices=new Map<string,number>(SCREENSHOT_GIFTS.map(g=>[g.name.toLocaleLowerCase('tr-TR'),g.coins]));
+ const proposed=pairs.flatMap(([upper,lower,a,b])=>[
+  {toothId:upper,giftName:a,coins:prices.get(a.toLocaleLowerCase('tr-TR'))??0},
+  {toothId:lower,giftName:b,coins:prices.get(b.toLocaleLowerCase('tr-TR'))??0}
+ ]);
+ return validateToothGiftAssignments(proposed);
 }
