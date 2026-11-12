@@ -20,3 +20,17 @@ export function findAssignedTooth(assignments:ToothGiftAssignment[],giftName:str
  const a=assignments.find(x=>x.giftName.toLocaleLowerCase('tr-TR')===giftName.trim().toLocaleLowerCase('tr-TR')&&x.coins===coins);
  return a?.toothId??null;
 }
+
+/** Assign each distinct pictured gift to at most one tooth; unmatched teeth stay locked. */
+export function initialToothGiftAssignments():ToothGiftAssignment[]{
+ const gifts=[...SCREENSHOT_GIFTS].sort((a,b)=>b.coins-a.coins);
+ const teeth=Array.from({length:32},(_,i)=>i).sort((a,b)=>claimPrice(b)-claimPrice(a));
+ const used=new Set<number>();
+ const proposed:ToothGiftAssignment[]=[];
+ for(const gift of gifts){
+  const toothId=teeth.find(id=>!used.has(id)&&gift.coins>=claimPrice(id));
+  if(toothId===undefined)continue;
+  used.add(toothId);proposed.push({toothId,giftName:gift.name,coins:gift.coins});
+ }
+ return validateToothGiftAssignments(proposed);
+}
