@@ -2,23 +2,22 @@ import type {AnimationCue} from './ActionAnimation';
 import type {Action} from './engine';
 import {doctorRole} from './ActionAnimation';
 import {DoctorPortrait} from './DoctorPortrait';
-import {GIFT_CATALOG} from './giftClaims';
 
 export const OPENING_CAST=[
- {name:'Dr. Restorasyon',job:'TEDAVİ',action:'heal' as Action,gift:'Finger Heart',side:'good' as const},
- {name:'Dr. Periodonti',job:'KORUMA',action:'fractureShield' as Action,gift:'Rose',side:'good' as const},
- {name:'Dr. İmplant',job:'İMPLANT',action:'implant' as Action,gift:'Doughnut',side:'good' as const},
- {name:'Dr. Karies',job:'ÇÜRÜTME',action:'decay' as Action,gift:'Rose',side:'bad' as const},
- {name:'Dr. Kırık',job:'KIRIK',action:'fracture' as Action,gift:'Perfume',side:'bad' as const},
- {name:'Dr. Ekstraksiyon',job:'ÇEKİM',action:'extract' as Action,gift:'Doughnut',side:'bad' as const},
+ {name:'Dr. Restorasyon',job:'TEDAVİ',action:'heal' as Action,side:'good' as const},
+ {name:'Dr. Periodonti',job:'KORUMA',action:'fractureShield' as Action,side:'good' as const},
+ {name:'Dr. İmplant',job:'İMPLANT',action:'implant' as Action,side:'good' as const},
+ {name:'Dr. Karies',job:'ÇÜRÜTME',action:'decay' as Action,side:'bad' as const},
+ {name:'Dr. Kırık',job:'KIRIK',action:'fracture' as Action,side:'bad' as const},
+ {name:'Dr. Ekstraksiyon',job:'ÇEKİM',action:'extract' as Action,side:'bad' as const},
 ];
 /** Stage-only gift hints; final LIVE action prices must come from server-side mapping. */
 export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
  const good=OPENING_CAST.filter(c=>c.side==='good'),bad=OPENING_CAST.filter(c=>c.side==='bad');
  const group=(items:typeof OPENING_CAST,side:'good'|'bad')=><div className={'opening-cast '+side}>
   <h2>{side==='good'?'✚ İYİ EKİP':'☣ KÖTÜ EKİP'}</h2>
-  {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);const current=cues.find(c=>(c.blocked?'Dr. Periodonti':doctorRole(c.action))===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
-   <DoctorPortrait side={side} role={person.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 {gift?.name} · {gift?.coins} coin <em>ÖRNEK</em></small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
+  {items.map(person=>{const current=cues.find(c=>(c.blocked?'Dr. Periodonti':doctorRole(c.action))===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
+   <DoctorPortrait side={side} role={person.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 İŞLEM HEDİYESİ: AYARLANACAK</small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
   </div>})}
  </div>;
  return <section className="opening-stage" aria-label="Diş Arena canlı yayın açılış sahnesi">
