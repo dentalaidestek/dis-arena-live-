@@ -17,7 +17,7 @@ export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
  const good=OPENING_CAST.filter(c=>c.side==='good'),bad=OPENING_CAST.filter(c=>c.side==='bad');
  const group=(items:typeof OPENING_CAST,side:'good'|'bad')=><div className={'opening-cast '+side}>
   <h2>{side==='good'?'✚ İYİ EKİP':'☣ KÖTÜ EKİP'}</h2>
-  {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);const current=cues.find(c=>doctorRole(c.action)===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
+  {items.map(person=>{const gift=GIFT_CATALOG.find(g=>g.name===person.gift);const current=cues.find(c=>(c.blocked?'Dr. Periodonti':doctorRole(c.action))===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
    <DoctorPortrait side={side} role={person.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 {gift?.name} · {gift?.coins} coin <em>ÖRNEK</em></small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
   </div>})}
  </div>;
