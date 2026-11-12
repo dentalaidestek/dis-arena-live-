@@ -21,6 +21,20 @@ describe('eş zamanlı iyi ve kötü hekimler',()=>{
   assert.equal(s.active.length,2);assert.equal(s.waiting.length,1);
   s=finishAnimation(s,1);assert.equal(s.active.length,2);assert.equal(s.waiting.length,0);
  });
+ it('aynı dişte çoklu karşıt işlemler FIFO sırasını korur',()=>{
+  let s=emptyAnimationState();
+  s=enqueueAnimation(s,cue(1,'decay',4));
+  s=enqueueAnimation(s,cue(2,'heal',4));
+  s=enqueueAnimation(s,cue(3,'fracture',4));
+  assert.deepEqual(s.waiting.map(c=>c.id),[2,3]);
+  s=finishAnimation(s,1);assert.deepEqual(s.active.map(c=>c.id),[2]);
+  s=finishAnimation(s,2);assert.deepEqual(s.active.map(c=>c.id),[3]);
+ });
+ it('kalabalık kuyruk eski animasyonları sessizce kaybetmez',()=>{
+  let s=emptyAnimationState();
+  for(let i=0;i<70;i++)s=enqueueAnimation(s,cue(i+1,'decay',i%32));
+  assert.equal(s.active.length+s.waiting.length,70);
+ });
  it('bitmiş animasyon tekrar bitirilirse durum değişmez',()=>{
   const s=enqueueAnimation(emptyAnimationState(),cue(1,'heal'));
   assert.equal(finishAnimation(s,999),s);
