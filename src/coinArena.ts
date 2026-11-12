@@ -1,6 +1,8 @@
 export const ROUND_MS=600_000;
 export const EXTRACTION_MS=30_000;
 export const TEA_COINS=50;
+export const IMPLANT_COINS=20;
+export const IMPLANT_NAMES=['parfüm','perfume'];
 export const TEA_NAMES=['çay','tea'];
 export const POSITIONS=[7,8,24,23,6,9,25,22,5,10,26,21,4,11,27,20,3,12,28,19,2,13,29,18,1,14,30,17];
 export type Player={userId:string;username:string;coins:number;joinedAt:number;lockedUntil:number};
@@ -19,14 +21,16 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  if(!gift.eventId||gift.eventId.length>128||!gift.userId||!gift.username||!Number.isSafeInteger(gift.coins)||gift.coins<=0||!Number.isFinite(gift.timestamp))return fail('Geçersiz hediye');
  if(state.processedIds.includes(gift.eventId))return fail('Tekrarlanan hediye');
  if(state.startedAt>0&&(gift.timestamp<state.startedAt||timeLeft(state,gift.timestamp)===0))return fail('Tur sona erdi');
- const tea=TEA_NAMES.includes(gift.giftName.trim().toLocaleLowerCase('tr-TR'))&&gift.coins===TEA_COINS;
+ const name=gift.giftName.trim().toLocaleLowerCase('tr-TR');
+ const tea=TEA_NAMES.includes(name)&&gift.coins===TEA_COINS;
+ const implant=IMPLANT_NAMES.includes(name)&&gift.coins===IMPLANT_COINS;
  const startedAt=state.startedAt||gift.timestamp;const players=state.players.map(p=>({...p}));let sender=players.find(p=>p.userId===gift.userId);
  if(!sender){sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0};players.push(sender);}
  sender.username=gift.username;
  let action:GiftResult['action']='score',targetId:number|null=null;
  let message='';
  if(isLocked(sender,gift.timestamp)){
-  if(tea){sender.lockedUntil=0;sender.coins+=gift.coins;action='implant';targetId=toothOf({...state,players},sender.userId);message='🔩 @'+sender.username+' Çay ile implant yaptı, +50 jeton';}
+  if(implant){sender.lockedUntil=0;sender.coins+=gift.coins;action='implant';targetId=toothOf({...state,players},sender.userId);message='🔩 @'+sender.username+' Parfüm ile implant yaptı, +20 jeton';}
   else{action='blocked';message='⛔ @'+sender.username+' çekilmiş durumda: normal hediye puan kazandırmadı';}
  }else{
   sender.coins+=gift.coins;
