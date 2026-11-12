@@ -1,0 +1,9 @@
+import {describe,it} from 'node:test';import assert from 'node:assert/strict';import {claim,createRound,replaceByImplant,replacementLocked,implantLocked} from './runtime';
+function extractedRound(active:number){let s=claim(createRound('r',0),31,'old-id','olduser',1).snapshot;return {...s,teeth:s.teeth.map((t,i)=>i===31?{...t,extracted:true,hp:0}:{...t,extracted:i>=active})};}
+describe('Yeni oyuncunun implantla diş devralması',()=>{
+ it('17 aktif dişte yeni kullanıcı implantla 50 HP ile gelir',()=>{const s=extractedRound(17);const r=replaceByImplant(s,31,'new-id','@yeni','gift-1',2);assert.equal(r.accepted,true);assert.equal(r.snapshot.teeth[31].hp,50);assert.equal(r.snapshot.owners[31].userId,'new-id');assert.equal(r.snapshot.teeth[31].extracted,false);});
+ it('16 aktif dişte yeni oyuncu girişi kapanır',()=>{const s=extractedRound(16);assert.equal(replacementLocked(s.teeth),true);const r=replaceByImplant(s,31,'new-id','yeni','gift-2',2);assert.equal(r.accepted,false);assert.equal(r.snapshot.owners[31].userId,'old-id');});
+ it('8 aktif dişte her implant kapalıdır',()=>{const s=extractedRound(8);assert.equal(implantLocked(s.teeth),true);assert.equal(replaceByImplant(s,31,'new-id','yeni','gift-3',2).accepted,false);});
+ it('aynı kullanıcı ikinci diş alamaz',()=>{let s=extractedRound(17);s=claim(s,0,'new-id','yeni',2).snapshot;assert.equal(replaceByImplant(s,31,'new-id','yeni','gift-4',3).accepted,false);});
+ it('tekrar edilen olay yeni sahip atamaz',()=>{const s=extractedRound(17);const first=replaceByImplant(s,31,'new-id','yeni','gift-5',2);assert.equal(first.accepted,true);const second=replaceByImplant(first.snapshot,31,'another-id','baska','gift-5',3);assert.equal(second.accepted,false);});
+});
