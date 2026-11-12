@@ -4,7 +4,8 @@ import {Text} from '@react-three/drei';
 import * as THREE from 'three';
 import type {Action} from './engine';
 
-export type AnimationCue={id:number;action:Action;team:string;user:string;blocked:boolean};
+export type AnimationCue={id:number;action:Action;team:string;user:string;blocked:boolean;targetId:number};
+export function toothPosition(index:number):[number,number,number]{const upper=index<16;const slot=index%16;const angle=(slot/15-.5)*Math.PI*.92;return [Math.sin(angle)*4.4,upper?1.15:-1.15,-Math.cos(angle)*1.5];}
 const GOOD=new Set<Action>(['heal','decayShield','fractureShield','implant']);
 const duration=3.5;
 export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComplete:(id:number)=>void}){
@@ -23,8 +24,11 @@ export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComple
   const entrance=Math.min(1,t/.22);
   const exit=Math.max(0,Math.min(1,(1-t)/.18));
   group.current.visible=t<1;
-  group.current.position.x=side*(4.8-2.15*Math.min(entrance,exit));
-  group.current.position.y=-.2+Math.sin(Math.min(t,1)*Math.PI)*.1;
+  const [tx,ty,tz]=toothPosition(cue.targetId);
+  const approach=Math.min(entrance,exit);
+  group.current.position.x=THREE.MathUtils.lerp(side*5.7,tx+side*.85,approach);
+  group.current.position.y=THREE.MathUtils.lerp(-.7,ty-.3,approach)+Math.sin(Math.min(t,1)*Math.PI)*.1;
+  group.current.position.z=THREE.MathUtils.lerp(2.3,tz+1.2,approach);
   group.current.rotation.y=-side*.25;
   if(tool.current)tool.current.rotation.z=Math.sin(progress.current*11)*.24;
   if(t>=1&&finished.current!==cue.id){finished.current=cue.id;onComplete(cue.id);}
@@ -61,7 +65,7 @@ export function ToothImpact({cue}:{cue:AnimationCue|null}){
  });
  if(!cue)return null;
  const positive=GOOD.has(cue.action)||cue.blocked;
- return <group ref={ref} position={[0,0,1.4]}>
+ return <group ref={ref} position={(()=>{const [x,y,z]=toothPosition(cue.targetId);return [x,y,z+1.1] as [number,number,number]})()}>
   <mesh><torusGeometry args={[.8,.07,8,36]}/><meshBasicMaterial color={cue.blocked?'#65d8ff':positive?'#4cffa9':'#ff5669'} transparent opacity={.8}/></mesh>
   <Text position={[0,1.05,0]} fontSize={.24} color="#fff" anchorX="center">{cue.blocked?'KALKAN ENGELLEDİ':positive?'TEDAVİ / KORUMA':'SALDIRI'}</Text>
  </group>;
