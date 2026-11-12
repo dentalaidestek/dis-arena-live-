@@ -151,3 +151,17 @@ header{position:relative;z-index:2}
 @keyframes doctor-operating-bad{from{box-shadow:0 0 5px #ff536866}to{box-shadow:0 0 22px #ff5368cc}}
 @keyframes doctor-working{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
 @media(prefers-reduced-motion:reduce){.opening-doctor-active,.opening-doctor-active .doctor-art{animation:none}}
+
+
+.broadcast-queue{display:flex;justify-content:space-between;align-items:center;gap:5px;padding:7px 9px;border-block:1px solid #ffca7759;background:linear-gradient(90deg,#0c2744,#101321,#391622);font-size:clamp(9px,1.6vw,12px);font-weight:700;color:#c9dcec}
+.broadcast-queue span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.broadcast-queue strong{color:#ffe5a7;font-variant-numeric:tabular-nums}
+.opening-activity-glow{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(ellipse at 45% 70%,#71d7ff45,transparent 70%)}
+.opening-cast.bad .opening-activity-glow{background:radial-gradient(ellipse at 45% 70%,#ff637545,transparent 70%)}
+.opening-doctor-active .opening-activity-glow{opacity:1;animation:stage-pulse 1.2s ease-in-out infinite alternate}
+.opening-patient-busy svg{animation:patient-breath 2.8s ease-in-out infinite alternate}
+.opening-gift{border:1px solid #e7bd7759}
+@keyframes stage-pulse{from{opacity:.25}to{opacity:1}}
+@keyframes patient-breath{from{transform:translateY(0)}to{transform:translateY(3px)}}
+@media(max-width:420px){.broadcast-queue{padding:5px 4px;gap:3px;font-size:8px}}
+@media(prefers-reduced-motion:reduce){.opening-doctor-active .opening-activity-glow,.opening-patient-busy svg{animation:none}}
