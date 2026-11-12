@@ -103,7 +103,7 @@ function Scene({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){
  {/* Clinical overhead lighting and room furnishings */}
  <mesh position={[0,4.4,-2.7]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[1.45,1.45,.14,48]}/><meshStandardMaterial color="#e5f5ff" emissive="#80c5ff" emissiveIntensity={.8}/></mesh>
  <mesh position={[0,4.45,-2.5]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[1.24,.11,12,64]}/><meshStandardMaterial color="#f8fdff" emissive="#c7f1ff" emissiveIntensity={1.5}/></mesh>
- <spotLight position={[0,5,4]} target-position={[0,0,0]} intensity={90} angle={.8} penumbra={.8} color="#eaf8ff"/>
+ <spotLight position={[0,5,4]} intensity={90} angle={.8} penumbra={.8} color="#eaf8ff"/>
  <group position={[0,.2,0]}><Patient state={state} now={now} cue={cue}/><Doctor side="bad" active={cue?.action==='extract'}/><Doctor side="good" active={cue?.action==='implant'}/></group>
  </Canvas>;
 }
