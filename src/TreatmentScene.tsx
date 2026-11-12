@@ -4,6 +4,7 @@ import {Text} from '@react-three/drei';
 import * as THREE from 'three';
 import type {AnimationCue} from './ActionAnimation';
 import {toothPosition} from './ActionAnimation';
+import {procedurePhase,procedureProgress,procedureLabel} from './procedureTimeline';
 
 /** Animated chair-side vignette for each accepted clinical event. */
 export function TreatmentScene({cue}:{cue:AnimationCue}){
@@ -15,6 +16,10 @@ export function TreatmentScene({cue}:{cue:AnimationCue}){
  const target=useRef<THREE.Group>(null);
  const crown=useRef<THREE.Mesh>(null);
  const drill=useRef<THREE.Group>(null);
+ const damage=useRef<THREE.Mesh>(null);
+ const crackMesh=useRef<THREE.Mesh>(null);
+ const implant=useRef<THREE.Mesh>(null);
+ const shield=useRef<THREE.Mesh>(null);
  const started=useRef<number|null>(null);
  const elapsed=useRef(0);
  const bad=['decay','fracture','extract'].includes(cue.action)&&!cue.blocked;
@@ -23,15 +28,21 @@ export function TreatmentScene({cue}:{cue:AnimationCue}){
   if(started.current!==cue.id){started.current=cue.id;elapsed.current=0;}
   elapsed.current+=Math.min(delta,.06);
   const t=elapsed.current;
+  const phase=procedurePhase(t);
+  const progress=procedureProgress(t);
   const enter=THREE.MathUtils.smoothstep(t,0,.55);
   const leave=1-THREE.MathUtils.smoothstep(t,2.8,3.5);
   if(root.current){root.current.visible=t<3.5;root.current.scale.setScalar(Math.max(.001,enter*leave)*.9);}
   if(patient.current)patient.current.rotation.z=THREE.MathUtils.lerp(-.12,-.53,THREE.MathUtils.smoothstep(t,.3,1.05));
-  if(mouth.current)mouth.current.scale.y=bad&&cue.action==='extract'?1.35:.85+.22*Math.sin(t*5);
+  if(mouth.current)mouth.current.scale.y=phase==='operate'?1.25:.85+.12*Math.sin(t*5);
   if(hand.current){const operating=THREE.MathUtils.smoothstep(t,.8,1.3)*(1-THREE.MathUtils.smoothstep(t,2.6,3.1));hand.current.rotation.z=operating*(bad?-.6:.5)+Math.sin(t*(cue.action==='fracture'?22:13))*.13*operating;hand.current.position.y=.85-operating*.33;}
   if(target.current){target.current.rotation.y=Math.sin(t*1.7)*.13;target.current.position.y=.18+Math.sin(t*2)*.025;}
   if(crown.current){const progress=THREE.MathUtils.smoothstep(t,1.1,2.5);const shrinking=cue.action==='extract'&&!cue.blocked?1-progress*.95:1;crown.current.scale.setScalar(shrinking);crown.current.position.y=cue.action==='extract'&&!cue.blocked?progress*.9:0;}
-  if(drill.current){const touch=THREE.MathUtils.smoothstep(t,.85,1.5)*(1-THREE.MathUtils.smoothstep(t,2.5,3));drill.current.position.set(.45-touch*.35,.85-touch*.75,.55);drill.current.rotation.z=touch*.5;}
+  if(drill.current){const touch=THREE.MathUtils.smoothstep(t,.85,1.5)*(1-THREE.MathUtils.smoothstep(t,2.5,3));drill.current.position.set(.36-touch*.5,.85-touch*.55,.75);drill.current.rotation.z=touch*.5;}
+  if(damage.current){const amount=cue.action==='decay'?progress:cue.action==='heal'?1-progress:0;damage.current.scale.setScalar(Math.max(.001,amount));damage.current.visible=amount>.01;}
+  if(crackMesh.current){crackMesh.current.scale.y=Math.max(.001,progress);crackMesh.current.visible=progress>.01;}
+  if(implant.current){implant.current.scale.y=Math.max(.001,progress);implant.current.visible=progress>.01;}
+  if(shield.current){shield.current.rotation.y=t*1.4;shield.current.scale.setScalar(.6+progress*.4);}
   if(fx.current){fx.current.rotation.z=t*(bad?4:-3);fx.current.scale.setScalar(.6+Math.sin(t*10)*.12);fx.current.visible=t>1.05&&t<2.8;}
  });
  const [x,y,z]=toothPosition(cue.targetId);
@@ -46,10 +57,10 @@ export function TreatmentScene({cue}:{cue:AnimationCue}){
    <mesh ref={crown} position={[0,0,0]}>
     <sphereGeometry args={[.27,24,20]}/><meshPhysicalMaterial color={decay?'#a88b5b':'#fff4dc'} roughness={.22} clearcoat={.7}/>
    </mesh>
-   {crack&&<mesh position={[.02,0,.275]} rotation={[0,0,.48]} scale={[.027,.37,.015]}><boxGeometry/><meshBasicMaterial color="#7a2729"/></mesh>}
-   {decay&&<mesh position={[.11,.12,.254]} scale={[.11,.1,.022]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color="#3b271b"/></mesh>}
-   {isShield&&<mesh><icosahedronGeometry args={[.46,1]}/><meshBasicMaterial color="#49d9ff" wireframe transparent opacity={.65}/></mesh>}
-   {cue.action==='implant'&&<mesh position={[0,-.35,0]}><cylinderGeometry args={[.1,.14,.52,16]}/><meshStandardMaterial color="#c4d4df" metalness={.85}/></mesh>}
+   {crack&&<mesh ref={crackMesh} position={[.02,0,.275]} rotation={[0,0,.48]} scale={[.027,.37,.015]}><boxGeometry/><meshBasicMaterial color="#7a2729"/></mesh>}
+   {(decay||cue.action==='heal')&&<mesh ref={damage} position={[.11,.12,.254]} scale={[.11,.1,.022]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color="#3b271b"/></mesh>}
+   {isShield&&<mesh ref={shield}><icosahedronGeometry args={[.46,1]}/><meshBasicMaterial color="#49d9ff" wireframe transparent opacity={.65}/></mesh>}
+   {cue.action==='implant'&&<mesh ref={implant} position={[0,-.35,0]}><cylinderGeometry args={[.1,.14,.52,16]}/><meshStandardMaterial color="#c4d4df" metalness={.85}/></mesh>}
    <Text position={[0,.53,.1]} fontSize={.21} color="#ffdc73" anchorX="center" outlineWidth={.012} outlineColor="#1a1010">{'DİŞ '+(cue.targetId+1)}</Text>
    <mesh position={[0,0,-.05]}><torusGeometry args={[.45,.025,8,32]}/><meshBasicMaterial color={color} transparent opacity={.85}/></mesh>
   </group>
@@ -73,7 +84,8 @@ export function TreatmentScene({cue}:{cue:AnimationCue}){
    <mesh position={[0,-.79,.02]}><cylinderGeometry args={[.04,.065,.43,10]}/><meshStandardMaterial color="#d1dce5" metalness={.85} roughness={.2}/></mesh>
    {cue.action==='extract'?<mesh position={[0,-1.04,.02]} rotation={[0,0,.3]}><torusGeometry args={[.13,.045,8,16,Math.PI*1.6]}/><meshStandardMaterial color="#c6d1d9" metalness={.8}/></mesh>:cue.action==='fracture'?<mesh position={[0,-1.02,.02]} scale={[.18,.12,.13]}><boxGeometry/><meshStandardMaterial color="#aab9c9" metalness={.7}/></mesh>:<mesh position={[0,-1.04,.02]}><coneGeometry args={[.075,.24,12]}/><meshStandardMaterial color={color} emissive={color} emissiveIntensity={.6}/></mesh>}
   </group>
+  <group ref={drill} position={[.36,.85,.75]}><mesh rotation={[0,0,.5]}><cylinderGeometry args={[.018,.025,.46,8]}/><meshStandardMaterial color="#c7d4dd" metalness={.8}/></mesh></group>
   <group ref={fx} position={[-.15,.18,1.15]}><mesh><torusGeometry args={[.28,.035,8,32]}/><meshBasicMaterial color={color} transparent opacity={.85}/></mesh><pointLight color={color} intensity={3} distance={2}/></group>
-  <Text position={[0,1.17,.1]} fontSize={.22} color={color} outlineWidth={.014} outlineColor="#07101a" anchorX="center">{cue.blocked?'KALKAN ENGELLEDİ':cue.action==='heal'?'DİŞ TEDAVİSİ':cue.action==='fracture'?'DİŞ KIRILIYOR':cue.action==='extract'?'DİŞ ÇEKİMİ':cue.action==='decay'?'ÇÜRÜK SALDIRISI':cue.action==='implant'?'İMPLANT TEDAVİSİ':'KORUYUCU TEDAVİ'}</Text>
+  <Text position={[0,1.17,.1]} fontSize={.22} color={color} outlineWidth={.014} outlineColor="#07101a" anchorX="center">{procedureLabel(cue.action,cue.blocked)}</Text>
  </group>;
 }
