@@ -9,7 +9,7 @@ function Tooth({id,rank,name,coins,locked,now,activeCue}:{id:number;rank?:number
  const upper=id<16;const slot=upper?id:id-16;const angle=(slot-7.5)/7.5*1.13;const x=Math.sin(angle)*3.5;const z=Math.cos(angle)*.65;
  const y=upper?-.12:.12;const size=upper?1:.83;const champion=rank!==undefined&&rank<4;
  const group=useRef<THREE.Group>(null);const affected=activeCue?.targetId===id;
- useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse);if(affected){const t=clock.elapsedTime;group.current.rotation.z=Math.sin(t*13)*.08;group.current.position.z=z+.18+.12*Math.sin(t*9)}else{group.current.rotation.z=0;group.current.position.z=z}}});
+ useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse);if(affected){const t=clock.elapsedTime;group.current.rotation.z=Math.sin(t*13)*.08;group.current.position.z=.18+.12*Math.sin(t*9)}else{group.current.rotation.z=0;group.current.position.z=0}}});
  return <group ref={group} position={[x,y,z]} rotation={[0,-angle*.42,0]} scale={size}>
  {champion&&<><mesh position={[0,upper?.48:-.48,-.1]}><torusGeometry args={[.31,.035,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffbf44" intensity={1.7} distance={1.4}/></>}
  {locked?<><mesh position={[0,upper?-.09:.09,.08]}><sphereGeometry args={[.17,16,12]}/><meshStandardMaterial color="#741a38"/></mesh><Text position={[0,0,.4]} fontSize={.24} color="#ff6685">✕</Text></>:<mesh position={[0,upper?-.1:.1,0]} scale={[.23,.37,.26]}><sphereGeometry args={[1,24,20]}/><meshPhysicalMaterial color="#fff5e9" roughness={.22} clearcoat={.8}/></mesh>}
