@@ -40,7 +40,7 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
  const trim=good?'#26b9d6':'#b5ed55';
  const skin=good?'#dba88c':'#a77964';
  const metal='#b7c9d2';
- return <group ref={group} position={[good?4.8:-4.8,-.2,2.3]}>
+ return <group ref={group} position={[good?-4.8:4.8,-.2,2.3]}>
   {/* Sculpted torso and open laboratory coat */}
   <mesh position={[0,-.06,0]} scale={[.53,.78,.32]}><capsuleGeometry args={[.68,.72,8,16]}/><meshStandardMaterial color={coat} roughness={.78}/></mesh>
   <mesh position={[0,.15,.305]} scale={[.22,.57,.065]}><boxGeometry/><meshStandardMaterial color={good?'#67d7e4':'#5e304b'}/></mesh>
@@ -79,7 +79,7 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
    <mesh position={[0,.37,0]}><sphereGeometry args={[.14,16,12]}/><meshStandardMaterial color={trim} emissive={trim} emissiveIntensity={.65}/></mesh>
    <pointLight color={trim} intensity={2} distance={2}/>
   </group>
-  <Text position={[0,1.77,0]} fontSize={.2} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center" outlineWidth={.013} outlineColor="#101522">{doctorRole(cue.action)}</Text>
+  <Text position={[0,1.77,0]} fontSize={.2} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center" outlineWidth={.013} outlineColor="#101522">{cue.blocked?'Dr. Periodonti':doctorRole(cue.action)}</Text>
   <Text position={[0,-1.59,0]} fontSize={.17} maxWidth={2.7} color="#ffffff" anchorX="center" outlineWidth={.012} outlineColor="#101522">{cue.user.slice(0,22)}</Text>
  </group>;
 }
