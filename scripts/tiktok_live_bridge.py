@@ -39,6 +39,19 @@ async def main():
     if len(sys.argv) != 2 or not sys.argv[1].strip('@ '):
         raise SystemExit('Usage: python scripts/tiktok_live_bridge.py @tiktok_username')
     username = sys.argv[1].strip().lstrip('@')
+    if username == '--demo':
+        print(f'DEMO bridge ws://127.0.0.1:{PORT} | no TikTok LIVE required', flush=True)
+        async with serve(websocket_handler, '127.0.0.1', PORT):
+            LIVE_STATE.update({'state': 'live-connected', 'username': 'demo'})
+            counter = 0
+            while True:
+                await asyncio.sleep(2)
+                counter += 1
+                gift = ('Rose', 'Finger Heart', 'Perfume')[counter % 3]
+                coins = {'Rose': 1, 'Finger Heart': 5, 'Perfume': 20}[gift]
+                await broadcast({'type': 'gift', 'eventId': f'demo-{counter}', 'userId': f'demo-{counter}', 'username': f'demo{counter}', 'giftName': gift, 'coins': coins, 'repeatCount': 1, 'timestamp': int(time.time() * 1000)})
+                print('DEMO GIFT:', gift, 'from demo'+str(counter), flush=True)
+        return
     client = TikTokLiveClient(unique_id='@' + username)
 
     @client.on(ConnectEvent)
