@@ -25,7 +25,7 @@ export function finishAnimation(state:AnimationState,id:number):AnimationState{
  // FIFO among compatible cues; do not allow two characters on the same tooth.
  for(let i=0;i<waiting.length;){
   const cue=waiting[i];
-  if(active.filter(c=>cueLane(c)===cueLane(cue)).length<MAX_PER_SIDE&&!active.some(c=>c.targetId===cue.targetId||cueRole(c)===cueRole(cue))&&!waiting.slice(0,i).some(c=>c.targetId===cue.targetId)){
+  if(active.filter(c=>cueLane(c)===cueLane(cue)).length<MAX_PER_SIDE&&!active.some(c=>c.targetId===cue.targetId||cueRole(c)===cueRole(cue))&&!waiting.slice(0,i).some(c=>c.targetId===cue.targetId||cueRole(c)===cueRole(cue))){
    active.push(cue);waiting.splice(i,1);
   }else i++;
  }
