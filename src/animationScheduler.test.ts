@@ -1,6 +1,6 @@
 import {describe,it} from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyAnimationState,enqueueAnimation,finishAnimation,laneOf} from './animationScheduler';
+import {emptyAnimationState,enqueueAnimation,finishAnimation,laneOf,cueLane,resetAnimations} from './animationScheduler';
 import type {AnimationCue} from './ActionAnimation';
 const cue=(id:number,action:AnimationCue['action'],targetId=id):AnimationCue=>({id,action,targetId,team:'Demo',user:'@demo',blocked:false});
 describe('eş zamanlı iyi ve kötü hekimler',()=>{
@@ -38,5 +38,38 @@ describe('eş zamanlı iyi ve kötü hekimler',()=>{
  it('bitmiş animasyon tekrar bitirilirse durum değişmez',()=>{
   const s=enqueueAnimation(emptyAnimationState(),cue(1,'heal'));
   assert.equal(finishAnimation(s,999),s);
+ });
+});
+describe('savunma ve sıfırlama yarış koşulları',()=>{
+ it('engellenmiş kötü saldırı iyi ekip kanalını kullanır',()=>{
+  const blocked={...cue(1,'fracture',1),blocked:true};
+  assert.equal(cueLane(blocked),'good');
+  let s=enqueueAnimation(emptyAnimationState(),blocked);
+  s=enqueueAnimation(s,cue(2,'decay',2));
+  assert.equal(s.active.length,2);
+  assert.deepEqual(s.active.map(cueLane),['good','bad']);
+ });
+ it('aynı dişe gelen engellenmiş saldırı ve tedavi üst üste binmez',()=>{
+  let s=enqueueAnimation(emptyAnimationState(),{...cue(1,'decay',7),blocked:true});
+  s=enqueueAnimation(s,cue(2,'heal',7));
+  assert.deepEqual(s.active.map(c=>c.id),[1]);
+  s=finishAnimation(s,1);
+  assert.deepEqual(s.active.map(c=>c.id),[2]);
+ });
+ it('eski turun animasyonları sıfırlanınca geri gelmez',()=>{
+  const old=enqueueAnimation(emptyAnimationState(),cue(1,'decay',0));
+  const fresh=resetAnimations();
+  assert.equal(fresh.active.length,0);
+  assert.equal(fresh.waiting.length,0);
+  assert.equal(finishAnimation(fresh,old.active[0].id),fresh);
+ });
+ it('dört eşzamanlı işlem farklı dişlerde çalışır, beşinci bekler',()=>{
+  let s=emptyAnimationState();
+  for(const c of [cue(1,'decay',1),cue(2,'fracture',2),cue(3,'heal',3),cue(4,'implant',4),cue(5,'heal',5)])s=enqueueAnimation(s,c);
+  assert.equal(s.active.length,4);
+  assert.deepEqual(s.waiting.map(c=>c.id),[5]);
+  s=finishAnimation(s,3);
+  assert.equal(s.active.length,4);
+  assert.equal(s.waiting.length,0);
  });
 });
