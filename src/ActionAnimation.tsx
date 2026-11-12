@@ -36,23 +36,51 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
  });
  if(!cue)return null;
  const good=GOOD.has(cue.action);
- const coat=good?'#eaf5ff':'#25202c';
- const accent=good?'#54d5ff':'#8be344';
+ const coat=good?'#f0f5f9':'#392b3f';
+ const trim=good?'#26b9d6':'#b5ed55';
+ const skin=good?'#dba88c':'#a77964';
+ const metal='#b7c9d2';
  return <group ref={group} position={[good?4.8:-4.8,-.2,2.3]}>
-  <mesh position={[0,-.05,0]}><capsuleGeometry args={[.36,.82,6,12]}/><meshStandardMaterial color={coat}/></mesh>
-  <mesh position={[0,.92,0]}><sphereGeometry args={[.32,16,12]}/><meshStandardMaterial color={good?'#dba985':'#a57b65'}/></mesh>
-  <mesh position={[0,.89,.29]} scale={[.24,.13,.055]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color={good?'#d6f4ff':'#252c31'}/></mesh>
-  <mesh position={[0,1.2,-.02]} scale={[.34,.16,.34]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color={good?'#283b4b':'#343039'}/></mesh>
-  <mesh position={[-.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
-  <mesh position={[.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
-  <mesh position={[good ? -.37 : .37,.15,0]} rotation={[0,0,good ? -.5 : .5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
-  <mesh position={[good ? .37 : -.37,.15,0]} rotation={[0,0,good ? .5 : -.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
-  <group ref={tool} position={[good?-.46:.46,.35,.12]} rotation={[0,0,good?-.45:.45]}>
-   <mesh><capsuleGeometry args={[.1,.6,4,8]}/><meshStandardMaterial color={accent} metalness={.6} roughness={.25} emissive={accent} emissiveIntensity={.35}/></mesh>
-   <pointLight color={accent} intensity={2} distance={2}/>
+  {/* Sculpted torso and open laboratory coat */}
+  <mesh position={[0,-.06,0]} scale={[.53,.78,.32]}><capsuleGeometry args={[.68,.72,8,16]}/><meshStandardMaterial color={coat} roughness={.78}/></mesh>
+  <mesh position={[0,.15,.305]} scale={[.22,.57,.065]}><boxGeometry/><meshStandardMaterial color={good?'#67d7e4':'#5e304b'}/></mesh>
+  <mesh position={[-.22,.09,.3]} rotation={[0,0,-.12]} scale={[.14,.55,.045]}><boxGeometry/><meshStandardMaterial color={good?'#fff':'#554052'}/></mesh>
+  <mesh position={[.22,.09,.3]} rotation={[0,0,.12]} scale={[.14,.55,.045]}><boxGeometry/><meshStandardMaterial color={good?'#fff':'#554052'}/></mesh>
+  <mesh position={[-.23,-.32,.34]} scale={[.16,.14,.03]}><boxGeometry/><meshStandardMaterial color={trim}/></mesh>
+  <mesh position={[.23,-.32,.34]} scale={[.16,.14,.03]}><boxGeometry/><meshStandardMaterial color={trim}/></mesh>
+  {/* Neck, face, nose, ears and hair */}
+  <mesh position={[0,.68,0]}><cylinderGeometry args={[.15,.18,.27,12]}/><meshStandardMaterial color={skin}/></mesh>
+  <mesh position={[0,1.08,0]} scale={[.37,.45,.32]}><sphereGeometry args={[1,24,18]}/><meshStandardMaterial color={skin} roughness={.85}/></mesh>
+  {[-1,1].map(s=><React.Fragment key={s}>
+   <mesh position={[s*.35,1.07,0]} scale={[.095,.17,.1]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color={skin}/></mesh>
+   <mesh position={[s*.145,1.13,.295]} scale={[.075,.065,.025]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color="#f6fafb"/></mesh>
+   <mesh position={[s*.145,1.13,.319]} scale={[.03,.043,.014]}><sphereGeometry args={[1,10,8]}/><meshStandardMaterial color={good?'#276a87':'#7cbd3d'}/></mesh>
+   <mesh position={[s*.145,1.25,.29]} rotation={[0,0,s*.12]} scale={[.12,.035,.04]}><boxGeometry/><meshStandardMaterial color={good?'#3e414c':'#29222c'}/></mesh>
+  </React.Fragment>)}
+  <mesh position={[0,1.02,.323]} scale={[.09,.14,.12]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color={skin}/></mesh>
+  <mesh position={[0,.86,.296]} scale={[.14,.022,.025]}><boxGeometry/><meshStandardMaterial color={good?'#a26a67':'#431e28'}/></mesh>
+  <mesh position={[0,1.4,-.055]} scale={[.38,.18,.34]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color={good?'#283849':'#1c2029'}/></mesh>
+  {/* Medical mask on the good doctor, respirator on the villain */}
+  <mesh position={[0,.96,.333]} scale={[.22,.115,.045]}><boxGeometry/><meshStandardMaterial color={good?'#b9f0f4':'#333c40'}/></mesh>
+  <mesh position={[0,.96,.383]} scale={[.06,.055,.02]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color={trim}/></mesh>
+  {/* Animated arms, gloves, legs, shoes */}
+  {[-1,1].map(s=><React.Fragment key={'limb'+s}>
+   <mesh position={[s*.53,.17,0]} rotation={[0,0,s*.33]}><capsuleGeometry args={[.15,.47,6,12]}/><meshStandardMaterial color={coat}/></mesh>
+   <mesh position={[s*.68,-.16,.04]}><sphereGeometry args={[.14,12,10]}/><meshStandardMaterial color={good?'#61cbe5':'#8eb95b'}/></mesh>
+   <mesh position={[s*.21,-.93,0]}><capsuleGeometry args={[.15,.52,6,12]}/><meshStandardMaterial color="#253343"/></mesh>
+   <mesh position={[s*.21,-1.31,.14]} scale={[.19,.11,.32]}><sphereGeometry args={[1,12,10]}/><meshStandardMaterial color="#151a25"/></mesh>
+  </React.Fragment>)}
+  {/* Stethoscope and chest insignia */}
+  <mesh position={[-.18,.3,.33]}><torusGeometry args={[.12,.019,6,20,Math.PI]}/><meshStandardMaterial color={metal} metalness={.7}/></mesh>
+  <mesh position={[-.16,.09,.34]}><sphereGeometry args={[.055,12,10]}/><meshStandardMaterial color={metal} metalness={.8}/></mesh>
+  <mesh position={[.24,.28,.35]} scale={[.1,.1,.02]}><boxGeometry/><meshStandardMaterial color={trim}/></mesh>
+  <group ref={tool} position={[good?-.76:.76,.24,.23]} rotation={[0,0,good?-.6:.6]}>
+   <mesh><cylinderGeometry args={[.055,.085,.6,12]}/><meshStandardMaterial color={metal} metalness={.85} roughness={.22}/></mesh>
+   <mesh position={[0,.37,0]}><sphereGeometry args={[.14,16,12]}/><meshStandardMaterial color={trim} emissive={trim} emissiveIntensity={.65}/></mesh>
+   <pointLight color={trim} intensity={2} distance={2}/>
   </group>
-  <Text position={[0,1.68,0]} fontSize={.22} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center">{doctorRole(cue.action)}</Text>
-  <Text position={[0,-1.35,0]} fontSize={.18} maxWidth={2.7} color="#ffffff" anchorX="center">{cue.user.slice(0,22)}</Text>
+  <Text position={[0,1.77,0]} fontSize={.2} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center" outlineWidth={.013} outlineColor="#101522">{doctorRole(cue.action)}</Text>
+  <Text position={[0,-1.59,0]} fontSize={.17} maxWidth={2.7} color="#ffffff" anchorX="center" outlineWidth={.012} outlineColor="#101522">{cue.user.slice(0,22)}</Text>
  </group>;
 }
 export function ToothImpact({cue}:{cue:AnimationCue|null}){
