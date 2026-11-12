@@ -8,7 +8,7 @@ export type AnimationCue={id:number;action:Action;team:string;user:string;blocke
 export function toothPosition(index:number):[number,number,number]{const upper=index<16;const slot=index%16;const angle=(slot/15-.5)*Math.PI*.92;return [Math.sin(angle)*4.4,upper?1.15:-1.15,-Math.cos(angle)*1.5];}
 const GOOD=new Set<Action>(['heal','decayShield','fractureShield','implant']);
 const duration=3.5;
-export const doctorRole=(action:Action):string=>({decay:'Dr. Karies',fracture:'Dr. Kırık',extract:'Dr. Ekstraksiyon',heal:'Dr. Restorasyon',decayShield:'Dr. Koruma',fractureShield:'Dr. Periodonti',implant:'Dr. İmplant'})[action];
+export const doctorRole=(action:Action):string=>({decay:'Dr. Karies',fracture:'Dr. Kırık',extract:'Dr. Ekstraksiyon',heal:'Dr. Restorasyon',decayShield:'Dr. Periodonti',fractureShield:'Dr. Periodonti',implant:'Dr. İmplant'})[action];
 export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|null;onComplete:(id:number)=>void;laneOffset?:number}){
  const group=useRef<THREE.Group>(null);
  const tool=useRef<THREE.Group>(null);
@@ -20,8 +20,8 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
   if(lastId.current!==cue.id){lastId.current=cue.id;progress.current=0;}
   progress.current+=Math.min(delta,.08);
   const t=progress.current/duration;
-  const good=GOOD.has(cue.action);
-  const side=good?1:-1;
+  const good=GOOD.has(cue.action)||cue.blocked;
+  const side=good?-1:1;
   const entrance=Math.min(1,t/.22);
   const exit=Math.max(0,Math.min(1,(1-t)/.18));
   group.current.visible=t<1;
@@ -35,7 +35,7 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
   if(t>=1&&finished.current!==cue.id){finished.current=cue.id;onComplete(cue.id);}
  });
  if(!cue)return null;
- const good=GOOD.has(cue.action);
+ const good=GOOD.has(cue.action)||cue.blocked;
  const coat=good?'#f0f5f9':'#392b3f';
  const trim=good?'#26b9d6':'#b5ed55';
  const skin=good?'#dba88c':'#a77964';
