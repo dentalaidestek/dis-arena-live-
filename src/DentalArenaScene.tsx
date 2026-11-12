@@ -35,6 +35,12 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  <mesh position={[3.9,-.12,-.35]} scale={[.9,1.9,.9]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#df987e"/></mesh>
  <mesh position={[0,2.1,-.42]} scale={[.9,.95,.9]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#d99479"/></mesh>
  <mesh position={[0,2.45,.35]} scale={[.68,.21,.35]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
+ {/* Hairline and hairstyle */}
+ <mesh position={[0,2.9,-.84]} scale={[3.25,.9,.7]}><sphereGeometry args={[1,48,28]}/><meshStandardMaterial color="#30252b" roughness={.92}/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*3.27,1.55,-.62]} rotation={[0,0,side*.16]} scale={[.48,1.4,.48]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#33252d"/></mesh>)}
+ {/* Nose and nostrils */}
+ <mesh position={[0,.65,.08]} scale={[.44,.68,.45]}><sphereGeometry args={[1,28,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*.26,.31,.46]} scale={[.11,.06,.03]}><sphereGeometry args={[1,14,12]}/><meshStandardMaterial color="#9d6459"/></mesh>)}
  {/* Patient's eyes, brows and cheek details */}
  {[-1,1].map(side=><React.Fragment key={side}>
   <mesh position={[side*1.45,1.25,-.35]} scale={[.67,.28,.17]}><sphereGeometry args={[1,28,16]}/><meshStandardMaterial color="#f5f0eb"/></mesh>
@@ -61,9 +67,25 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=THREE.MathUtils.lerp(ref.current.position.x,bad?(-5.55+(active?1.1:0)):(5.55-(active?1.1:0)),.08);ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.1}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
+ {/* Stethoscope loop and clinic gloves */}
+ <mesh position={[0,-.97,.52]} rotation={[0,0,.12]}><torusGeometry args={[.3,.025,8,40,Math.PI*1.4]}/><meshStandardMaterial color="#18283b" metalness={.3}/></mesh>
  <mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
  <mesh position={[0,.3,.07]} scale={[.57,.33,.5]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#27122e':'#17233f'}/></mesh>
  <mesh position={[0,-.42,.5]} scale={[.43,.19,.12]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color={bad?'#4c1735':'#d9f5ff'}/></mesh>
+ {/* Sculpted hair, ears, brows, eyes and face mask */}
+ {[-1,1].map(side=><React.Fragment key={side}>
+ <mesh position={[side*.55,-.2,.03]} scale={[.13,.23,.16]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#d59a7c"/></mesh>
+ <mesh position={[side*.2,-.01,.54]} scale={[.055,.035,.02]}><sphereGeometry args={[1,12,10]}/><meshBasicMaterial color="#172438"/></mesh>
+ <mesh position={[side*.2,.09,.54]} rotation={[0,0,side*.1]} scale={[.17,.035,.04]}><sphereGeometry args={[1,14,10]}/><meshStandardMaterial color="#3d2a33"/></mesh>
+ </React.Fragment>)}
+ <mesh position={[0,.5,-.03]} scale={[.52,.21,.46]}><sphereGeometry args={[1,24,14]}/><meshStandardMaterial color={bad?'#351d35':'#29324b'}/></mesh>
+ <mesh position={[0,-.38,.59]} scale={[.34,.18,.08]}><sphereGeometry args={[1,24,14]}/><meshStandardMaterial color="#dcebf1" roughness={.75}/></mesh>
+ {/* Tailored white lab coat, collar and badge */}
+ <mesh position={[0,-1.53,.36]} scale={[.77,.92,.25]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#edf5f8" roughness={.55}/></mesh>
+ <mesh position={[0,-1.6,.53]} scale={[.18,.75,.035]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color={bad?'#9b2554':'#118eab'}/></mesh>
+ <mesh position={[bad?-.39:.39,-1.12,.55]} scale={[.24,.12,.02]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#3a5e7e"/></mesh>
+ <mesh position={[bad?-.39:.39,-1.12,.57]} scale={[.16,.028,.015]}><boxGeometry args={[1,1,1]}/><meshBasicMaterial color="#a5f6ff"/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*.42,-1.7,.56]} scale={[.21,.14,.02]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#c9dce3"/></mesh>)}
  {[-.22,.22].map((x,i)=><mesh key={i} position={[x,-.1,.53]} scale={[.06,.06,.025]}><sphereGeometry args={[1,12,12]}/><meshBasicMaterial color="#172036"/></mesh>)}
  <group ref={arm} position={[bad?.68:-.68,-.96,.3]}>
  <mesh position={[bad?.27:-.27,-.12,0]} rotation={[0,0,bad?-.65:.65]} scale={[.18,.75,.2]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
@@ -78,6 +100,10 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
 }
 function Scene({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){
  return <Canvas gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} dpr={[1,1.7]} camera={{position:[0,0,13.8],fov:52}}><ambientLight intensity={1.6}/><hemisphereLight args={['#b3deff','#4b153f',2]}/><pointLight position={[-5,5,6]} intensity={95} color="#64c6ff"/><pointLight position={[5,3,5]} intensity={95} color="#ff8dd4"/>
+ {/* Clinical overhead lighting and room furnishings */}
+ <mesh position={[0,4.4,-2.7]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[1.45,1.45,.14,48]}/><meshStandardMaterial color="#e5f5ff" emissive="#80c5ff" emissiveIntensity={.8}/></mesh>
+ <mesh position={[0,4.45,-2.5]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[1.24,.11,12,64]}/><meshStandardMaterial color="#f8fdff" emissive="#c7f1ff" emissiveIntensity={1.5}/></mesh>
+ <spotLight position={[0,5,4]} target-position={[0,0,0]} intensity={90} angle={.8} penumbra={.8} color="#eaf8ff"/>
  <group position={[0,.2,0]}><Patient state={state} now={now} cue={cue}/><Doctor side="bad" active={cue?.action==='extract'}/><Doctor side="good" active={cue?.action==='implant'}/></group>
  </Canvas>;
 }
