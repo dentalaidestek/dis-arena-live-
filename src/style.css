@@ -22,3 +22,5 @@ button:focus-visible{outline:3px solid #f9d17b;outline-offset:2px}
 .comment-demo input{min-width:0;flex:1;background:#091525;color:#fff;border:1px solid #6488a9;border-radius:8px;padding:11px;font-size:14px}
 .comment-demo button{border:1px solid #55c8e6;background:#175071;color:#fff;border-radius:8px;padding:8px;font-size:11px;font-weight:800}
 .comment-demo small{display:block;margin-top:7px;color:#9db5c8;font-size:10px}
+
+.replacement{margin-top:9px;display:flex;flex-direction:column;gap:5px}.replacement button{background:#62411b;border-color:#dfb45f;min-height:42px}.replacement button:disabled{opacity:.4;cursor:not-allowed}
