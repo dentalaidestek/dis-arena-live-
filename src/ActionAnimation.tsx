@@ -8,7 +8,7 @@ export type AnimationCue={id:number;action:Action;team:string;user:string;blocke
 export function toothPosition(index:number):[number,number,number]{const upper=index<16;const slot=index%16;const angle=(slot/15-.5)*Math.PI*.92;return [Math.sin(angle)*4.4,upper?1.15:-1.15,-Math.cos(angle)*1.5];}
 const GOOD=new Set<Action>(['heal','decayShield','fractureShield','implant']);
 const duration=3.5;
-export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComplete:(id:number)=>void}){
+export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|null;onComplete:(id:number)=>void;laneOffset?:number}){
  const group=useRef<THREE.Group>(null);
  const tool=useRef<THREE.Group>(null);
  const progress=useRef(0);
@@ -26,7 +26,7 @@ export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComple
   group.current.visible=t<1;
   const [tx,ty,tz]=toothPosition(cue.targetId);
   const approach=Math.min(entrance,exit);
-  group.current.position.x=THREE.MathUtils.lerp(side*5.7,tx+side*.85,approach);
+  group.current.position.x=THREE.MathUtils.lerp(side*(5.7+laneOffset),tx+side*(.85+laneOffset),approach);
   group.current.position.y=THREE.MathUtils.lerp(-.7,ty-.3,approach)+Math.sin(Math.min(t,1)*Math.PI)*.1;
   group.current.position.z=THREE.MathUtils.lerp(2.3,tz+1.2,approach);
   group.current.rotation.y=-side*.25;
