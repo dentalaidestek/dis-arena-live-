@@ -5,6 +5,8 @@ import{Text}from'@react-three/drei';
 import*as THREE from'three';
 import{initialTeeth}from'./engine';
 import{DentalProcedureFX}from'./DentalProcedureFX';
+import{ActionCharacter}from'./ActionAnimation';
+import{TreatmentScene}from'./TreatmentScene';
 import{ProcedureBroadcast}from'./ProcedureBroadcast';
 import{DoctorPortrait}from'./DoctorPortrait';
 import type{AnimationCue}from'./ActionAnimation';
@@ -34,7 +36,7 @@ function Mouth({state,now,cues,onEffectDone}:{state:CoinArena;now:number;cues:An
  <mesh position={[0,1.75,-.85]} scale={[5.3,.44,1.7]}><sphereGeometry args={[1,32,16]}/><meshStandardMaterial color="#a64c62" roughness={.65}/></mesh>
  <mesh position={[0,-1.75,-.85]} scale={[5.3,.44,1.7]}><sphereGeometry args={[1,32,16]}/><meshStandardMaterial color="#a64c62" roughness={.65}/></mesh>
  {TEETH.filter(t=>POSITIONS.includes(t.id)).map(t=>{const p=positions.get(t.id);return <Tooth3D key={t.id} id={t.id} username={p?.username} coins={p?.coins} rank={p?.rank} locked={!!p&&isLocked(p,now)} highlight={!!p&&p.rank<4}/>})}
- {cues.map(c=><DentalProcedureFX key={c.id} cue={c} onDone={onEffectDone}/>)}
+ {cues.map((c,i)=><React.Fragment key={c.id}><ActionCharacter cue={c} laneOffset={i%2===0?-.25:.25} onComplete={onEffectDone}/><TreatmentScene cue={c}/><DentalProcedureFX cue={c} onDone={()=>{}}/></React.Fragment>)}
  </Canvas>;
 }
 function App(){
