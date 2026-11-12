@@ -45,8 +45,8 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
   <mesh position={[0,1.2,-.02]} scale={[.34,.16,.34]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color={good?'#283b4b':'#343039'}/></mesh>
   <mesh position={[-.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
   <mesh position={[.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
-  <mesh position={[good?-.37:.37,.15,0]} rotation={[0,0,good?-.5:.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
-  <mesh position={[good?.37:-.37,.15,0]} rotation={[0,0,good?.5:-.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
+  <mesh position={[good ? -.37 : .37,.15,0]} rotation={[0,0,good ? -.5 : .5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
+  <mesh position={[good ? .37 : -.37,.15,0]} rotation={[0,0,good ? .5 : -.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
   <group ref={tool} position={[good?-.46:.46,.35,.12]} rotation={[0,0,good?-.45:.45]}>
    <mesh><capsuleGeometry args={[.1,.6,4,8]}/><meshStandardMaterial color={accent} metalness={.6} roughness={.25} emissive={accent} emissiveIntensity={.35}/></mesh>
    <pointLight color={accent} intensity={2} distance={2}/>
