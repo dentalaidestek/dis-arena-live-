@@ -17,10 +17,10 @@ export function DentalProcedureFX({cue,onDone}:{cue:AnimationCue;onDone:(id:numb
  const healing=!cue.blocked&&['heal','implant'].includes(cue.action);
  const shielding=cue.blocked||cue.action==='decayShield'||cue.action==='fractureShield';
  const tint=hostile?'#ff405d':shielding?'#65d8ff':'#45ffb2';
- const particles=Array.from({length:fracture?12:8},(_,i)=>{
+ const particles=React.useMemo(()=>Array.from({length:fracture?12:8},(_,i)=>{
   const a=i*Math.PI*2/(fracture?12:8);
   return {a,dist:.48+(i%3)*.16,scale:.075+(i%4)*.025};
- });
+ }),[fracture]);
  useFrame((_,dt)=>{
   clock.current+=Math.min(dt,.06);
   const t=clock.current;
