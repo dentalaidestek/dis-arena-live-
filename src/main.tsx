@@ -16,8 +16,15 @@ function ToothMesh({tooth,index,selected,select,owner}:{tooth:Tooth;index:number
  useFrame(({clock})=>{if(ref.current)ref.current.scale.setScalar(selected?1+.035*Math.sin(clock.elapsedTime*4):1)});
  const color=tooth.hp>75?'#f5eedd':tooth.hp>40?'#c5ad7c':tooth.hp>20?'#906947':'#4a342f';
  return <group ref={ref} position={[x,y,z]} rotation={[0,-angle,0]} onClick={e=>{e.stopPropagation();select(tooth.id)}}>
- <mesh scale={[.47,.52,.47]} position={[0,top?.1:-.1,0]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color={tooth.extracted?'#384153':color} transparent opacity={tooth.extracted?.12:1} roughness={.36}/></mesh>
- {!tooth.extracted&&<mesh position={[0,top?-.33:.33,0]} scale={[.23,.35,.24]}><cylinderGeometry args={[.65,.3,1,10]}/><meshStandardMaterial color="#d9cbb9"/></mesh>}
+ {/* Anatomical crown: four cusps, cervical neck and tapered separated roots */}
+ <mesh scale={[.42,.43,.37]} position={[0,top?.08:-.08,0]}><sphereGeometry args={[1,24,18]}/><meshPhysicalMaterial color={tooth.extracted?'#384153':color} transparent opacity={tooth.extracted?.13:1} roughness={.28} clearcoat={.5}/></mesh>
+ {!tooth.extracted&&<>
+  {[-1,1].map(s=><React.Fragment key={s}>
+   <mesh position={[s*.19,top?.37:-.37,.13]} scale={[.21,.19,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color={color} roughness={.3}/></mesh>
+   <mesh position={[s*.16,top?-.37:.37,-.02]} rotation={[0,0,s*.12]} scale={[.15,.37,.16]}><coneGeometry args={[1,1,16]}/><meshStandardMaterial color="#ded3bf" roughness={.48}/></mesh>
+  </React.Fragment>)}
+  <mesh position={[0,top?.22:-.22,-.17]} scale={[.3,.22,.2]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color={color} roughness={.3}/></mesh>
+ </>}
  {tooth.hp<75&&!tooth.extracted&&<mesh position={[.14,.12,.39]} scale={[.12+(.75-tooth.hp/100)*.12,.13,.035]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color="#32221c"/></mesh>}
  {tooth.fractureHits>0&&!tooth.extracted&&<mesh position={[-.12,.1,.43]} rotation={[0,0,.6]} scale={[.022,.34,.022]}><boxGeometry/><meshBasicMaterial color="#3e2522"/></mesh>}
  <Text position={[0,top?.72:-.72,.12]} fontSize={.19} color={selected?'#5ce8ff':'#fff'} anchorX="center">{String(index+1)}</Text><Text position={[0,top?.94:-.94,.13]} fontSize={.15} maxWidth={1.5} color={owner==='SAHİPSİZ'?'#8ca2b7':'#ffda88'} anchorX="center">{owner==='SAHİPSİZ'?'':owner.slice(0,13)}</Text>
