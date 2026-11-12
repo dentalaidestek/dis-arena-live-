@@ -8,9 +8,9 @@ export const emptyAnimationState=():AnimationState=>({active:[],waiting:[]});
 export function enqueueAnimation(state:AnimationState,cue:AnimationCue):AnimationState{
  const lane=laneOf(cue.action);
  const occupied=state.active.filter(c=>laneOf(c.action)===lane).length;
- const conflicts=state.active.some(c=>c.targetId===cue.targetId);
- if(occupied<MAX_PER_SIDE&&!conflicts)return {...state,active:[...state.active,cue]};
- return {...state,waiting:[...state.waiting,cue].slice(-MAX_WAITING)};
+ const conflicts=state.active.some(c=>c.targetId===cue.targetId)||state.waiting.some(c=>c.targetId===cue.targetId);
+ if(occupied<MAX_PER_SIDE&&!conflicts&&state.waiting.length===0)return {...state,active:[...state.active,cue]};
+ return {...state,waiting:state.waiting.length>=MAX_WAITING?state.waiting:[...state.waiting,cue]};
 }
 export function finishAnimation(state:AnimationState,id:number):AnimationState{
  if(!state.active.some(c=>c.id===id))return state;
