@@ -9,12 +9,14 @@ import json
 import os
 import sys
 import time
+import random
 from TikTokLive import TikTokLiveClient
 from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent
 from websockets.asyncio.server import serve
 
 PORT = int(os.environ.get('ARENA_WS_PORT', '8765'))
 CLIENTS = set()
+LIVE_STATE = {'type': 'status', 'state': 'live-disconnected'}
 
 async def broadcast(message):
     payload = json.dumps(message, ensure_ascii=False)
@@ -27,7 +29,7 @@ async def broadcast(message):
 async def websocket_handler(ws):
     CLIENTS.add(ws)
     try:
-        await ws.send(json.dumps({'type': 'status', 'state': 'bridge-connected'}))
+        await ws.send(json.dumps(LIVE_STATE, ensure_ascii=False))
         async for _ in ws:
             pass  # Browser cannot inject gift events into TikTok.
     finally:
@@ -41,13 +43,15 @@ async def main():
 
     @client.on(ConnectEvent)
     async def on_connect(event):
+        LIVE_STATE.update({'state': 'live-connected', 'username': username})
         print('LIVE connected:', username, flush=True)
-        await broadcast({'type': 'status', 'state': 'live-connected', 'username': username})
+        await broadcast(LIVE_STATE)
 
     @client.on(DisconnectEvent)
     async def on_disconnect(event):
+        LIVE_STATE.update({'state': 'live-disconnected'})
         print('LIVE disconnected', flush=True)
-        await broadcast({'type': 'status', 'state': 'live-disconnected'})
+        await broadcast(LIVE_STATE)
 
     @client.on(GiftEvent)
     async def on_gift(event):
@@ -79,7 +83,25 @@ async def main():
 
     print(f'Local bridge ws://127.0.0.1:{PORT} | TikTok @{username}', flush=True)
     async with serve(websocket_handler, '127.0.0.1', PORT):
-        await client.start()
+        retry = 0
+        while True:
+            try:
+                await client.start()
+                retry = 0
+                print('LIVE session ended; reconnecting...', flush=True)
+            except (KeyboardInterrupt, asyncio.CancelledError):
+                raise
+            except Exception as exc:
+                LIVE_STATE.update({'state': 'live-disconnected'})
+                await broadcast(LIVE_STATE)
+                print('LIVE connection error:', type(exc).__name__, str(exc)[:200], flush=True)
+            retry += 1
+            delay = min(60, 2 ** min(retry, 5)) + random.uniform(0, 1)
+            await asyncio.sleep(delay)
+            client = TikTokLiveClient(unique_id='@' + username)
+            client.add_listener(ConnectEvent, on_connect)
+            client.add_listener(DisconnectEvent, on_disconnect)
+            client.add_listener(GiftEvent, on_gift)
 
 if __name__ == '__main__':
     asyncio.run(main())
