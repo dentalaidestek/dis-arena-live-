@@ -25,8 +25,8 @@ export const SCREENSHOT_GIFTS=[
  {name:'Parfüm',coins:20},{name:'LOL',coins:20},{name:'Minik Allık',coins:20},{name:'Buket',coins:20},
  {name:'Donat',coins:30},{name:'Çay',coins:50},{name:'Harika',coins:88},
  {name:'Şapka ve Bıyık',coins:99},{name:'Konfeti',coins:100},
- {name:'Öpücük',coins:150},{name:'Gece Yıldızı',coins:199},
- {name:'TikTok',coins:1},{name:'Lale',coins:1},{name:'Göz kırpma',coins:1},{name:'Süpersin',coins:1},{name:'Deniz Kabuğu',coins:1},{name:'Denizyıldızı',coins:1},{name:'Rüzgâr gülü',coins:1},{name:'Hazine Yoncası',coins:1},{name:'Karşılama Kahvesi',coins:1},
- {name:'Aşk Kokusu',coins:5},{name:'Dondurma',coins:5},{name:'Tamam',coins:5},{name:'Şeftali',coins:5},{name:'Türk kahvesi',coins:5},
- {name:'Dostluk Kolyesi',coins:10},{name:'Filtre Kahve',coins:10},{name:'Cesaret iksiri',coins:10}
+ {name:'Öpücük',coins:150},{name:'Sceptre',coins:150},{name:'Elle Kalp',coins:100},{name:'Gece Yıldızı',coins:199},
+ {name:'Pasta Dilimi',coins:1},{name:'Blue Bead',coins:1},{name:'Pati',coins:1},{name:'Parlıyorsun!',coins:1},{name:'Türk kahvesi',coins:1},{name:'TikTok',coins:1},{name:'Lale',coins:1},{name:'Göz kırpma',coins:1},{name:'Süpersin',coins:1},{name:'Deniz Kabuğu',coins:1},{name:'Denizyıldızı',coins:1},{name:'Rüzgâr gülü',coins:1},{name:'Hazine Yoncası',coins:1},{name:'Karşılama Kahvesi',coins:1},
+ {name:'Bir Daha Bileti',coins:5},{name:'Dönen Top',coins:5},{name:'İsimle selamlama',coins:5},{name:'Aşk Kokusu',coins:5},{name:'Dondurma',coins:5},{name:'Tamam',coins:5},{name:'Şeftali',coins:5},{name:'Türk kahvesi',coins:5},
+ {name:'Rosa',coins:10},{name:'Yolculuk Bileti',coins:10},{name:'Dostluk Kolyesi',coins:10},{name:'Filtre Kahve',coins:10},{name:'Cesaret iksiri',coins:10}
 ] as const;
