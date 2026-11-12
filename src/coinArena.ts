@@ -7,7 +7,7 @@ export type Player={userId:string;username:string;coins:number;joinedAt:number;l
 export type CoinArena={version:2;roundId:string;startedAt:number;players:Player[];processedIds:string[];history:string[]};
 export type Gift={eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number};
 export type GiftResult={state:CoinArena;accepted:boolean;message:string;action:'extract'|'implant'|'score'|'blocked'|'none';targetId:number|null};
-export const newCoinArena=(now:number=Date.now()):CoinArena=>({version:2,roundId:'round-'+now,startedAt:now,players:[],processedIds:[],history:[]});
+export const newCoinArena=(now:number=0):CoinArena=>({version:2,roundId:'round-'+now,startedAt:now,players:[],processedIds:[],history:[]});
 export const ranked=(state:CoinArena)=>[...state.players].sort((a,b)=>b.coins-a.coins||a.joinedAt-b.joinedAt||a.userId.localeCompare(b.userId));
 export const isLocked=(p:Player,now:number)=>p.lockedUntil>now;
 export const timeLeft=(state:CoinArena,now:number)=>Math.max(0,ROUND_MS-(now-state.startedAt));
@@ -18,9 +18,9 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  const fail=(message:string):GiftResult=>({state,accepted:false,message,action:'none',targetId:null});
  if(!gift.eventId||gift.eventId.length>128||!gift.userId||!gift.username||!Number.isSafeInteger(gift.coins)||gift.coins<=0||!Number.isFinite(gift.timestamp))return fail('Geçersiz hediye');
  if(state.processedIds.includes(gift.eventId))return fail('Tekrarlanan hediye');
- if(gift.timestamp<state.startedAt||timeLeft(state,gift.timestamp)===0)return fail('Tur sona erdi');
+ if(state.startedAt>0&&(gift.timestamp<state.startedAt||timeLeft(state,gift.timestamp)===0))return fail('Tur sona erdi');
  const tea=TEA_NAMES.includes(gift.giftName.trim().toLocaleLowerCase('tr-TR'))&&gift.coins===TEA_COINS;
- const players=state.players.map(p=>({...p}));let sender=players.find(p=>p.userId===gift.userId);
+ const startedAt=state.startedAt||gift.timestamp;const players=state.players.map(p=>({...p}));let sender=players.find(p=>p.userId===gift.userId);
  if(!sender){sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0};players.push(sender);}
  sender.username=gift.username;
  let action:GiftResult['action']='score',targetId:number|null=null;
@@ -40,6 +40,6 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
    else message='☕ @'+sender.username+' +50 jeton (çekilebilecek rakip yok)';
   }else message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
  }
- const next={...state,players,processedIds:[...state.processedIds,gift.eventId].slice(-10000),history:[message,...state.history].slice(0,12)};
+ const next={...state,startedAt,players,processedIds:[...state.processedIds,gift.eventId].slice(-10000),history:[message,...state.history].slice(0,12)};
  return {state:next,accepted:true,message,action,targetId};
 }
