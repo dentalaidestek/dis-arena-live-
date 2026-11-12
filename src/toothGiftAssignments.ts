@@ -1,4 +1,5 @@
-import {SCREENSHOT_GIFTS,claimPrice,toothPriceBand} from './toothEconomy';
+import {WISDOM_TOOTH_IDS} from './engine';
+import {SCREENSHOT_GIFTS,claimPrice} from './toothEconomy';
 /** Explicit one-gift-to-one-tooth mapping. No random assignment or reused gift names. */
 export type ToothGiftAssignment={toothId:number;giftName:string;coins:number};
 export function validateToothGiftAssignments(input:unknown):ToothGiftAssignment[]{
@@ -24,11 +25,11 @@ export function findAssignedTooth(assignments:ToothGiftAssignment[],giftName:str
 /** Fixed assignments. Each upper tooth has a lower counterpart of equal coin price. */
 export function initialToothGiftAssignments():ToothGiftAssignment[]{
  const pairs:[number,number,string,string][]=[
-  [0,16,'Gül','GG'],[1,17,'Dondurma Külahı','Lale'],[2,18,'Göz kırpma','Rüzgâr gülü'],
+  [1,17,'Dondurma Külahı','Lale'],[2,18,'Göz kırpma','Rüzgâr gülü'],
   [3,19,'Finger Heart','Aşırı tepki'],[4,20,'Aşk Kokusu','Bir Daha Bileti'],[5,21,'Dönen Top','İsimle selamlama'],
   [6,22,'Parfüm','LOL'],[7,23,'Çay',''],[8,24,'',''],[9,25,'Minik Allık','Buket'],
   [10,26,'Kalp','Meraklı Twinkle'],[11,27,'Ağır çekim','Rosa'],[12,28,'Yıldızıma Tebrikler','Bravo!'],
-  [13,29,'Pasta Dilimi','Blue Bead'],[14,30,'Pati','Parlıyorsun!'],[15,31,'Karşılama Kahvesi','Denizyıldızı']
+  [13,29,'Pasta Dilimi','Blue Bead'],[14,30,'Pati','Parlıyorsun!']
  ];
  const prices=new Map<string,number>(SCREENSHOT_GIFTS.map(g=>[g.name.toLocaleLowerCase('tr-TR'),g.coins]));
  const proposed=pairs.flatMap(([upper,lower,a,b])=>[
