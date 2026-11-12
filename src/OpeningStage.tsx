@@ -1,5 +1,6 @@
 import type {AnimationCue} from './ActionAnimation';
 import type {Action} from './engine';
+import type {ProcedureGiftRule} from './procedureGifts';
 import {doctorRole} from './ActionAnimation';
 import {DoctorPortrait} from './DoctorPortrait';
 
@@ -12,12 +13,12 @@ export const OPENING_CAST=[
  {name:'Dr. Ekstraksiyon',job:'ÇEKİM',action:'extract' as Action,side:'bad' as const},
 ];
 /** Stage-only gift hints; final LIVE action prices must come from server-side mapping. */
-export function OpeningStage({cues=[]}:{cues?:AnimationCue[]}){
+export function OpeningStage({cues=[],giftRules=[]}:{cues?:AnimationCue[];giftRules?:ProcedureGiftRule[]}){
  const good=OPENING_CAST.filter(c=>c.side==='good'),bad=OPENING_CAST.filter(c=>c.side==='bad');
  const group=(items:typeof OPENING_CAST,side:'good'|'bad')=><div className={'opening-cast '+side}>
   <h2>{side==='good'?'✚ İYİ EKİP':'☣ KÖTÜ EKİP'}</h2>
   {items.map(person=>{const current=cues.find(c=>(c.blocked?'Dr. Periodonti':doctorRole(c.action))===person.name);return <div className={'opening-doctor'+(current?' opening-doctor-active':'')} key={person.name}>
-   <DoctorPortrait side={side} role={person.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 İŞLEM HEDİYESİ: AYARLANACAK</small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
+   <DoctorPortrait side={side} role={person.action}/><div className="opening-activity-glow" aria-hidden="true"/><div className="opening-doctor-label"><strong>{person.name}</strong><span>{person.job}</span><small className="opening-gift">🎁 {giftRules.find(r=>r.action===person.action||person.name==='Dr. Periodonti'&&r.action==='decayShield')?.giftName??'HEDİYE AYARLANMADI'}</small>{current&&<div className="opening-doctor-live">● DİŞ {current.targetId+1} · {current.blocked?'ENGELLENDİ':'İŞLEMDE'}</div>}</div>
   </div>})}
  </div>;
  return <section className="opening-stage" aria-label="Diş Arena canlı yayın açılış sahnesi">
