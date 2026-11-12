@@ -17,7 +17,7 @@ describe('eş zamanlı iyi ve kötü hekimler',()=>{
  });
  it('bir tarafta iki karakter oynar üçüncü bekler',()=>{
   let s=emptyAnimationState();
-  for(let i=0;i<3;i++)s=enqueueAnimation(s,cue(i+1,'fracture',i));
+  for(const x of [cue(1,'fracture',0),cue(2,'decay',1),cue(3,'extract',2)])s=enqueueAnimation(s,x);
   assert.equal(s.active.length,2);assert.equal(s.waiting.length,1);
   s=finishAnimation(s,1);assert.equal(s.active.length,2);assert.equal(s.waiting.length,0);
  });
@@ -32,7 +32,7 @@ describe('eş zamanlı iyi ve kötü hekimler',()=>{
  });
  it('kalabalık kuyruk eski animasyonları sessizce kaybetmez',()=>{
   let s=emptyAnimationState();
-  for(let i=0;i<70;i++)s=enqueueAnimation(s,cue(i+1,'decay',i%32));
+  for(let i=0;i<70;i++)s=enqueueAnimation(s,cue(i+1,i%2?'fracture':'decay',i%32));
   assert.equal(s.active.length+s.waiting.length,70);
  });
  it('bitmiş animasyon tekrar bitirilirse durum değişmez',()=>{
@@ -71,5 +71,31 @@ describe('savunma ve sıfırlama yarış koşulları',()=>{
   s=finishAnimation(s,3);
   assert.equal(s.active.length,4);
   assert.equal(s.waiting.length,0);
+ });
+});
+
+describe('hekim tekilliği ve kuyruk adaleti',()=>{
+ it('aynı hekim farklı iki dişe eş zamanlı müdahale etmez',()=>{
+  let s=enqueueAnimation(emptyAnimationState(),cue(101,'heal',1));
+  s=enqueueAnimation(s,cue(102,'heal',2));
+  assert.deepEqual(s.active.map(c=>c.id),[101]);
+  assert.deepEqual(s.waiting.map(c=>c.id),[102]);
+  s=finishAnimation(s,101);
+  assert.deepEqual(s.active.map(c=>c.id),[102]);
+ });
+ it('çürük ve kırık koruması aynı uzmanı aynı anda kullanmaz',()=>{
+  let s=enqueueAnimation(emptyAnimationState(),cue(201,'decayShield',1));
+  s=enqueueAnimation(s,cue(202,'fractureShield',2));
+  assert.equal(s.active.length,1);
+  assert.equal(s.waiting.length,1);
+ });
+ it('bekleyen eski aynı-diş işlemi daha yeni işlem tarafından geçilmez',()=>{
+  let s=enqueueAnimation(emptyAnimationState(),cue(301,'decay',1));
+  s=enqueueAnimation(s,cue(302,'heal',1));
+  s=enqueueAnimation(s,cue(303,'fracture',1));
+  s=finishAnimation(s,301);
+  assert.deepEqual(s.active.map(c=>c.id),[302]);
+  s=finishAnimation(s,302);
+  assert.deepEqual(s.active.map(c=>c.id),[303]);
  });
 });
