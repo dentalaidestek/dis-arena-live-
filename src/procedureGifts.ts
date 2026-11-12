@@ -1,3 +1,4 @@
+import {procedurePrice} from './toothEconomy';
 import type {Action} from './engine';
 import type {ArenaSnapshot} from './runtime';
 import type {GiftEvent} from './giftClaims';
@@ -32,11 +33,11 @@ export function chooseProcedureTarget(snapshot:ArenaSnapshot,event:GiftEvent,act
  const owned=Object.entries(snapshot.owners).find(([,owner])=>owner.userId===event.userId);
  const ownId=owned?Number(owned[0]):null;
  if(action==='implant'){
-  if(ownId!==null&&snapshot.teeth[ownId]?.extracted)return ownId;
+  if(ownId!==null&&snapshot.teeth[ownId]?.extracted&&event.coins>=procedurePrice(ownId,action))return ownId;
   return null;
  }
- if(['heal','decayShield','fractureShield'].includes(action)&&ownId!==null&&!snapshot.teeth[ownId].extracted)return ownId;
- const eligible=snapshot.teeth.filter(t=>!t.extracted&&(action!=='extract'||t.hp<=20)&&(action!=='heal'||t.hp<100)&&(ownId===null||['heal','decayShield','fractureShield'].includes(action)||t.id!==ownId));
+ if(['heal','decayShield','fractureShield'].includes(action)&&ownId!==null&&!snapshot.teeth[ownId].extracted)return event.coins>=procedurePrice(ownId,action)?ownId:null;
+ const eligible=snapshot.teeth.filter(t=>event.coins>=procedurePrice(t.id,action)&&!t.extracted&&(action!=='extract'||t.hp<=20)&&(action!=='heal'||t.hp<100)&&(ownId===null||['heal','decayShield','fractureShield'].includes(action)||t.id!==ownId));
  if(!eligible.length)return null;
  const seed=event.eventId+'|'+event.userId;
  let hash=2166136261;
