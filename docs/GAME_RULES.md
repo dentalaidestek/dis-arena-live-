@@ -1,8 +1,8 @@
-# DİŞ ARENA — OYUN KURALLARI (v0.3, yerel demo)
+# SON DİŞ AYAKTA — OYUN KURALLARI (v0.4, yerel demo)
 
 ## Kesinleşen temel kurallar
 - Dikey 9:16 yayın, merkezde anatomik 32 dişli ağız; büyük gerçekçi insan yüzü yok.
-- Her diş tek takıma aittir. Kulüp listesi ve arma/forma lisansları yayından önce kesinleştirilecek.
+- Her diş tek bir izleyici hesabına aittir. Sahiplik TikTok kullanıcı adıyla gösterilir, eşsiz kullanıcı ID'siyle korunur. Bir kullanıcı yalnız bir diş alabilir; çekilen diş başka kullanıcıya verilmez.
 - Her diş 100 HP başlar. 0 HP otomatik çekim değildir.
 - Çürütme: -10 HP; kırma: -30 HP; tedavi: +25 HP, en fazla 100.
 - Çürük kalkanı yalnız çürütmeyi; kırık kalkanı yalnız kırmayı engeller. Kalkan süreli değil, saldırı başına 1 azalır.
@@ -10,7 +10,7 @@
 - Çekim ancak 20 HP veya altında yapılabilir. Çekilmiş dişe yalnız implant uygulanır.
 - İmplant dişi 50 HP ile geri getirir, eski iz ve kalkanları sıfırlar.
 - Aktif diş sayısı sekize indiğinde implant kilitlenir; iki dişte final başlar. Tek diş kalınca kazanan belirlenir ve tur biter.
-- Bütün dişler eşitken lider yoktur; eşit liderlikte önceki lider korunabilir. Lider karakter takım forması giyer.
+- Bütün dişler eşitken lider yoktur; eşit liderlikte önceki lider korunabilir. Lider karakter diş sahibinin kullanıcı adını gösterir.
 - Kullanıcı adı/avatar kartı eylemle görünür; TikTok'ta olmayan ad-soyad uydurulmaz.
 - Kötü karakterler çürütme/kırma/çekim, iyi karakterler tedavi/koruma/implant işlemlerini sahnede yapar.
 - Oyun durumu animasyonun bitmesini beklemez; efektler ayrı kuyrukta oynar.
@@ -26,13 +26,20 @@
 ## Turnuva evreleri
 - 32 → 16 → 8 → 4 → 2 → 1 aktif diş. Bunlar eleme sayacı eşikleridir; eşleşmeli futbol fikstürü değildir.
 - Son 8'e girince implant yasaktır; son iki dişte büyük final, tek dişte şampiyonluk ekranı gösterilir.
-- Tüm kulüplerin bir dişle temsil edilmesi zorunludur. Süper Lig'deki tüm takımlar ve alt liglerden taraftar kitlesi güçlü takımlar 32 kontenjana yerleşir; resmi sezon kadrosu doğrulanmadan örnek liste kesin kabul edilmez.
+- 32 kontenjan izleyici kullanıcı adlarına ayrılır; futbol kulüpleri artık oyunun sahibi değildir.
 
 ## Eş zamanlı eylem ve animasyon
 - Olaylar tekil kimlik ile oyun durumuna geliş sırasıyla uygulanır. Aynı dişte önce kalkan sonra saldırı ile önce saldırı sonra kalkan farklı sonuç verir.
 - İyi ve kötü ekipler aynı anda sahneye çıkabilir: her tarafta en fazla iki hekim, toplam dört hekim.
 - Farklı dişlere eş zamanlı görsel işlem yapılabilir. Aynı dişin animasyonları geliş sırasını korur.
 - Kuyruk doluluğunda görsel işlemler sessizce silinmez. Bu bir prototip uygulamasıdır; kalıcı sunucu kuyruğu ve yük testleri yayından önce gereklidir.
+
+## Diş sahiplenme
+- Sahiplenme 32 dişle sınırlıdır, diş seçimi yayıncı test panelinden simüle edilir.
+- Ücretsiz sahiplenme ve yerel test modu mevcut. Ön kesiciler için premium hediye fikri gerçek fiyat veya etkin TikTok eşlemesi değildir.
+- Çekilen diş son 8'e kadar implantla 50 HP ile geri dönebilir ve aynı kullanıcıya ait kalır. Son 8'de implant yasaktır.
+- Kazanan son aktif dişin sahibidir; diş sahipsizse kullanıcı şampiyonluğu verilmez.
+- Ücretli hediye üzerinden sahiplenme, satın alma, ödül veya şans oyunu entegrasyonu platform/hukuk kontrolü olmadan açılmaz.
 
 ## Platform ve yayın sınırı
 Gerçek TikTok hediye eşlemesi kapalıdır. Yetkili olay erişimi ve güncel platform politikaları doğrulanmadan hediyelerin sonucu değiştirmesi etkinleştirilmeyecek. Bahis, ödül karşılığı hediye ve yanıltıcı hediye teşviki yoktur.
