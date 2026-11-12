@@ -8,15 +8,16 @@ const gold='#ffcf56';
 function Tooth({id,rank,name,coins,locked,now,activeCue}:{id:number;rank?:number;name?:string;coins?:number;locked:boolean;now:number;activeCue?:AnimationCue}){
  const upper=id<16;const slot=upper?id:id-16;const angle=(slot-7.5)/7.5*1.13;const x=Math.sin(angle)*3.5;const z=Math.cos(angle)*.65;
  const y=upper?-.12:.12;const size=upper?1:.83;const champion=rank!==undefined&&rank<4;
- const group=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse)}});
- const affected=activeCue?.targetId===id;
+ const group=useRef<THREE.Group>(null);const affected=activeCue?.targetId===id;
+ useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse);if(affected){const t=clock.elapsedTime;group.current.rotation.z=Math.sin(t*13)*.08;group.current.position.z=z+.18+.12*Math.sin(t*9)}else{group.current.rotation.z=0;group.current.position.z=z}}});
  return <group ref={group} position={[x,y,z]} rotation={[0,-angle*.42,0]} scale={size}>
  {champion&&<><mesh position={[0,upper?.48:-.48,-.1]}><torusGeometry args={[.31,.035,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffbf44" intensity={1.7} distance={1.4}/></>}
  {locked?<><mesh position={[0,upper?-.09:.09,.08]}><sphereGeometry args={[.17,16,12]}/><meshStandardMaterial color="#741a38"/></mesh><Text position={[0,0,.4]} fontSize={.24} color="#ff6685">✕</Text></>:<mesh position={[0,upper?-.1:.1,0]} scale={[.23,.37,.26]}><sphereGeometry args={[1,24,20]}/><meshPhysicalMaterial color="#fff5e9" roughness={.22} clearcoat={.8}/></mesh>}
  {name&&<group position={[0,upper?-.53:.53,.34]}><mesh scale={[.45,.19,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#654117':'#172747'} transparent opacity={.94}/></mesh><Text position={[0,.055,.025]} fontSize={.13} maxWidth={.8} color="#ffffff" anchorX="center">{name.slice(0,9)}</Text><Text position={[0,-.075,.025]} fontSize={.11} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
  {champion&&<Text position={[0,upper?.69:-.69,.25]} fontSize={.27} color={gold}>♛{(rank??0)+1}</Text>}
- {affected&&<mesh position={[0,0,.18]}><torusGeometry args={[.35,.035,8,32]}/><meshBasicMaterial color={activeCue?.action==='extract'?'#ff365d':'#53ffbd'}/></mesh>}
+ {affected&&<><mesh position={[0,0,.18]}><torusGeometry args={[.35,.035,8,32]}/><meshBasicMaterial color={activeCue?.action==='extract'?'#ff365d':'#53ffbd'}/></mesh>
+ {activeCue?.action==='implant'&&<group position={[0,0,.34]} rotation={[Math.PI/2,0,0]}><mesh><cylinderGeometry args={[.1,.12,.47,16]}/><meshStandardMaterial color="#a5c8d9" metalness={.95} roughness={.17}/></mesh>{[-.17,-.09,0,.09,.17].map(i=><mesh key={i} position={[0,i,0]}><torusGeometry args={[.115,.018,6,18]}/><meshStandardMaterial color="#effaff" metalness={.85}/></mesh>)}</group>}
+ </>}
  </group>;
 }
 function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){
@@ -42,15 +43,17 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
   <mesh position={[side*1.45,1.66,-.32]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>
   <mesh position={[side*2.85,.03,-.03]} scale={[.55,.75,.2]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color="#d99480" transparent opacity={.56}/></mesh>
  </React.Fragment>)}
+ {/* Mouth cavity with shaded gingival rim */}
+ <mesh position={[0,-.14,-.04]} scale={[3.82,1.82,.24]}><sphereGeometry args={[1,64,32]}/><meshPhysicalMaterial color="#a63e58" roughness={.45} clearcoat={.2}/></mesh>
  {/* Open mouth cavity and lips */}
  <mesh position={[0,-.12,-.19]} scale={[3.68,1.64,.29]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#b84b62" roughness={.45}/></mesh>
  <mesh position={[0,-.13,.06]} scale={[3.48,1.43,.18]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#200616" roughness={.8}/></mesh>
  <mesh position={[0,-.87,.23]} scale={[2.08,.42,.23]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#c95776" roughness={.66}/></mesh>
- <mesh position={[0,.49,.15]} scale={[3.3,.35,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
- <mesh position={[0,-.72,.16]} scale={[3.25,.33,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
+ <mesh position={[0,.79,.19]} scale={[3.08,.25,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
+ <mesh position={[0,-1.07,.17]} scale={[3.07,.24,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
  {/* Separate anatomically arranged upper/lower rows, each 14 teeth */}
- <group position={[0,.53,.34]}>{teeth.filter(id=>id<16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
- <group position={[0,-.76,.38]}>{teeth.filter(id=>id>=16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
+ <group position={[0,.53,.48]}>{teeth.filter(id=>id<16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
+ <group position={[0,-.76,.48]}>{teeth.filter(id=>id>=16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
  </group>;
 }
 function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
