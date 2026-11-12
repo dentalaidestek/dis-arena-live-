@@ -25,12 +25,23 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  const jaw=useRef<THREE.Group>(null);
  useFrame(({clock})=>{if(jaw.current)jaw.current.rotation.x=Math.sin(clock.elapsedTime*.7)*.012});
  return <group ref={jaw} position={[0,-.05,0]}>
+ {/* Dental chair and patient's shoulders */}
+ <mesh position={[0,-3.45,-2.5]} scale={[3.8,1.6,.55]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#3e7d9b" roughness={.5}/></mesh>
+ <mesh position={[0,-2.8,-2.1]} scale={[2.1,1.2,.6]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e8a587"/></mesh>
  {/* Patient head and cheeks, viewed face-on */}
  <mesh position={[0,0,-1.18]} scale={[4.6,3.5,.83]}><sphereGeometry args={[1,56,36]}/><meshStandardMaterial color="#e9a888" roughness={.73}/></mesh>
  <mesh position={[-3.9,-.12,-.35]} scale={[.9,1.9,.9]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#df987e"/></mesh>
  <mesh position={[3.9,-.12,-.35]} scale={[.9,1.9,.9]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#df987e"/></mesh>
  <mesh position={[0,2.1,-.42]} scale={[.9,.95,.9]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#d99479"/></mesh>
  <mesh position={[0,2.45,.35]} scale={[.68,.21,.35]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
+ {/* Patient's eyes, brows and cheek details */}
+ {[-1,1].map(side=><React.Fragment key={side}>
+  <mesh position={[side*1.45,1.25,-.35]} scale={[.67,.28,.17]}><sphereGeometry args={[1,28,16]}/><meshStandardMaterial color="#f5f0eb"/></mesh>
+  <mesh position={[side*1.45,1.25,-.16]} scale={[.16,.21,.06]}><sphereGeometry args={[1,20,16]}/><meshStandardMaterial color="#3b6175"/></mesh>
+  <mesh position={[side*1.45,1.25,-.08]} scale={[.08,.12,.03]}><sphereGeometry args={[1,16,12]}/><meshBasicMaterial color="#111c29"/></mesh>
+  <mesh position={[side*1.45,1.66,-.32]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>
+  <mesh position={[side*2.85,.03,-.03]} scale={[.55,.75,.2]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color="#d99480" transparent opacity={.56}/></mesh>
+ </React.Fragment>)}
  {/* Open mouth cavity and lips */}
  <mesh position={[0,-.12,-.19]} scale={[3.68,1.64,.29]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#b84b62" roughness={.45}/></mesh>
  <mesh position={[0,-.13,.06]} scale={[3.48,1.43,.18]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#200616" roughness={.8}/></mesh>
@@ -43,17 +54,21 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  </group>;
 }
 function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
- const bad=side==='bad';const ref=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.06:0}});
+ const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.1}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  <mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
  <mesh position={[0,.3,.07]} scale={[.57,.33,.5]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#27122e':'#17233f'}/></mesh>
  <mesh position={[0,-.42,.5]} scale={[.43,.19,.12]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color={bad?'#4c1735':'#d9f5ff'}/></mesh>
  {[-.22,.22].map((x,i)=><mesh key={i} position={[x,-.1,.53]} scale={[.06,.06,.025]}><sphereGeometry args={[1,12,12]}/><meshBasicMaterial color="#172036"/></mesh>)}
- <mesh position={[bad?.72:-.72,-1.1,.3]} rotation={[0,0,bad?-.7:.7]} scale={[.17,.8,.18]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
- <mesh position={[bad?1.15:-1.15,-.35,.55]} rotation={[0,0,bad?.4:-.4]} scale={[.09,.43,.09]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#c6e8f7" metalness={.8} roughness={.2}/></mesh>
- <mesh position={[bad?1.3:-1.3,.05,.55]} scale={[.17,.2,.12]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color={bad?'#ff6b80':'#65ffd7'} emissive={bad?'#8c1530':'#0a7c65'} emissiveIntensity={active?2:.5}/></mesh>
+ <group ref={arm} position={[bad?.68:-.68,-.96,.3]}>
+ <mesh position={[bad?.27:-.27,-.12,0]} rotation={[0,0,bad?-.65:.65]} scale={[.18,.75,.2]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
+ <mesh position={[bad?.53:-.53,.3,.06]} scale={[.18,.22,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>
+ <group ref={tool} position={[bad?.53:-.53,.57,.14]}>
+ <mesh scale={[.055,.42,.06]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#d9e9f0" metalness={.85} roughness={.16}/></mesh>
+ {bad?<mesh position={[0,.28,0]} rotation={[0,0,.4]} scale={[.15,.045,.07]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#e3f3ff" metalness={.9}/></mesh>:<mesh position={[0,.31,0]} scale={[.09,.22,.09]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#c8d2e4" metalness={.9}/></mesh>}
+ </group></group>
  <Text position={[0,-2.8,.4]} fontSize={.27} color={bad?'#ff8ab6':'#8cfce7'}>{bad?'KÖTÜ HEKİM':'İYİ HEKİM'}</Text>
  <Text position={[0,-3.15,.4]} fontSize={.17} color="#ffffff">{bad?'☕ ÇEKİM':'🧴 İMPLANT'}</Text>
  </group>;
