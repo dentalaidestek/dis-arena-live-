@@ -4,7 +4,7 @@ import {Text} from '@react-three/drei';
 import * as THREE from 'three';
 import type {Action} from './engine';
 
-export type AnimationCue={id:number;action:Action;team:string;user:string;blocked:boolean;targetId:number};
+export type AnimationCue={id:number;action:Action;team:string;user:string;blocked:boolean;targetId:number;beforeHp?:number;afterHp?:number};
 export function toothPosition(index:number):[number,number,number]{const upper=index<16;const slot=index%16;const angle=(slot/15-.5)*Math.PI*.92;return [Math.sin(angle)*4.4,upper?1.15:-1.15,-Math.cos(angle)*1.5];}
 const GOOD=new Set<Action>(['heal','decayShield','fractureShield','implant']);
 const duration=3.5;
