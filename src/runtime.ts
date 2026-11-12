@@ -30,6 +30,7 @@ export const PRESSURE_DELAY_MS=10*60*1000;
 export const PRESSURE_INTERVAL_MS=60*1000;
 export const PRESSURE_DAMAGE=2;
 export function implantLocked(teeth:Tooth[]):boolean{return teeth.filter(t=>!t.extracted).length<=8;}
+export function replacementLocked(teeth:Tooth[]):boolean{return teeth.filter(t=>!t.extracted).length<=16;}
 export function pressureTick(snapshot:ArenaSnapshot,now:number):ArenaSnapshot{
  if(!snapshot.pressureEnabled||roundPhase(snapshot.teeth)==='finished'||!Number.isFinite(now)||now<snapshot.lastEliminationAt+PRESSURE_DELAY_MS||now<snapshot.lastPressureAt+PRESSURE_INTERVAL_MS)return snapshot;
  const teeth=snapshot.teeth.map(t=>t.extracted? t:{...t,hp:Math.max(0,t.hp-PRESSURE_DAMAGE)});
@@ -44,6 +45,24 @@ export function claim(snapshot:ArenaSnapshot,toothId:number,userId:string,userna
  const result=claimTooth(snapshot.owners,toothId,userId,username,now,snapshot.teeth[toothId]?.extracted??true);
  if(!result.accepted)return {snapshot,...result};
  return {snapshot:{...snapshot,owners:result.owners,history:[{id:'claim-'+userId+'-'+now,user:'@'+result.owners[toothId].username,team:'DİŞ '+(toothId+1),message:'Diş sahiplenildi',blocked:false,at:now},...snapshot.history].slice(0,MAX_HISTORY)},...result};
+}
+/** Atomic replacement: the previous owner is removed only after the new implant succeeds.
+ * Gift prices are deliberately not encoded; this is a local, non-monetary simulation.
+ */
+export function replaceByImplant(snapshot:ArenaSnapshot,toothId:number,userId:string,username:string,eventId:string,now=Date.now()):{accepted:boolean;message:string;snapshot:ArenaSnapshot}{
+ const fail=(message:string)=>({accepted:false,message,snapshot});
+ if(!Number.isInteger(toothId)||toothId<0||toothId>=32||!snapshot.teeth[toothId].extracted)return fail('Yalnızca çekilmiş diş devralınabilir');
+ if(replacementLocked(snapshot.teeth))return fail('Son 16 aşamasında yeni oyuncu giremez');
+ if(!snapshot.owners[toothId])return fail('Sahipsiz diş için devralma yapılamaz');
+ if(snapshot.owners[toothId].userId===userId)return fail('Mevcut sahibi devralma işlemi yapamaz');
+ if(Object.values(snapshot.owners).some(o=>o.userId===userId))return fail('Kullanıcının zaten bir dişi var');
+ const normalized=username.trim().replace(/^@+/,'').toLocaleLowerCase('tr-TR');
+ if(!userId.trim()||userId.length>128||!normalized||normalized.length>40||!Number.isFinite(now)||now<0)return fail('Geçersiz kullanıcı');
+ const event:GameEvent={id:eventId,user:'@'+normalized,teamId:toothId,action:'implant',timestamp:now};
+ const outcome=ingest(snapshot,event);
+ if(!outcome.accepted||outcome.snapshot.teeth[toothId].extracted)return fail(outcome.message);
+ const owners={...outcome.snapshot.owners,[toothId]:{userId,username:normalized,claimedAt:now}};
+ return {accepted:true,message:'@'+normalized+' implantla '+(toothId+1)+'. dişi devraldı',snapshot:{...outcome.snapshot,owners}};
 }
 export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
  if(typeof event.id!=='string'||event.id.length===0||event.id.length>MAX_EVENT_ID||typeof event.user!=='string'||!event.user.trim()||event.user.length>MAX_USER||!Number.isInteger(event.teamId)||event.teamId<0||event.teamId>=32||!Number.isFinite(event.timestamp)||event.timestamp<0){
