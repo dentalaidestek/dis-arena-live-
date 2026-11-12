@@ -38,10 +38,10 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
    const order=ranked({...state,players});
    const senderIndex=order.findIndex(p=>p.userId===sender!.userId);
    // Anlık sıralamaya göre önündeki oyuncu hedeflenir; lider ikinciyi hedefler.
-   const targets=senderIndex===0?order.slice(1):order.slice(0,senderIndex).reverse();
-   const target=targets.find(p=>p.lockedUntil<=gift.timestamp);
-   if(target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf({...state,players},target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
-   else message='☕ @'+sender.username+' +50 jeton (çekilebilecek rakip yok)';
+   const target=senderIndex===0?order[1]:order[senderIndex-1];
+   const canExtract=!!target&&target.lockedUntil<=gift.timestamp;
+   if(canExtract&&target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf({...state,players},target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
+   else message='☕ @'+sender.username+' +50 jeton (hedef zaten çekilmiş veya rakip yok)';
   }else message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
  }
  const next={...state,startedAt,players,processedIds:[...state.processedIds,gift.eventId].slice(-10000),history:[message,...state.history].slice(0,12)};
