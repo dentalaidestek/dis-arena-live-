@@ -19,6 +19,21 @@ describe('Kalıcı oyun akışı',()=>{
   assert.equal(saveSnapshot(store,round),true);
   assert.equal(loadSnapshot(store)?.roundId,'round-test');
  });
+ it('aynı dişe gelen ardışık savunma ve saldırı sırası belirleyicidir',()=>{
+  const start=createRound('concurrent',0);
+  const shield=ingest(start,{id:'a',user:'@iyi',teamId:0,action:'decayShield',timestamp:1});
+  const attack=ingest(shield.snapshot,{id:'b',user:'@kotu',teamId:0,action:'decay',timestamp:2});
+  assert.equal(attack.snapshot.teeth[0].hp,100);
+  assert.equal(attack.snapshot.teeth[0].decayShields,0);
+  assert.equal(attack.snapshot.history[0].blocked,true);
+  const fracture=ingest(attack.snapshot,{id:'c',user:'@kotu2',teamId:0,action:'fracture',timestamp:3});
+  assert.equal(fracture.snapshot.teeth[0].hp,70);
+ });
+ it('geçersiz ve aşırı büyük olay kimlikleri reddedilir',()=>{
+  const s=createRound('r',0);
+  assert.equal(ingest(s,{id:'x'.repeat(200),user:'@test',teamId:0,action:'heal',timestamp:1}).accepted,false);
+  assert.equal(ingest(s,{id:'x',user:'@test',teamId:-1,action:'heal',timestamp:1}).accepted,false);
+ });
  it('bozuk kayıt reddedilir',()=>{
   assert.equal(validateSnapshot({version:1,teeth:[]}),false);
   assert.equal(loadSnapshot({getItem:()=>'{bozuk'}),null);
