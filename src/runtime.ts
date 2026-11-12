@@ -7,6 +7,9 @@ export type ArenaSnapshot={
  leaderId:number|null;
  processedIds:string[];
  history:{id:string;user:string;team:string;message:string;blocked:boolean;at:number}[];
+ lastEliminationAt:number;
+ lastPressureAt:number;
+ pressureEnabled:boolean;
 };
 export function roundPhase(teeth:Tooth[]):'open'|'final'|'finished'{
  const active=teeth.filter(t=>!t.extracted).length;
@@ -18,8 +21,18 @@ export function winner(teeth:Tooth[]):Tooth|null{
 export type IngestResult={accepted:boolean;message:string;snapshot:ArenaSnapshot};
 const MAX_IDS=10000;
 const MAX_HISTORY=100;
-export function createRound(roundId:string):ArenaSnapshot{
- return {version:1,roundId,teeth:initialTeeth(),leaderId:null,processedIds:[],history:[]};
+export const PRESSURE_DELAY_MS=10*60*1000;
+export const PRESSURE_INTERVAL_MS=60*1000;
+export const PRESSURE_DAMAGE=2;
+export function implantLocked(teeth:Tooth[]):boolean{return teeth.filter(t=>!t.extracted).length<=8;}
+export function pressureTick(snapshot:ArenaSnapshot,now:number):ArenaSnapshot{
+ if(!snapshot.pressureEnabled||roundPhase(snapshot.teeth)==='finished'||!Number.isFinite(now)||now<snapshot.lastEliminationAt+PRESSURE_DELAY_MS||now<snapshot.lastPressureAt+PRESSURE_INTERVAL_MS)return snapshot;
+ const teeth=snapshot.teeth.map(t=>t.extracted? t:{...t,hp:Math.max(0,t.hp-PRESSURE_DAMAGE)});
+ const leader=getLeader(teeth,snapshot.leaderId);
+ return {...snapshot,teeth,leaderId:leader?.id??null,lastPressureAt:now,history:[{id:'pressure-'+now,user:'SİSTEM',team:'TÜM AKTİF TAKIMLAR',message:'Otomatik baskı −2 HP (çekim yok)',blocked:false,at:now},...snapshot.history].slice(0,MAX_HISTORY)};
+}
+export function createRound(roundId:string,now=Date.now()):ArenaSnapshot{
+ return {version:1,roundId,teeth:initialTeeth(),leaderId:null,processedIds:[],history:[],lastEliminationAt:now,lastPressureAt:now,pressureEnabled:true};
 }
 export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
  if(!event.id || !event.user || !Number.isInteger(event.teamId) || !Number.isFinite(event.timestamp)){
@@ -27,13 +40,14 @@ export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
  }
  if(!['decay','fracture','heal','decayShield','fractureShield','extract','implant'].includes(event.action))return {accepted:false,message:'Bilinmeyen işlem',snapshot};
  if(roundPhase(snapshot.teeth)==='finished')return {accepted:false,message:'Tur tamamlandı',snapshot};
- if(event.action==='implant'&&roundPhase(snapshot.teeth)==='final')return {accepted:false,message:'Finalde implant kapalı',snapshot};
+ if(event.action==='implant'&&implantLocked(snapshot.teeth))return {accepted:false,message:'Son 8 aşamasında implant kapalı',snapshot};
  if(snapshot.processedIds.includes(event.id))return {accepted:false,message:'Tekrarlanan olay',snapshot};
  const result=processEvent(snapshot.teeth,event,new Set<string>());
  if(result.message==='Geçersiz diş')return {accepted:false,message:result.message,snapshot};
  const lead=getLeader(result.teeth,snapshot.leaderId);
+ const eliminated=result.teeth.filter(t=>t.extracted).length>snapshot.teeth.filter(t=>t.extracted).length;
  const next:ArenaSnapshot={
-  ...snapshot,teeth:result.teeth,leaderId:lead?.id??null,
+  ...snapshot,teeth:result.teeth,leaderId:lead?.id??null,lastEliminationAt:eliminated?event.timestamp:snapshot.lastEliminationAt,lastPressureAt:eliminated?event.timestamp:snapshot.lastPressureAt,
   processedIds:[...snapshot.processedIds,event.id].slice(-MAX_IDS),
   history:[{id:event.id,user:event.user.slice(0,80),team:snapshot.teeth[event.teamId].team,message:result.message,blocked:result.blocked,at:event.timestamp},...snapshot.history].slice(0,MAX_HISTORY)
  };
@@ -42,7 +56,7 @@ export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
 export function validateSnapshot(input:unknown):input is ArenaSnapshot{
  if(!input || typeof input!=='object')return false;
  const s=input as Partial<ArenaSnapshot>;
- return s.version===1&&typeof s.roundId==='string'&&Array.isArray(s.teeth)&&s.teeth.length===32&&s.teeth.every((t,i)=>t.id===i&&Number.isFinite(t.hp)&&t.hp>=0&&t.hp<=100&&Number.isInteger(t.decayShields)&&t.decayShields>=0&&Number.isInteger(t.fractureShields)&&t.fractureShields>=0&&typeof t.extracted==='boolean'&&Number.isInteger(t.decayHits)&&t.decayHits>=0&&Number.isInteger(t.fractureHits)&&t.fractureHits>=0)&&Array.isArray(s.processedIds)&&Array.isArray(s.history);
+ return s.version===1&&typeof s.roundId==='string'&&Array.isArray(s.teeth)&&s.teeth.length===32&&s.teeth.every((t,i)=>t.id===i&&Number.isFinite(t.hp)&&t.hp>=0&&t.hp<=100&&Number.isInteger(t.decayShields)&&t.decayShields>=0&&Number.isInteger(t.fractureShields)&&t.fractureShields>=0&&typeof t.extracted==='boolean'&&Number.isInteger(t.decayHits)&&t.decayHits>=0&&Number.isInteger(t.fractureHits)&&t.fractureHits>=0)&&Array.isArray(s.processedIds)&&Array.isArray(s.history)&&Number.isFinite(s.lastEliminationAt)&&Number.isFinite(s.lastPressureAt)&&typeof s.pressureEnabled==='boolean';
 }
 export function loadSnapshot(storage:{getItem(key:string):string|null},key='dis-arena-snapshot'):ArenaSnapshot|null{
  try{const raw=storage.getItem(key);if(!raw)return null;const parsed:unknown=JSON.parse(raw);return validateSnapshot(parsed)?parsed:null;}catch{return null;}
