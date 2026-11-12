@@ -8,6 +8,7 @@ export type AnimationCue={id:number;action:Action;team:string;user:string;blocke
 export function toothPosition(index:number):[number,number,number]{const upper=index<16;const slot=index%16;const angle=(slot/15-.5)*Math.PI*.92;return [Math.sin(angle)*4.4,upper?1.15:-1.15,-Math.cos(angle)*1.5];}
 const GOOD=new Set<Action>(['heal','decayShield','fractureShield','implant']);
 const duration=3.5;
+export const doctorRole=(action:Action):string=>({decay:'Dr. Karies',fracture:'Dr. Kırık',extract:'Dr. Ekstraksiyon',heal:'Dr. Restorasyon',decayShield:'Dr. Koruma',fractureShield:'Dr. Periodonti',implant:'Dr. İmplant'})[action];
 export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|null;onComplete:(id:number)=>void;laneOffset?:number}){
  const group=useRef<THREE.Group>(null);
  const tool=useRef<THREE.Group>(null);
@@ -40,14 +41,17 @@ export function ActionCharacter({cue,onComplete,laneOffset=0}:{cue:AnimationCue|
  return <group ref={group} position={[good?4.8:-4.8,-.2,2.3]}>
   <mesh position={[0,-.05,0]}><capsuleGeometry args={[.36,.82,6,12]}/><meshStandardMaterial color={coat}/></mesh>
   <mesh position={[0,.92,0]}><sphereGeometry args={[.32,16,12]}/><meshStandardMaterial color={good?'#dba985':'#a57b65'}/></mesh>
+  <mesh position={[0,.89,.29]} scale={[.24,.13,.055]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color={good?'#d6f4ff':'#252c31'}/></mesh>
   <mesh position={[0,1.2,-.02]} scale={[.34,.16,.34]}><sphereGeometry args={[1,12,8]}/><meshStandardMaterial color={good?'#283b4b':'#343039'}/></mesh>
   <mesh position={[-.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
   <mesh position={[.18,-.77,0]}><capsuleGeometry args={[.13,.48,4,8]}/><meshStandardMaterial color="#2e3746"/></mesh>
+  <mesh position={[good?-.37:.37,.15,0]} rotation={[0,0,good?-.5:.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
+  <mesh position={[good?.37:-.37,.15,0]} rotation={[0,0,good?.5:-.5]}><capsuleGeometry args={[.12,.58,6,10]}/><meshStandardMaterial color={coat}/></mesh>
   <group ref={tool} position={[good?-.46:.46,.35,.12]} rotation={[0,0,good?-.45:.45]}>
    <mesh><capsuleGeometry args={[.1,.6,4,8]}/><meshStandardMaterial color={accent} metalness={.6} roughness={.25} emissive={accent} emissiveIntensity={.35}/></mesh>
    <pointLight color={accent} intensity={2} distance={2}/>
   </group>
-  <Text position={[0,1.68,0]} fontSize={.22} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center">{good?'İYİ HEKİM':'KÖTÜ HEKİM'}</Text>
+  <Text position={[0,1.68,0]} fontSize={.22} maxWidth={2.4} color={good?'#8adfff':'#ff9191'} anchorX="center">{doctorRole(cue.action)}</Text>
   <Text position={[0,-1.35,0]} fontSize={.18} maxWidth={2.7} color="#ffffff" anchorX="center">{cue.user.slice(0,22)}</Text>
  </group>;
 }
@@ -67,6 +71,6 @@ export function ToothImpact({cue}:{cue:AnimationCue|null}){
  const positive=GOOD.has(cue.action)||cue.blocked;
  return <group ref={ref} position={(()=>{const [x,y,z]=toothPosition(cue.targetId);return [x,y,z+1.1] as [number,number,number]})()}>
   <mesh><torusGeometry args={[.8,.07,8,36]}/><meshBasicMaterial color={cue.blocked?'#65d8ff':positive?'#4cffa9':'#ff5669'} transparent opacity={.8}/></mesh>
-  <Text position={[0,1.05,0]} fontSize={.24} color="#fff" anchorX="center">{cue.blocked?'KALKAN ENGELLEDİ':positive?'TEDAVİ / KORUMA':'SALDIRI'}</Text>
+  <Text position={[0,1.05,0]} fontSize={.24} color="#fff" anchorX="center">{cue.blocked?'İŞLEM ENGELLENDİ':cue.action==='implant'?'İMPLANT':cue.action==='heal'?'TEDAVİ':cue.action==='decayShield'||cue.action==='fractureShield'?'KALKAN +1':cue.action==='extract'?'DİŞ ÇEKİLDİ':cue.action==='fracture'?'KIRIK −30':'ÇÜRÜK −10'}</Text>
  </group>;
 }
