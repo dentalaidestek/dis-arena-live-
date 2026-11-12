@@ -1,3 +1,4 @@
+import {WISDOM_TOOTH_IDS} from './engine';
 import {claimTooth,type Ownership,type ClaimResult} from './ownership';
 import {initialTeeth,processEvent,getLeader,type GameEvent,type Tooth} from './engine';
 
@@ -52,7 +53,7 @@ export function claim(snapshot:ArenaSnapshot,toothId:number,userId:string,userna
  */
 export function replaceByImplant(snapshot:ArenaSnapshot,toothId:number,userId:string,username:string,eventId:string,now=Date.now()):{accepted:boolean;message:string;snapshot:ArenaSnapshot}{
  const fail=(message:string)=>({accepted:false,message,snapshot});
- if(!Number.isInteger(toothId)||toothId<0||toothId>=32||!snapshot.teeth[toothId].extracted)return fail('Yalnızca çekilmiş diş devralınabilir');
+ if(!Number.isInteger(toothId)||toothId<0||toothId>=32||WISDOM_TOOTH_IDS.has(toothId)||!snapshot.teeth[toothId].extracted)return fail('Yalnızca çekilmiş diş devralınabilir');
  if(replacementLocked(snapshot.teeth))return fail('Son 16 aşamasında yeni oyuncu giremez');
  if(!snapshot.owners[toothId])return fail('Sahipsiz diş için devralma yapılamaz');
  if(snapshot.owners[toothId].userId===userId)return fail('Mevcut sahibi devralma işlemi yapamaz');
@@ -66,7 +67,7 @@ export function replaceByImplant(snapshot:ArenaSnapshot,toothId:number,userId:st
  return {accepted:true,message:'@'+normalized+' implantla '+(toothId+1)+'. dişi devraldı',snapshot:{...outcome.snapshot,owners}};
 }
 export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
- if(typeof event.id!=='string'||event.id.length===0||event.id.length>MAX_EVENT_ID||typeof event.user!=='string'||!event.user.trim()||event.user.length>MAX_USER||!Number.isInteger(event.teamId)||event.teamId<0||event.teamId>=32||!Number.isFinite(event.timestamp)||event.timestamp<0){
+ if(typeof event.id!=='string'||event.id.length===0||event.id.length>MAX_EVENT_ID||typeof event.user!=='string'||!event.user.trim()||event.user.length>MAX_USER||!Number.isInteger(event.teamId)||event.teamId<0||event.teamId>=32||WISDOM_TOOTH_IDS.has(event.teamId)||!Number.isFinite(event.timestamp)||event.timestamp<0){
   return {accepted:false,message:'Geçersiz olay',snapshot};
  }
  if(!ALLOWED_ACTIONS.has(event.action))return {accepted:false,message:'Bilinmeyen işlem',snapshot};
