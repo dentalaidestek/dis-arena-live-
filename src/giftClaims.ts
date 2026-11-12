@@ -17,7 +17,9 @@ export function processGiftClaim(snapshot:ArenaSnapshot,event:GiftEvent):GiftCla
  const fail=(message:string):GiftClaimResult=>({accepted:false,message,snapshot,toothId:null});
  if(!event.eventId||event.eventId.length>128||snapshot.processedIds.includes('gift:'+event.eventId))return fail('Tekrarlanan veya geçersiz hediye olayı');
  if(!Number.isFinite(event.timestamp)||event.timestamp<0||!event.userId||!event.username)return fail('Geçersiz gönderen');
- const gift=GIFT_CATALOG.find(g=>g.name.toLocaleLowerCase('en-US')===event.giftName.trim().toLocaleLowerCase('en-US'));
+ const aliases:Record<string,string>={'gül':'Rose','rose':'Rose','gg':'GG','tiktok':'TikTok','dondurma külahı':'Ice Cream Cone','ice cream cone':'Ice Cream Cone','parmak kalp':'Finger Heart','finger heart':'Finger Heart','parfüm':'Perfume','perfume':'Perfume','donut':'Doughnut','doughnut':'Doughnut'};
+ const canonical=aliases[event.giftName.trim().toLocaleLowerCase('tr-TR')]??event.giftName.trim();
+ const gift=GIFT_CATALOG.find(g=>g.name.toLocaleLowerCase('en-US')===canonical.toLocaleLowerCase('en-US'));
  if(!gift||gift.coins!==event.coins)return fail('Tanınmayan hediye veya jeton değeri uyuşmuyor');
  if(Object.values(snapshot.owners).some(owner=>owner.userId===event.userId))return fail('Bu izleyicinin zaten bir dişi var');
  if(gift.tier==='implant'){
