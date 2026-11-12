@@ -12,6 +12,7 @@ export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComple
  const tool=useRef<THREE.Group>(null);
  const progress=useRef(0);
  const lastId=useRef<number|null>(null);
+ const finished=useRef<number|null>(null);
  useFrame((_,delta)=>{
   if(!cue||!group.current)return;
   if(lastId.current!==cue.id){lastId.current=cue.id;progress.current=0;}
@@ -26,7 +27,7 @@ export function ActionCharacter({cue,onComplete}:{cue:AnimationCue|null;onComple
   group.current.position.y=-.2+Math.sin(Math.min(t,1)*Math.PI)*.1;
   group.current.rotation.y=-side*.25;
   if(tool.current)tool.current.rotation.z=Math.sin(progress.current*11)*.24;
-  if(t>=1){onComplete(cue.id);}
+  if(t>=1&&finished.current!==cue.id){finished.current=cue.id;onComplete(cue.id);}
  });
  if(!cue)return null;
  const good=GOOD.has(cue.action);
