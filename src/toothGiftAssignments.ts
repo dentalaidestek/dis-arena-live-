@@ -26,7 +26,7 @@ export function initialToothGiftAssignments():ToothGiftAssignment[]{
  const pairs:[number,number,string,string][]=[
   [0,16,'Gül','GG'],[1,17,'Dondurma Külahı','Lale'],[2,18,'Göz kırpma','Rüzgâr gülü'],
   [3,19,'Finger Heart','Aşırı tepki'],[4,20,'Aşk Kokusu','Bir Daha Bileti'],[5,21,'Dönen Top','İsimle selamlama'],
-  [6,22,'Parfüm','LOL'],[7,23,'Minik Allık','Buket'],[8,24,'Konfeti','Elle Kalp'],[9,25,'Öpücük','Sceptre'],
+  [6,22,'Parfüm','LOL'],[7,23,'Çay',''],[8,24,'',''],[9,25,'Minik Allık','Buket'],
   [10,26,'Kalp','Meraklı Twinkle'],[11,27,'Ağır çekim','Rosa'],[12,28,'Yıldızıma Tebrikler','Bravo!'],
   [13,29,'Pasta Dilimi','Blue Bead'],[14,30,'Pati','Parlıyorsun!'],[15,31,'Karşılama Kahvesi','Denizyıldızı']
  ];
@@ -35,5 +35,5 @@ export function initialToothGiftAssignments():ToothGiftAssignment[]{
   {toothId:upper,giftName:a,coins:prices.get(a.toLocaleLowerCase('tr-TR'))??0},
   {toothId:lower,giftName:b,coins:prices.get(b.toLocaleLowerCase('tr-TR'))??0}
  ]);
- return validateToothGiftAssignments(proposed);
+ return validateToothGiftAssignments(proposed.filter(x=>x.giftName&&x.coins<=50&&x.coins===claimPrice(x.toothId)));
 }
