@@ -1,0 +1,9 @@
+import {describe,it} from 'node:test';import assert from 'node:assert/strict';import {createRound,claim} from './runtime';import {processGiftClaim,toothTier} from './giftClaims';
+const gift=(id:string,name:string,coins:number,userId=id)=>({eventId:id,userId,username:'viewer'+id,giftName:name,coins,timestamp:10});
+describe('Gerçek hediye isimleriyle otomatik diş atama',()=>{
+ it('1 jeton Gül arka dişlerden boş olanı otomatik verir',()=>{const r=processGiftClaim(createRound('r',0),gift('a','Rose',1));assert.equal(r.accepted,true);assert.equal(toothTier(r.toothId!),'standard');assert.equal(r.snapshot.owners[r.toothId!].userId,'a');});
+ it('5 jeton Finger Heart orta, 20 jeton Perfume ön diş verir',()=>{const s=createRound('r',0);const m=processGiftClaim(s,gift('a','Finger Heart',5));const p=processGiftClaim(m.snapshot,gift('b','Perfume',20));assert.equal(toothTier(m.toothId!),'middle');assert.equal(toothTier(p.toothId!),'premium');});
+ it('yanlış fiyat ve tekrar gelen hediye reddedilir',()=>{const s=createRound('r',0);assert.equal(processGiftClaim(s,gift('a','Rose',20)).accepted,false);const first=processGiftClaim(s,gift('a','GG',1));assert.equal(processGiftClaim(first.snapshot,gift('a','GG',1,'other')).accepted,false);});
+ it('aynı izleyici ikinci diş alamaz',()=>{const s=createRound('r',0);const a=processGiftClaim(s,gift('a','Rose',1));assert.equal(processGiftClaim(a.snapshot,gift('b','Finger Heart',5,'a')).accepted,false);});
+ it('30 jeton Doughnut çekilmiş sahipli dişi yeni kullanıcıya verir',()=>{let s=claim(createRound('r',0),0,'old','old',1).snapshot;s={...s,teeth:s.teeth.map((t,i)=>i===0?{...t,extracted:true,hp:0}:t)};const r=processGiftClaim(s,gift('b','Doughnut',30));assert.equal(r.accepted,true);assert.equal(r.snapshot.owners[0].userId,'b');assert.equal(r.snapshot.teeth[0].hp,50);});
+});
