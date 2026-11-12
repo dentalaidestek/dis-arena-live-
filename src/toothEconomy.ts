@@ -22,7 +22,7 @@ export const SCREENSHOT_GIFTS=[
  {name:'Finger Heart',coins:5},{name:'Aşırı tepki',coins:5},
  {name:'Kalp',coins:10},{name:'Meraklı Twinkle',coins:10},{name:'Ağır çekim',coins:10},
  {name:'Yıldızıma Tebrikler',coins:15},{name:'Bravo!',coins:15},
- {name:'Parfüm',coins:20},{name:'LOL',coins:20},{name:'Minik Allık',coins:20},
+ {name:'Parfüm',coins:20},{name:'LOL',coins:20},{name:'Minik Allık',coins:20},{name:'Buket',coins:20},
  {name:'Donat',coins:30},{name:'Çay',coins:50},{name:'Harika',coins:88},
  {name:'Şapka ve Bıyık',coins:99},{name:'Konfeti',coins:100},
  {name:'Öpücük',coins:150},{name:'Gece Yıldızı',coins:199},
