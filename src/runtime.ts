@@ -21,6 +21,9 @@ export function winner(teeth:Tooth[]):Tooth|null{
 export type IngestResult={accepted:boolean;message:string;snapshot:ArenaSnapshot};
 const MAX_IDS=10000;
 const MAX_HISTORY=100;
+const MAX_EVENT_ID=128;
+const MAX_USER=80;
+const ALLOWED_ACTIONS=new Set(['decay','fracture','heal','decayShield','fractureShield','extract','implant']);
 export const PRESSURE_DELAY_MS=10*60*1000;
 export const PRESSURE_INTERVAL_MS=60*1000;
 export const PRESSURE_DAMAGE=2;
@@ -35,13 +38,13 @@ export function createRound(roundId:string,now=Date.now()):ArenaSnapshot{
  return {version:1,roundId,teeth:initialTeeth(),leaderId:null,processedIds:[],history:[],lastEliminationAt:now,lastPressureAt:now,pressureEnabled:true};
 }
 export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
- if(!event.id || !event.user || !Number.isInteger(event.teamId) || !Number.isFinite(event.timestamp)){
+ if(typeof event.id!=='string'||event.id.length===0||event.id.length>MAX_EVENT_ID||typeof event.user!=='string'||!event.user.trim()||event.user.length>MAX_USER||!Number.isInteger(event.teamId)||event.teamId<0||event.teamId>=32||!Number.isFinite(event.timestamp)||event.timestamp<0){
   return {accepted:false,message:'Geçersiz olay',snapshot};
  }
- if(!['decay','fracture','heal','decayShield','fractureShield','extract','implant'].includes(event.action))return {accepted:false,message:'Bilinmeyen işlem',snapshot};
+ if(!ALLOWED_ACTIONS.has(event.action))return {accepted:false,message:'Bilinmeyen işlem',snapshot};
+ if(snapshot.processedIds.includes(event.id))return {accepted:false,message:'Tekrarlanan olay',snapshot};
  if(roundPhase(snapshot.teeth)==='finished')return {accepted:false,message:'Tur tamamlandı',snapshot};
  if(event.action==='implant'&&implantLocked(snapshot.teeth))return {accepted:false,message:'Son 8 aşamasında implant kapalı',snapshot};
- if(snapshot.processedIds.includes(event.id))return {accepted:false,message:'Tekrarlanan olay',snapshot};
  const result=processEvent(snapshot.teeth,event,new Set<string>());
  if(result.message==='Geçersiz diş')return {accepted:false,message:result.message,snapshot};
  const lead=getLeader(result.teeth,snapshot.leaderId);
@@ -56,7 +59,7 @@ export function ingest(snapshot:ArenaSnapshot,event:GameEvent):IngestResult{
 export function validateSnapshot(input:unknown):input is ArenaSnapshot{
  if(!input || typeof input!=='object')return false;
  const s=input as Partial<ArenaSnapshot>;
- return s.version===1&&typeof s.roundId==='string'&&Array.isArray(s.teeth)&&s.teeth.length===32&&s.teeth.every((t,i)=>t.id===i&&Number.isFinite(t.hp)&&t.hp>=0&&t.hp<=100&&Number.isInteger(t.decayShields)&&t.decayShields>=0&&Number.isInteger(t.fractureShields)&&t.fractureShields>=0&&typeof t.extracted==='boolean'&&Number.isInteger(t.decayHits)&&t.decayHits>=0&&Number.isInteger(t.fractureHits)&&t.fractureHits>=0)&&Array.isArray(s.processedIds)&&Array.isArray(s.history)&&Number.isFinite(s.lastEliminationAt)&&Number.isFinite(s.lastPressureAt)&&typeof s.pressureEnabled==='boolean';
+ return s.version===1&&typeof s.roundId==='string'&&Array.isArray(s.teeth)&&s.teeth.length===32&&s.teeth.every((t,i)=>t.id===i&&Number.isFinite(t.hp)&&t.hp>=0&&t.hp<=100&&Number.isInteger(t.decayShields)&&t.decayShields>=0&&Number.isInteger(t.fractureShields)&&t.fractureShields>=0&&typeof t.team==='string'&&t.team.length>0&&typeof t.extracted==='boolean'&&Number.isInteger(t.decayHits)&&t.decayHits>=0&&Number.isInteger(t.fractureHits)&&t.fractureHits>=0)&&Array.isArray(s.processedIds)&&s.processedIds.length<=MAX_IDS&&s.processedIds.every(x=>typeof x==='string'&&x.length>0&&x.length<=MAX_EVENT_ID)&&Array.isArray(s.history)&&s.history.length<=MAX_HISTORY&&Number.isFinite(s.lastEliminationAt)&&Number.isFinite(s.lastPressureAt)&&typeof s.pressureEnabled==='boolean';
 }
 export function loadSnapshot(storage:{getItem(key:string):string|null},key='dis-arena-snapshot'):ArenaSnapshot|null{
  try{const raw=storage.getItem(key);if(!raw)return null;const parsed:unknown=JSON.parse(raw);return validateSnapshot(parsed)?parsed:null;}catch{return null;}
