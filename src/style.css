@@ -26,3 +26,26 @@ button:focus-visible{outline:3px solid #f9d17b;outline-offset:2px}
 .replacement{margin-top:9px;display:flex;flex-direction:column;gap:5px}.replacement button{background:#62411b;border-color:#dfb45f;min-height:42px}.replacement button:disabled{opacity:.4;cursor:not-allowed}
 
 .comment-demo select{flex:1;min-width:0;background:#091525;color:#fff;border:1px solid #6488a9;border-radius:8px;padding:10px;font-size:13px}
+
+
+/* Reference-art stage treatment: crimson villains, electric-blue clinicians, enamel arena */
+header{background:linear-gradient(95deg,#3b0d17 0%,#160e1c 44%,#071c32 58%,#06355a 100%);border-bottom:2px solid #ad7743;min-height:85px}
+.logo strong{font-size:clamp(21px,5.4vw,35px);letter-spacing:.07em;font-weight:1000;color:#ffcb6a;-webkit-text-stroke:.6px #6c3013;text-shadow:0 3px #6b3014,0 0 18px #ff9e34}
+.logo small{font-weight:900;letter-spacing:.17em;background:#802b20;border:1px solid #ed9c46;border-radius:9px;padding:3px 6px;display:inline-block}
+.evil b,.good b{font-size:clamp(12px,3.2vw,21px);font-weight:1000;text-shadow:0 2px 9px #000}
+.characters{padding:0;gap:0;background:#0c1724;min-height:132px;border-bottom:2px solid #d98a4b}
+.team-stage{width:50%;min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:15px 8px;position:relative;overflow:hidden}
+.bad-stage{background:radial-gradient(circle at 55% 35%,#8c2636,#280c16 75%);border-right:2px solid #ef5d55}
+.good-stage{background:radial-gradient(circle at 45% 35%,#176ca0,#08223d 75%);border-left:2px solid #38bdf8}
+.character-portrait{font-size:clamp(36px,9vw,67px);filter:drop-shadow(0 0 13px currentColor)}
+.bad-stage .character-portrait{color:#ff636b}.good-stage .character-portrait{color:#65d4ff}
+.team-stage strong{font-size:clamp(12px,3vw,19px);display:block;color:#fff;text-shadow:0 2px 7px #000}
+.team-stage small{font-size:10px;color:#ffceae;display:block}.good-stage small{color:#b5e8ff}
+.team-stage span{font-size:9px;display:block;color:#d4d8e2;margin-top:6px}
+.arena{background:radial-gradient(ellipse at 50% 55%,#9b4254 0%,#682e42 17%,#252038 43%,#0a1323 75%);border:2px solid #8b5962;box-shadow:inset 0 0 55px #050b18}
+.arena:before{content:"";position:absolute;inset:8% 1% 12%;border:8px solid #a25b71;border-radius:48% / 30%;box-shadow:inset 0 0 20px #5d2537,0 0 25px #070b14;pointer-events:none}
+.arena-jaw-caption{position:absolute;z-index:3;top:48px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.12em;color:#ffdfbc;font-weight:900;white-space:nowrap;pointer-events:none;text-shadow:0 1px 5px #000}
+.counter div{border:1px solid #d9a869;background:linear-gradient(145deg,#152335ed,#050a15ed);box-shadow:0 0 9px #000a}
+.counter strong{color:#ffe3aa;text-shadow:0 0 8px #bd7334}
+.notification{background:linear-gradient(95deg,#103f29,#075432,#092a24);border-color:#4fffa2;box-shadow:0 0 14px #1e9f6055}
+@media(max-width:420px){.team-stage{padding:10px 4px;gap:4px}.team-stage span{font-size:8px}.characters{min-height:105px}.arena-jaw-caption{top:45px;font-size:8px}}
