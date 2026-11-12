@@ -119,3 +119,24 @@ header{position:relative;z-index:2}
 .showcase-card{padding:3px 2px 7px;gap:4px}
 .showcase-card strong{min-height:28px}
 @media(max-width:420px){.characters,.team-stage{min-height:127px}.team-stage>div:last-child{padding:4px 2px}.team-stage strong{font-size:11px}.team-stage small{font-size:9px}.team-stage span{font-size:7px}.showcase-card{min-height:100px}}
+
+
+/* Opening broadcast: three blue doctors LEFT, open-mouth patient CENTER, three red doctors RIGHT. */
+.opening-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,1.05fr) minmax(0,1fr);gap:4px;min-height:340px;position:relative;overflow:hidden;border-bottom:3px solid #e5a24f;background:linear-gradient(90deg,#092c4a 0%,#071628 37%,#251322 63%,#510e1d 100%)}
+.opening-cast{display:flex;flex-direction:column;gap:5px;padding:7px 4px 9px;min-width:0;z-index:1}
+.opening-cast h2{font-size:clamp(11px,2.4vw,17px);margin:2px 0 3px;text-align:center;color:#a7e9ff;text-shadow:0 0 12px #2eacff}
+.opening-cast.bad h2{color:#ffabb1;text-shadow:0 0 12px #fa3955}
+.opening-doctor{position:relative;display:flex;align-items:center;min-height:88px;border:1px solid #4eb9ff;border-radius:10px;background:linear-gradient(100deg,#0a3456d9,#081626db);box-shadow:inset 0 0 14px #2f9be233,0 0 9px #36a8ff33;overflow:hidden}
+.opening-cast.bad .opening-doctor{border-color:#e35365;background:linear-gradient(100deg,#35101fdd,#180b16e8);box-shadow:inset 0 0 14px #e3314a33,0 0 9px #ed385333}
+.opening-doctor .doctor-art{width:42%;height:85px;flex-shrink:0}
+.opening-doctor-label{min-width:0;flex:1;padding:2px 3px}
+.opening-doctor-label strong{display:block;font-size:clamp(9px,1.7vw,13px);line-height:1.1;color:#fff}
+.opening-doctor-label span{display:block;font-size:clamp(8px,1.4vw,10px);color:#b4e8ff;margin:3px 0}
+.opening-cast.bad .opening-doctor-label span{color:#ffc2bd}
+.opening-doctor-label small{display:block;font-size:clamp(8px,1.4vw,10px);line-height:1.2;padding:4px 2px;border-radius:5px;color:#ffe2a5;background:#0009}
+.opening-patient{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:radial-gradient(ellipse at 50% 65%,#92425799,transparent 72%)}
+.opening-patient-title{position:absolute;top:8px;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:2;text-align:center;font-size:clamp(16px,3vw,25px);font-weight:1000;color:#ffdb8c;text-shadow:0 2px 4px #200c08,0 0 15px #ff9b37}
+.opening-patient-title small{display:block;font-size:clamp(8px,1.2vw,11px);letter-spacing:.13em;background:#9a251f;color:#fff2c7;border-radius:6px;padding:3px}
+.opening-patient svg{display:block;width:100%;max-height:300px;filter:drop-shadow(0 0 13px #f6a0a066)}
+.opening-patient-caption{position:absolute;bottom:5px;font-size:clamp(7px,1.2vw,10px);font-weight:900;color:#ffe2b2;text-shadow:0 1px 4px #000;text-align:center}
+@media(max-width:470px){.opening-stage{grid-template-columns:minmax(0,1fr) minmax(108px,1fr) minmax(0,1fr);min-height:265px;gap:2px}.opening-cast{padding:5px 2px;gap:4px}.opening-doctor{min-height:68px;flex-direction:column;justify-content:center}.opening-doctor .doctor-art{height:38px;width:65%}.opening-doctor-label{text-align:center;width:100%;padding:0 1px 2px}.opening-doctor-label strong{font-size:8px}.opening-doctor-label span{display:none}.opening-doctor-label small{font-size:7px;padding:2px 0}.opening-patient svg{max-height:240px}.opening-patient-title{font-size:13px}.opening-patient-title small{font-size:7px}.opening-cast h2{font-size:9px}}
