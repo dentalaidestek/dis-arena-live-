@@ -72,3 +72,28 @@ header{position:relative;z-index:2}
 .notification{margin:9px 8px;min-height:48px;font-size:clamp(11px,2.5vw,14px)}
 .live-dot{display:inline-block;width:9px;height:9px;background:#46ff9b;border-radius:50%;box-shadow:0 0 8px #46ff9b;vertical-align:middle;margin-right:4px}
 @media(max-width:460px){.arena{height:108vw;min-height:400px}.action-showcase{gap:3px;padding:12px 4px 6px}.showcase-card{min-height:91px;padding:5px 1px}.stage-legend{gap:3px}.stage-legend span{font-size:8px;padding:5px}}
+
+
+/* Non-obstructing procedure broadcast panels inspired by the supplied arena artwork. */
+.procedure-broadcast{position:absolute;z-index:5;top:68px;left:7px;right:7px;display:flex;gap:6px;justify-content:space-between;pointer-events:none}
+.procedure-broadcast-card{flex:1;max-width:48%;min-width:0;padding:7px 8px;border-radius:10px;background:linear-gradient(135deg,#2d0c1bed,#120f20ef);border:1px solid #e45d71;box-shadow:0 0 18px #e45d7155;animation:procedure-appear .28s ease-out both}
+.procedure-friendly{margin-left:auto;background:linear-gradient(135deg,#062b4bf2,#081826ef);border-color:#54cfff;box-shadow:0 0 18px #54cfff44}
+.procedure-broadcast-heading{display:flex;justify-content:space-between;align-items:center;gap:4px;color:#ffb2b8;font-size:9px;font-weight:800}
+.procedure-friendly .procedure-broadcast-heading{color:#9ce9ff}
+.procedure-broadcast-heading strong{font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.procedure-broadcast-target{display:flex;gap:6px;align-items:center;margin-top:5px}
+.procedure-target-icon{font-size:24px;filter:drop-shadow(0 0 8px #fff8)}
+.procedure-broadcast-target>div{min-width:0}
+.procedure-broadcast-target b{display:block;font-size:13px;color:#fff1c7}
+.procedure-broadcast-target small{display:block;max-width:75px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;color:#d5e7f1}
+.procedure-outcome{margin-left:auto;font-size:10px;color:#ff929e;text-align:right;max-width:80px}
+.procedure-friendly .procedure-outcome{color:#70ffcd}
+.procedure-timeline{height:3px;margin-top:7px;background:#ffffff33;border-radius:5px;overflow:hidden}
+.procedure-timeline span{display:block;height:100%;width:100%;background:#ff6576;transform-origin:left;animation:procedure-progress 3.5s linear forwards}
+.procedure-friendly .procedure-timeline span{background:#66eaff}
+@keyframes procedure-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes procedure-appear{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.arena .leader{display:flex;flex-direction:column;gap:4px;bottom:7px;z-index:4}
+.arena .leader small{font-size:10px;font-weight:650;color:#ffcf8c}
+@media(max-width:420px){.procedure-broadcast{top:63px;gap:4px}.procedure-broadcast-card{padding:5px}.procedure-broadcast-heading span{font-size:8px}.procedure-broadcast-heading strong{font-size:8px}.procedure-outcome{font-size:8px;max-width:55px}.procedure-target-icon{font-size:18px}.procedure-broadcast-target b{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.procedure-broadcast-card,.procedure-timeline span{animation:none}}
