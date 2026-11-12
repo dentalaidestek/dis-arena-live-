@@ -24,7 +24,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  const name=gift.giftName.trim().toLocaleLowerCase('tr-TR');
  const tea=TEA_NAMES.includes(name)&&gift.coins===TEA_COINS;
  const implant=IMPLANT_NAMES.includes(name)&&gift.coins===IMPLANT_COINS;
- const startedAt=state.startedAt||gift.timestamp;const players=state.players.map(p=>({...p}));let sender=players.find(p=>p.userId===gift.userId);
+ const startedAt=state.startedAt||gift.timestamp;const players=state.players.map(p=>({...p}));const preGiftOrder=ranked({...state,players});let sender=players.find(p=>p.userId===gift.userId);
  if(!sender){sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0};players.push(sender);}
  sender.username=gift.username;
  let action:GiftResult['action']='score',targetId:number|null=null;
@@ -35,10 +35,10 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  }else{
   sender.coins+=gift.coins;
   if(tea){
-   const order=ranked({...state,players});
-   const senderIndex=order.findIndex(p=>p.userId===sender!.userId);
-   // Anlık sıralamaya göre önündeki oyuncu hedeflenir; lider ikinciyi hedefler.
-   const target=senderIndex===0?order[1]:order[senderIndex-1];
+   // Hedef hediye eklenmeden ÖNCEKİ sıralamadan belirlenir: +50 puan hedefi değiştirmez.
+   const senderIndex=preGiftOrder.findIndex(p=>p.userId===sender!.userId);
+   const targetId=senderIndex===0?preGiftOrder[1]?.userId:senderIndex>0?preGiftOrder[senderIndex-1]?.userId:undefined;
+   const target=players.find(p=>p.userId===targetId);
    const canExtract=!!target&&target.lockedUntil<=gift.timestamp;
    if(canExtract&&target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf({...state,players},target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
    else message='☕ @'+sender.username+' +50 jeton (hedef zaten çekilmiş veya rakip yok)';
