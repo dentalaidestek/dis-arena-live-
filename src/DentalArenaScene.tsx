@@ -58,7 +58,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
 }
 function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}});
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=THREE.MathUtils.lerp(ref.current.position.x,bad?(-5.55+(active?1.1:0)):(5.55-(active?1.1:0)),.08);ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.1}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  <mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
