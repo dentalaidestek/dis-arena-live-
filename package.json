@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "tsx --test src/coinArena.test.ts",
+    "test": "tsx --test src/coinArena.test.ts src/bridgeGift.test.ts",
     "test:legacy": "tsx --test src/*.test.ts"
   },
   "dependencies": {
