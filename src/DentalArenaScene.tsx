@@ -91,8 +91,8 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  </group>;
 }
 function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
- const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=THREE.MathUtils.lerp(ref.current.position.x,bad?(-5.55+(active?1.1:0)):(5.55-(active?1.1:0)),.08);ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}});
+ const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=THREE.MathUtils.lerp(ref.current.position.x,bad?(-5.55+(active?1.1:0)):(5.55-(active?1.1:0)),.08);ref.current.rotation.z=active?Math.sin(clock.elapsedTime*8)*.025:0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.1}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  {/* Stethoscope loop and clinic gloves */}
@@ -115,6 +115,11 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  <mesh position={[bad?-.39:.39,-1.12,.57]} scale={[.16,.028,.015]}><boxGeometry args={[1,1,1]}/><meshBasicMaterial color="#a5f6ff"/></mesh>
  {[-1,1].map(side=><mesh key={side} position={[side*.42,-1.7,.56]} scale={[.21,.14,.02]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#c9dce3"/></mesh>)}
  {[-.22,.22].map((x,i)=><mesh key={i} position={[x,-.1,.53]} scale={[.06,.06,.025]}><sphereGeometry args={[1,12,12]}/><meshBasicMaterial color="#172036"/></mesh>)}
+ {/* Second hand stays near the patient's head while the instrument hand operates. */}
+ <group ref={support} position={[bad?-.66:.66,-.95,.32]}>
+ <mesh position={[bad?-.30:.30,.25,0]} rotation={[0,0,bad?.48:-.48]} scale={[.17,.65,.19]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
+ <mesh position={[bad?-.59:.59,.65,.12]} rotation={[0,0,bad?-.25:.25]} scale={[.23,.16,.12]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#d8edf3"/></mesh>
+ </group>
  <group ref={arm} position={[bad?.68:-.68,-.96,.3]}>
  <mesh position={[bad?.27:-.27,-.12,0]} rotation={[0,0,bad?-.65:.65]} scale={[.18,.75,.2]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
  <mesh position={[bad?.53:-.53,.3,.06]} scale={[.18,.22,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>
