@@ -24,7 +24,21 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  const rankedPlayers=ranked(state);const positions=new Map(rankedPlayers.slice(0,28).map((p,i)=>[POSITIONS[i],{...p,rank:i}]));
  const teeth=useMemo(()=>POSITIONS.slice().sort((a,b)=>a-b),[]);
  const jaw=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(jaw.current)jaw.current.rotation.x=Math.sin(clock.elapsedTime*.7)*.012});
+ const eyebrows=useRef<THREE.Group>(null);
+ const expression=useRef<THREE.Group>(null);
+ const lowerLip=useRef<THREE.Mesh>(null);
+ const eyeLids=useRef<THREE.Group>(null);
+ const reaction=useRef(0);
+ useFrame(({clock},delta)=>{
+  if(jaw.current)jaw.current.rotation.x=Math.sin(clock.elapsedTime*.7)*.012;
+  const target=cue?.action==='extract'?-1:cue?.action==='implant'?1:0;
+  reaction.current=THREE.MathUtils.damp(reaction.current,target,3.4,delta);
+  const pain=Math.max(0,-reaction.current),joy=Math.max(0,reaction.current);
+  if(eyebrows.current){eyebrows.current.position.y=pain*.16+joy*.07;eyebrows.current.scale.y=1+pain*.42;}
+  if(expression.current){expression.current.position.y=joy*.13-pain*.08;expression.current.scale.x=1+joy*.16-pain*.12;expression.current.scale.y=1+joy*.08+pain*.18;}
+  if(lowerLip.current){lowerLip.current.position.y=-1.07-pain*.17+joy*.09;lowerLip.current.scale.x=3.07+joy*.2;}
+  if(eyeLids.current)eyeLids.current.scale.y=1+pain*.9-joy*.25;
+ });
  return <group ref={jaw} position={[0,-.05,0]}>
  {/* Dental chair and patient's shoulders */}
  <mesh position={[0,-3.45,-2.5]} scale={[3.8,1.6,.55]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#3e7d9b" roughness={.5}/></mesh>
@@ -41,12 +55,19 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  {/* Nose and nostrils */}
  <mesh position={[0,.65,.08]} scale={[.44,.68,.45]}><sphereGeometry args={[1,28,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
  {[-1,1].map(side=><mesh key={side} position={[side*.26,.31,.46]} scale={[.11,.06,.03]}><sphereGeometry args={[1,14,12]}/><meshStandardMaterial color="#9d6459"/></mesh>)}
+ {/* Facial expression is driven by the real extraction / implant event */}
+ <group ref={eyebrows}>
+ {[-1,1].map(side=><mesh key={side} position={[side*1.45,1.66,-.25]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>)}
+ </group>
+ <group ref={eyeLids}>
+ {[-1,1].map(side=><mesh key={side} position={[side*1.45,1.42,-.12]} scale={[.64,.055,.07]}><sphereGeometry args={[1,24,12]}/><meshStandardMaterial color="#d99480"/></mesh>)}
+ </group>
  {/* Patient's eyes, brows and cheek details */}
  {[-1,1].map(side=><React.Fragment key={side}>
   <mesh position={[side*1.45,1.25,-.35]} scale={[.67,.28,.17]}><sphereGeometry args={[1,28,16]}/><meshStandardMaterial color="#f5f0eb"/></mesh>
   <mesh position={[side*1.45,1.25,-.16]} scale={[.16,.21,.06]}><sphereGeometry args={[1,20,16]}/><meshStandardMaterial color="#3b6175"/></mesh>
   <mesh position={[side*1.45,1.25,-.08]} scale={[.08,.12,.03]}><sphereGeometry args={[1,16,12]}/><meshBasicMaterial color="#111c29"/></mesh>
-  <mesh position={[side*1.45,1.66,-.32]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>
+
   <mesh position={[side*2.85,.03,-.03]} scale={[.55,.75,.2]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color="#d99480" transparent opacity={.56}/></mesh>
  </React.Fragment>)}
  {/* Mouth cavity with shaded gingival rim */}
@@ -54,9 +75,12 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  {/* Open mouth cavity and lips */}
  <mesh position={[0,-.12,-.19]} scale={[3.68,1.64,.29]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#b84b62" roughness={.45}/></mesh>
  <mesh position={[0,-.13,.06]} scale={[3.48,1.43,.18]}><sphereGeometry args={[1,64,32]}/><meshStandardMaterial color="#200616" roughness={.8}/></mesh>
+ <group ref={expression}>
  <mesh position={[0,-.87,.23]} scale={[2.08,.42,.23]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#c95776" roughness={.66}/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*2.72,-.61,.3]} rotation={[0,0,side*-.45]} scale={[.35,.055,.07]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#c26b70"/></mesh>)}
+ </group>
  <mesh position={[0,.79,.19]} scale={[3.08,.25,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
- <mesh position={[0,-1.07,.17]} scale={[3.07,.24,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
+ <mesh ref={lowerLip} position={[0,-1.07,.17]} scale={[3.07,.24,.27]}><sphereGeometry args={[1,48,20]}/><meshStandardMaterial color="#f18da0"/></mesh>
  {/* Separate anatomically arranged upper/lower rows, each 14 teeth */}
  <group position={[0,.53,.48]}>{teeth.filter(id=>id<16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
  <group position={[0,-.76,.48]}>{teeth.filter(id=>id>=16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
