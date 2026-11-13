@@ -6,8 +6,8 @@ import{POSITIONS,ranked,isLocked,type CoinArena}from'./coinArena';
 import type{AnimationCue}from'./ActionAnimation';
 const gold='#ffcf56';
 function Tooth({id,rank,name,coins,locked,now,activeCue}:{id:number;rank?:number;name?:string;coins?:number;locked:boolean;now:number;activeCue?:AnimationCue}){
- const upper=id<16;const slot=id<16?id:id-16;const centered=Math.abs(slot-7.5);
- const angle=(slot-7.5)/7.5*1.12;const x=Math.sin(angle)*3.32;const z=Math.cos(angle)*.53;
+ const upper=id<16;const slot=id<16?id-1:id-17;const centered=Math.abs(slot-6.5);
+ const angle=(slot-6.5)/6.5*1.12;const x=Math.sin(angle)*3.32;const z=Math.cos(angle)*.53;
  const posterior=centered>4.5;const canine=centered>2.8&&!posterior;
  const width=posterior?.32:canine?.25:.235;const height=posterior?.27:canine?.40:.36;
  const champion=rank!==undefined&&rank<4;const affected=activeCue?.targetId===id;
@@ -114,14 +114,14 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  <group position={[0,-.76,.48]}>{teeth.filter(id=>id>=16).map(id=>{const p=positions.get(id);return <Tooth key={id} id={id} rank={p?.rank} name={p?.username} coins={p?.coins} locked={!!p&&isLocked(p,now)} now={now} activeCue={cue}/>})}</group>
  </group>;
 }
-function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
- const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);const wrist=useRef<THREE.Group>(null);const blink=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}if(wrist.current){wrist.current.rotation.z=active?(bad?-.45:.45)+Math.sin(clock.elapsedTime*9)*.14:0;}if(blink.current){const phase=clock.elapsedTime*1.3+(bad?0:1.4);blink.current.scale.y=Math.max(.08,1-.94*Math.pow(Math.max(0,Math.sin(phase)),40));}});
+function Doctor({side,active,targetId}:{side:'bad'|'good';active:boolean;targetId?:number}){
+ const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);const wrist=useRef<THREE.Group>(null);const head=useRef<THREE.Group>(null);const blink=useRef<THREE.Group>(null);
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){const toward=targetId===undefined?0:(targetId%16-7.5)/7.5;const desired=active?(bad?-.68:.68)+toward*.12+Math.sin(clock.elapsedTime*8)*.09:(bad?-.15:.15);arm.current.rotation.z=THREE.MathUtils.lerp(arm.current.rotation.z,desired,.13);}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}if(wrist.current){wrist.current.rotation.z=THREE.MathUtils.lerp(wrist.current.rotation.z,active?(bad?-.45:.45)+Math.sin(clock.elapsedTime*9)*.14:0,.14);}if(head.current){head.current.rotation.z=THREE.MathUtils.lerp(head.current.rotation.z,active?(bad?-.12:.12):0,.08);}if(blink.current){const phase=clock.elapsedTime*1.3+(bad?0:1.4);blink.current.scale.y=Math.max(.08,1-.94*Math.pow(Math.max(0,Math.sin(phase)),40));}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.45}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  {/* Stethoscope loop and clinic gloves */}
  <mesh position={[0,-.97,.52]} rotation={[0,0,.12]}><torusGeometry args={[.3,.025,8,40,Math.PI*1.4]}/><meshStandardMaterial color="#18283b" metalness={.3}/></mesh>
- <mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
+ <group ref={head}><mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
  <mesh position={[0,.3,.07]} scale={[.57,.33,.5]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#27122e':'#17233f'}/></mesh>
  <mesh position={[0,-.42,.5]} scale={[.43,.19,.12]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color={bad?'#4c1735':'#d9f5ff'}/></mesh>
  {/* Articulated eyelids, eyelashes, cheeks and expression */}
@@ -137,6 +137,7 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  </React.Fragment>)}
  <mesh position={[0,.5,-.03]} scale={[.52,.21,.46]}><sphereGeometry args={[1,24,14]}/><meshStandardMaterial color={bad?'#351d35':'#29324b'}/></mesh>
  <mesh position={[0,-.38,.59]} scale={[.34,.18,.08]}><sphereGeometry args={[1,24,14]}/><meshStandardMaterial color="#dcebf1" roughness={.75}/></mesh>
+ </group>
  {/* Tailored white lab coat, collar and badge */}
  <mesh position={[0,-1.53,.36]} scale={[.77,.92,.25]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#edf5f8" roughness={.55}/></mesh>
  <mesh position={[0,-1.6,.53]} scale={[.18,.75,.035]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color={bad?'#9b2554':'#118eab'}/></mesh>
@@ -168,7 +169,7 @@ function Scene({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){
  <spotLight position={[0,5,4]} intensity={90} angle={.8} penumbra={.8} color="#eaf8ff"/>
  <mesh position={[-6.1,-.2,-3.1]} scale={[4.8,7,.12]}><planeGeometry args={[1,1]}/><meshBasicMaterial color="#731a30" transparent opacity={.28}/></mesh>
  <mesh position={[6.1,-.2,-3.1]} scale={[4.8,7,.12]}><planeGeometry args={[1,1]}/><meshBasicMaterial color="#0b8b66" transparent opacity={.28}/></mesh>
- <group position={[0,.2,0]}><Patient state={state} now={now} cue={cue}/><Doctor side="bad" active={cue?.action==='extract'}/><Doctor side="good" active={cue?.action==='implant'}/></group>
+ <group position={[0,.2,0]}><Patient state={state} now={now} cue={cue}/><Doctor side="bad" active={cue?.action==='extract'} targetId={cue?.targetId}/><Doctor side="good" active={cue?.action==='implant'} targetId={cue?.targetId}/></group>
  </Canvas>;
 }
 export function DentalArenaScene({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){return <div className="dental-3d-stage"><div className="dental-clinic-bg"><div className="dental-light dental-light-left"/><div className="dental-light dental-light-right"/></div><div className="dental-3d-title">🦷 DİŞ ARENA <span>2 ÜST · 2 ALT · 4 KAZANAN</span></div><Scene state={state} now={now} cue={cue}/>{cue&&<div className={'dental-action-banner '+(cue.action==='extract'?'danger':'success')}>{cue.action==='extract'?'🦷 KÖTÜ HEKİM · ÇEKİM':'🔩 İYİ HEKİM · İMPLANT'}</div>}</div>}
