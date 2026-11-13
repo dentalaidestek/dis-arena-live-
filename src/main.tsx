@@ -12,7 +12,7 @@ import{DoctorPortrait}from'./DoctorPortrait';
 import type{AnimationCue}from'./ActionAnimation';
 import{applyGift,loadCoinArena,saveCoinArena,newCoinArena,ranked,toothOf,timeLeft,isLocked,POSITIONS,TEA_COINS,IMPLANT_COINS,type Gift,type CoinArena}from'./coinArena';
 import{DentalArenaScene}from'./DentalArenaScene';
-import {normalizeBridgeGift} from './bridgeGift';
+import {normalizeBridgeGift,type StreakProgress} from './bridgeGift';
 import './style.css';
 const TEETH=initialTeeth();
 function Tooth3D({id,username,coins,rank,locked,highlight}:{id:number;username?:string;coins?:number;rank?:number;locked:boolean;highlight:boolean}){
@@ -42,11 +42,11 @@ function Mouth({state,now,cues,onEffectDone}:{state:CoinArena;now:number;cues:An
  </Canvas>;
 }
 function App(){
- const[state,setState]=useState(()=>loadCoinArena(window.localStorage));const stateRef=useRef(state);const[now,setNow]=useState(Date.now());const[cues,setCues]=useState<AnimationCue[]>([]);const[latest,setLatest]=useState('Hediyeler bekleniyor');const[status,setStatus]=useState('TikTok köprüsü bekleniyor');const[demoName,setDemoName]=useState('Ahmet');const[demoGift,setDemoGift]=useState('Gül');const[demoCoins,setDemoCoins]=useState(1);const serial=useRef(0);const cueTimers=useRef<number[]>([]);
+ const[state,setState]=useState(()=>loadCoinArena(window.localStorage));const stateRef=useRef(state);const[now,setNow]=useState(Date.now());const[cues,setCues]=useState<AnimationCue[]>([]);const[latest,setLatest]=useState('Hediyeler bekleniyor');const[status,setStatus]=useState('TikTok köprüsü bekleniyor');const[demoName,setDemoName]=useState('Ahmet');const[demoGift,setDemoGift]=useState('Gül');const[demoCoins,setDemoCoins]=useState(1);const serial=useRef(0);const cueTimers=useRef<number[]>([]);const streakProgress=useRef<StreakProgress>({});
  const players=ranked(state);const remaining=state.startedAt?timeLeft(state,now):600000;const finished=state.startedAt>0&&remaining===0;const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
  useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),250);return()=>clearInterval(timer)},[]);
  function receive(gift:Gift){const result=applyGift(stateRef.current,gift);setLatest(result.message);if(!result.accepted)return;stateRef.current=result.state;setState(result.state);saveCoinArena(window.localStorage,result.state);if((result.action==='extract'||result.action==='implant')&&result.targetId!==null){const cue:AnimationCue={id:++serial.current,action:result.action,team:'DİŞ '+(result.targetId+1),user:'@'+gift.username,targetId:result.targetId,blocked:false};setCues(old=>[...old.slice(-2),cue]);cueTimers.current.push(window.setTimeout(()=>setCues(old=>old.filter(item=>item.id!==cue.id)),4500));}}
- useEffect(()=>{let ws:WebSocket|null=null;let retry:number|undefined;let stopped=false;function connect(){if(stopped)return;try{ws=new WebSocket('ws://127.0.0.1:8765');ws.onopen=()=>setStatus('🟢 Köprü bağlı');ws.onmessage=e=>{try{const m=JSON.parse(String(e.data));if(m.type==='status'){setStatus(m.state==='live-connected'?'🟢 TikTok LIVE bağlı':'Köprü bağlı · yayın bekleniyor');return;}for(const gift of normalizeBridgeGift(m))receive(gift);}catch{setStatus('Köprü mesajı okunamadı')}};ws.onclose=()=>{if(stopped)return;setStatus('🔴 Bağlantı kesildi');retry=window.setTimeout(connect,3000)};ws.onerror=()=>setStatus('🔴 Köprü bağlantı hatası')}catch{setStatus('🔴 Köprü kullanılamıyor')}}connect();return()=>{stopped=true;if(retry)clearTimeout(retry);ws?.close()}},[]);
+ useEffect(()=>{let ws:WebSocket|null=null;let retry:number|undefined;let stopped=false;function connect(){if(stopped)return;try{ws=new WebSocket('ws://127.0.0.1:8765');ws.onopen=()=>setStatus('🟢 Köprü bağlı');ws.onmessage=e=>{try{const m=JSON.parse(String(e.data));if(m.type==='status'){setStatus(m.state==='live-connected'?'🟢 TikTok LIVE bağlı':'Köprü bağlı · yayın bekleniyor');return;}for(const gift of normalizeBridgeGift(m,streakProgress.current))receive(gift);}catch{setStatus('Köprü mesajı okunamadı')}};ws.onclose=()=>{if(stopped)return;setStatus('🔴 Bağlantı kesildi');retry=window.setTimeout(connect,3000)};ws.onerror=()=>setStatus('🔴 Köprü bağlantı hatası')}catch{setStatus('🔴 Köprü kullanılamıyor')}}connect();return()=>{stopped=true;if(retry)clearTimeout(retry);ws?.close()}},[]);
  useEffect(()=>()=>{cueTimers.current.forEach(window.clearTimeout)},[]);
  const previewAction=(action:'extract'|'implant')=>{
   const target=POSITIONS[action==='extract'?0:2];
