@@ -31,7 +31,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  let action:GiftResult['action']='score',targetId:number|null=null;
  let message='';
  if(isLocked(sender,gift.timestamp)){
-  if(implant){sender.lockedUntil=0;sender.coins+=gift.coins;action='implant';targetId=toothOf({...state,players},sender.userId);message='🔩 @'+sender.username+' Parfüm ile implant yaptı, +20 jeton';}
+  if(implant){sender.lockedUntil=0;sender.coins+=gift.coins;action='implant';targetId=toothOf(state,sender.userId);message='🔩 @'+sender.username+' Parfüm ile implant yaptı, +20 jeton';}
   else{action='blocked';message='⛔ @'+sender.username+' çekilmiş durumda: normal hediye puan kazandırmadı';}
  }else{
   sender.coins+=gift.coins;
@@ -41,7 +41,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
    const extractionTargetUserId=senderIndex===0?preGiftOrder[1]?.userId:senderIndex>0?preGiftOrder[senderIndex-1]?.userId:undefined;
    const target=players.find(p=>p.userId===extractionTargetUserId);
    const canExtract=!!target&&target.lockedUntil<=gift.timestamp;
-   if(canExtract&&target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf({...state,players},target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
+   if(canExtract&&target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf(state,target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
    else message='☕ @'+sender.username+' +50 jeton (hedef zaten çekilmiş veya rakip yok)';
   }else message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
  }
