@@ -18,9 +18,10 @@ export const loadCoinArena=(storage:Pick<Storage,'getItem'>):CoinArena=>{try{con
 export const saveCoinArena=(storage:Pick<Storage,'setItem'>,s:CoinArena)=>{try{storage.setItem('dis-arena-coin-v2',JSON.stringify(s));}catch{}};
 export function applyGift(state:CoinArena,gift:Gift):GiftResult{
  const fail=(message:string):GiftResult=>({state,accepted:false,message,action:'none',targetId:null});
- if(!gift.eventId||gift.eventId.length>128||!gift.userId||!gift.username||!Number.isSafeInteger(gift.coins)||gift.coins<=0||!Number.isFinite(gift.timestamp))return fail('Geçersiz hediye');
+ if(!gift.eventId||gift.eventId.length>128||!gift.userId||!gift.username||!Number.isSafeInteger(gift.coins)||gift.coins<=0||!Number.isSafeInteger(gift.timestamp)||gift.timestamp<=0)return fail('Geçersiz hediye');
  if(state.processedIds.includes(gift.eventId))return fail('Tekrarlanan hediye');
  if(state.startedAt>0&&(gift.timestamp<state.startedAt||timeLeft(state,gift.timestamp)===0))return fail('Tur sona erdi');
+ const existing=state.players.find(p=>p.userId===gift.userId);if(existing&&(!Number.isSafeInteger(existing.coins)||existing.coins+gift.coins>Number.MAX_SAFE_INTEGER))return fail('Jeton sınırı aşıldı');
  const name=gift.giftName.trim().toLocaleLowerCase('tr-TR');
  const tea=TEA_NAMES.includes(name)&&gift.coins===TEA_COINS;
  const implant=IMPLANT_NAMES.includes(name)&&gift.coins===IMPLANT_COINS;
