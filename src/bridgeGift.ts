@@ -1,20 +1,29 @@
-/** Normalize untrusted TikTok bridge events before applying game rules.
- * Streak counters are cumulative; only final streak events are scored.
- * A bridge must supply stable eventId for replay deduplication.
+/** Stateful TikTok cumulative streak normalization.
+ * Each repeatCount is the cumulative number of units in ONE streak.
+ * The bridge must provide a stable streakId (or stable eventId) for all updates.
+ * Never infer a streak identity from just userId/giftId: distinct streaks can overlap.
  */
-export type BridgeGift={type:'gift';eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;repeatEnd?:boolean;giftId?:string|number;streak?:boolean};
+export type BridgeGift={type:'gift';eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;repeatEnd?:boolean;giftId?:string|number;streak?:boolean;streakId?:string};
 export type NormalizedGift={eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number};
-export function normalizeBridgeGift(value:unknown):NormalizedGift[] {
+export type StreakProgress=Record<string,number>;
+const valid=(m:Partial<BridgeGift>)=>m.type==='gift'&&typeof m.eventId==='string'&&m.eventId.length>0&&m.eventId.length<=128&&typeof m.userId==='string'&&m.userId.length>0&&typeof m.username==='string'&&m.username.length>0&&typeof m.giftName==='string'&&m.giftName.length>0&&Number.isSafeInteger(m.coins)&&Number(m.coins)>0&&Number.isSafeInteger(m.timestamp)&&Number(m.timestamp)>0;
+export function normalizeBridgeGift(value:unknown,progress:StreakProgress={}):NormalizedGift[]{
  if(!value||typeof value!=='object')return [];
  const m=value as Partial<BridgeGift>;
- if(m.type!=='gift'||typeof m.eventId!=='string'||!m.eventId||typeof m.userId!=='string'||!m.userId||typeof m.username!=='string'||!m.username||typeof m.giftName!=='string'||!m.giftName||!Number.isSafeInteger(m.coins)||Number(m.coins)<=0||!Number.isSafeInteger(m.timestamp)||Number(m.timestamp)<=0)return [];
+ if(!valid(m))return [];
  const count=m.repeatCount===undefined?1:m.repeatCount;
  if(!Number.isSafeInteger(count)||count<1||count>100000)return [];
- // Never score cumulative streak progress: otherwise 1,2,3...N is counted N(N+1)/2 times.
- if(m.streak===true&&m.repeatEnd!==true)return [];
- // Unspecified streak semantics are ambiguous; the bridge must identify streak updates.
- // One final event is expanded into independently deduplicated gift units.
- const result:NormalizedGift[]=[];
- for(let i=0;i<count;i++)result.push({eventId:count===1?m.eventId:m.eventId+':unit:'+i,userId:m.userId,username:m.username,giftName:m.giftName,coins:Number(m.coins),timestamp:Number(m.timestamp)});
- return result;
+ const id=m.eventId!;
+ const streak=m.streak===true;
+ const key=streak?(typeof m.streakId==='string'&&m.streakId?m.streakId:id):id;
+ // A streak needs a stable ID across cumulative progress updates.
+ const seen=streak?(progress[key]??0):0;
+ const from=streak?seen:0;
+ if(streak&&count<=seen)return [];
+ // If the bridge cannot provide a stable streak identifier, it must mark updates
+ // with the same eventId. Each cumulative unit has a stable dedupe identity.
+ const out:NormalizedGift[]=[];
+ for(let i=from;i<count;i++)out.push({eventId:streak?key+':unit:'+i:count===1?id:id+':unit:'+i,userId:m.userId!,username:m.username!,giftName:m.giftName!,coins:m.coins!,timestamp:m.timestamp!});
+ if(streak)progress[key]=count;
+ return out;
 }
