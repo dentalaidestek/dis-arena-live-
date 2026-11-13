@@ -115,8 +115,8 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  </group>;
 }
 function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
- const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}});
+ const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);const wrist=useRef<THREE.Group>(null);const blink=useRef<THREE.Group>(null);
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){arm.current.rotation.z=active?(bad?-.75:.75)+Math.sin(clock.elapsedTime*8)*.15:bad?-.15:.15}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}if(wrist.current){wrist.current.rotation.z=active?(bad?-.45:.45)+Math.sin(clock.elapsedTime*9)*.14:0;}if(blink.current){const phase=clock.elapsedTime*1.3+(bad?0:1.4);blink.current.scale.y=Math.max(.08,1-.94*Math.pow(Math.max(0,Math.sin(phase)),40));}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.45}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  {/* Stethoscope loop and clinic gloves */}
@@ -124,6 +124,11 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  <mesh position={[0,-.2,.06]} scale={[.54,.69,.49]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e1a283"/></mesh>
  <mesh position={[0,.3,.07]} scale={[.57,.33,.5]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#27122e':'#17233f'}/></mesh>
  <mesh position={[0,-.42,.5]} scale={[.43,.19,.12]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color={bad?'#4c1735':'#d9f5ff'}/></mesh>
+ {/* Articulated eyelids, eyelashes, cheeks and expression */}
+ <group ref={blink}>{[-1,1].map(k=><React.Fragment key={k}><mesh position={[k*.2,-.015,.555]} scale={[.145,.085,.04]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#f8fafb"/></mesh><mesh position={[k*.2,-.015,.594]} scale={[.053,.065,.022]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color={bad?'#764335':'#37748a'}/></mesh><mesh position={[k*.2,-.015,.615]} scale={[.025,.035,.015]}><sphereGeometry args={[1,12,10]}/><meshBasicMaterial color="#101823"/></mesh>{[-1,0,1].map(j=><mesh key={j} position={[k*.2+j*.07,.065,.594]} rotation={[0,0,j*.32]} scale={[.012,.046,.012]}><capsuleGeometry args={[1,1,3,6]}/><meshStandardMaterial color="#25202b"/></mesh>)}</React.Fragment>)}</group>
+ {[-1,1].map(k=><mesh key={k} position={[k*.2,.115,.555]} rotation={[0,0,k*(bad?-.2:.08)]} scale={[.19,.038,.035]}><capsuleGeometry args={[1,1,4,12]}/><meshStandardMaterial color={bad?'#251321':'#2b3441'}/></mesh>)}
+ <mesh position={[0,-.13,.61]} scale={[.13,.21,.12]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#dca185"/></mesh>
+ <mesh position={[0,-.26,.601]} scale={[bad?.19:.23,.045,.02]}><sphereGeometry args={[1,20,10]}/><meshStandardMaterial color={bad?'#793c45':'#9e6268'}/></mesh>
  {/* Sculpted hair, ears, brows, eyes and face mask */}
  {[-1,1].map(side=><React.Fragment key={side}>
  <mesh position={[side*.55,-.2,.03]} scale={[.13,.23,.16]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#d59a7c"/></mesh>
@@ -147,10 +152,10 @@ function Doctor({side,active}:{side:'bad'|'good';active:boolean}){
  <group ref={arm} position={[bad?.68:-.68,-.96,.3]}>
  <mesh position={[bad?.27:-.27,-.12,0]} rotation={[0,0,bad?-.65:.65]} scale={[.18,.75,.2]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
  <mesh position={[bad?.53:-.53,.3,.06]} scale={[.18,.22,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>
- <group ref={tool} position={[bad?.53:-.53,.57,.14]}>
+ <group ref={wrist} position={[bad?.53:-.53,.57,.14]}><group ref={tool}>
  <mesh scale={[.055,.42,.06]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#d9e9f0" metalness={.85} roughness={.16}/></mesh>
  {bad?<mesh position={[0,.28,0]} rotation={[0,0,.4]} scale={[.15,.045,.07]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#e3f3ff" metalness={.9}/></mesh>:<mesh position={[0,.31,0]} scale={[.09,.22,.09]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#c8d2e4" metalness={.9}/></mesh>}
- </group></group>
+ </group></group></group>
  <Text position={[0,-2.8,.4]} fontSize={.27} color={bad?'#ff8ab6':'#8cfce7'}>{bad?'KÖTÜ HEKİM':'İYİ HEKİM'}</Text>
  <Text position={[0,-3.15,.4]} fontSize={.17} color="#ffffff">{bad?'☕ ÇEKİM':'🧴 İMPLANT'}</Text>
  </group>;
