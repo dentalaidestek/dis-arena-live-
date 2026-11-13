@@ -37,8 +37,8 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult{
   if(tea){
    // Hedef hediye eklenmeden ÖNCEKİ sıralamadan belirlenir: +50 puan hedefi değiştirmez.
    const senderIndex=preGiftOrder.findIndex(p=>p.userId===sender!.userId);
-   const targetId=senderIndex===0?preGiftOrder[1]?.userId:senderIndex>0?preGiftOrder[senderIndex-1]?.userId:undefined;
-   const target=players.find(p=>p.userId===targetId);
+   const extractionTargetUserId=senderIndex===0?preGiftOrder[1]?.userId:senderIndex>0?preGiftOrder[senderIndex-1]?.userId:undefined;
+   const target=players.find(p=>p.userId===extractionTargetUserId);
    const canExtract=!!target&&target.lockedUntil<=gift.timestamp;
    if(canExtract&&target){target.lockedUntil=gift.timestamp+EXTRACTION_MS;action='extract';targetId=toothOf({...state,players},target.userId);message='🦷 @'+sender.username+' Çay ile @'+target.username+' dişini 30 sn çekti (+50 jeton)';}
    else message='☕ @'+sender.username+' +50 jeton (hedef zaten çekilmiş veya rakip yok)';
