@@ -12,7 +12,11 @@ function Tooth({id,rank,name,coins,locked,now,activeCue}:{id:number;rank?:number
  useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse);if(affected){const t=clock.elapsedTime;group.current.rotation.z=Math.sin(t*13)*.08;group.current.position.z=.18+.12*Math.sin(t*9)}else{group.current.rotation.z=0;group.current.position.z=0}}});
  return <group ref={group} position={[x,y,z]} rotation={[0,-angle*.42,0]} scale={size}>
  {champion&&<><mesh position={[0,upper?.48:-.48,-.1]}><torusGeometry args={[.31,.035,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffbf44" intensity={1.7} distance={1.4}/></>}
- {locked?<><mesh position={[0,upper?-.09:.09,.08]}><sphereGeometry args={[.17,16,12]}/><meshStandardMaterial color="#741a38"/></mesh><Text position={[0,0,.4]} fontSize={.24} color="#ff6685">✕</Text></>:<mesh position={[0,upper?-.1:.1,0]} scale={[.23,.37,.26]}><sphereGeometry args={[1,24,20]}/><meshPhysicalMaterial color="#fff5e9" roughness={.22} clearcoat={.8}/></mesh>}
+ {locked?<><mesh position={[0,upper?-.09:.09,.08]}><sphereGeometry args={[.17,16,12]}/><meshStandardMaterial color="#741a38"/></mesh><Text position={[0,0,.4]} fontSize={.24} color="#ff6685">✕</Text></>:<group>
+ <mesh position={[0,upper?-.1:.1,0]} scale={[.235,.35,.24]}><sphereGeometry args={[1,24,20]}/><meshPhysicalMaterial color="#fff5e9" roughness={.22} clearcoat={.8}/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*.105,upper?-.29:.29,.07]} scale={[.12,.16,.16]}><sphereGeometry args={[1,18,14]}/><meshPhysicalMaterial color="#fffaf0" roughness={.25} clearcoat={.7}/></mesh>)}
+ <mesh position={[0,upper?.2:-.2,-.045]} scale={[.12,.25,.14]}><coneGeometry args={[1,1,16]}/><meshStandardMaterial color="#dfd2be" roughness={.6}/></mesh>
+ </group>}
  {name&&<group position={[0,upper?-.53:.53,.34]}><mesh scale={[.45,.19,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#654117':'#172747'} transparent opacity={.94}/></mesh><Text position={[0,.055,.025]} fontSize={.13} maxWidth={.8} color="#ffffff" anchorX="center">{name.slice(0,9)}</Text><Text position={[0,-.075,.025]} fontSize={.11} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
  {champion&&<Text position={[0,upper?.69:-.69,.25]} fontSize={.27} color={gold}>♛{(rank??0)+1}</Text>}
  {affected&&<><mesh position={[0,0,.18]}><torusGeometry args={[.35,.035,8,32]}/><meshBasicMaterial color={activeCue?.action==='extract'?'#ff365d':'#53ffbd'}/></mesh>
