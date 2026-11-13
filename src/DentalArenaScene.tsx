@@ -6,22 +6,46 @@ import{POSITIONS,ranked,isLocked,type CoinArena}from'./coinArena';
 import type{AnimationCue}from'./ActionAnimation';
 const gold='#ffcf56';
 function Tooth({id,rank,name,coins,locked,now,activeCue}:{id:number;rank?:number;name?:string;coins?:number;locked:boolean;now:number;activeCue?:AnimationCue}){
- const upper=id<16;const slot=upper?id:id-16;const angle=(slot-7.5)/7.5*1.13;const x=Math.sin(angle)*3.5;const z=Math.cos(angle)*.65;
- const y=upper?-.12:.12;const size=upper?1:.83;const champion=rank!==undefined&&rank<4;
- const group=useRef<THREE.Group>(null);const affected=activeCue?.targetId===id;
- useFrame(({clock})=>{if(group.current){const pulse=champion?1+.035*Math.sin(clock.elapsedTime*3):1;group.current.scale.setScalar(pulse);if(affected){const t=clock.elapsedTime;group.current.rotation.z=Math.sin(t*13)*.08;group.current.position.z=.18+.12*Math.sin(t*9)}else{group.current.rotation.z=0;group.current.position.z=0}}});
- return <group ref={group} position={[x,y,z]} rotation={[0,-angle*.42,0]} scale={size}>
- {champion&&<><mesh position={[0,upper?.48:-.48,-.1]}><torusGeometry args={[.31,.035,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffbf44" intensity={1.7} distance={1.4}/></>}
- {locked?<><mesh position={[0,upper?-.09:.09,.08]}><sphereGeometry args={[.17,16,12]}/><meshStandardMaterial color="#741a38"/></mesh><Text position={[0,0,.4]} fontSize={.24} color="#ff6685">✕</Text></>:<group>
- <mesh position={[0,upper?-.1:.1,0]} scale={[.235,.35,.24]}><sphereGeometry args={[1,24,20]}/><meshPhysicalMaterial color="#fff5e9" roughness={.22} clearcoat={.8}/></mesh>
- {[-1,1].map(side=><mesh key={side} position={[side*.105,upper?-.29:.29,.07]} scale={[.12,.16,.16]}><sphereGeometry args={[1,18,14]}/><meshPhysicalMaterial color="#fffaf0" roughness={.25} clearcoat={.7}/></mesh>)}
- <mesh position={[0,upper?.2:-.2,-.045]} scale={[.12,.25,.14]}><coneGeometry args={[1,1,16]}/><meshStandardMaterial color="#dfd2be" roughness={.6}/></mesh>
- </group>}
- {name&&<group position={[0,upper?-.53:.53,.34]}><mesh scale={[.45,.19,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#654117':'#172747'} transparent opacity={.94}/></mesh><Text position={[0,.055,.025]} fontSize={.13} maxWidth={.8} color="#ffffff" anchorX="center">{name.slice(0,9)}</Text><Text position={[0,-.075,.025]} fontSize={.11} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
- {champion&&<Text position={[0,upper?.69:-.69,.25]} fontSize={.27} color={gold}>♛{(rank??0)+1}</Text>}
- {affected&&<><mesh position={[0,0,.18]}><torusGeometry args={[.35,.035,8,32]}/><meshBasicMaterial color={activeCue?.action==='extract'?'#ff365d':'#53ffbd'}/></mesh>
- {activeCue?.action==='implant'&&<group position={[0,0,.34]} rotation={[Math.PI/2,0,0]}><mesh><cylinderGeometry args={[.1,.12,.47,16]}/><meshStandardMaterial color="#a5c8d9" metalness={.95} roughness={.17}/></mesh>{[-.17,-.09,0,.09,.17].map(i=><mesh key={i} position={[0,i,0]}><torusGeometry args={[.115,.018,6,18]}/><meshStandardMaterial color="#effaff" metalness={.85}/></mesh>)}</group>}
- </>}
+ const upper=id<16;const slot=id<16?id:id-16;const centered=Math.abs(slot-7.5);
+ const angle=(slot-7.5)/7.5*1.12;const x=Math.sin(angle)*3.32;const z=Math.cos(angle)*.53;
+ const posterior=centered>4.5;const canine=centered>2.8&&!posterior;
+ const width=posterior?.32:canine?.25:.235;const height=posterior?.27:canine?.40:.36;
+ const champion=rank!==undefined&&rank<4;const affected=activeCue?.targetId===id;
+ const root=useRef<THREE.Group>(null);const tooth=useRef<THREE.Group>(null);const screw=useRef<THREE.Group>(null);
+ const start=useRef(0);const cueId=useRef<number|null>(null);
+ useFrame(({clock},delta)=>{
+  if(root.current)root.current.scale.setScalar(champion?1+.02*Math.sin(clock.elapsedTime*2.8):1);
+  if(affected&&activeCue&&cueId.current!==activeCue.id){cueId.current=activeCue.id;start.current=clock.elapsedTime;}
+  const t=affected?Math.min(1,(clock.elapsedTime-start.current)/2.6):0;
+  const smooth=t*t*(3-2*t);
+  if(tooth.current){
+   const extracting=affected&&activeCue?.action==='extract';
+   tooth.current.position.y=extracting?(upper?1:-1)*smooth*.72:0;
+   tooth.current.position.z=extracting?smooth*.62:0;
+   tooth.current.rotation.z=extracting?Math.sin(t*14)*.13*(1-t):0;
+   tooth.current.scale.setScalar(extracting?Math.max(.05,1-smooth*.85):1);
+   tooth.current.visible=!locked||extracting;
+  }
+  if(screw.current){
+   const implanting=affected&&activeCue?.action==='implant';
+   screw.current.visible=!!implanting;
+   screw.current.position.y=implanting?(upper?-1:1)*(.72-smooth*.72):0;
+   screw.current.rotation.y+=delta*(implanting?13:0);
+  }
+ });
+ return <group ref={root} position={[x,upper?-.12:.12,z]} rotation={[0,-angle*.35,0]}>
+ {champion&&<><mesh position={[0,upper?.56:-.56,-.05]}><torusGeometry args={[.29,.028,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffd56a" intensity={.7} distance={1.3}/></>}
+ <mesh position={[0,upper?-.12:.12,-.07]} scale={[width*1.33,.23,.27]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#b84c68" roughness={.58}/></mesh>
+ <group ref={tooth}>
+ <mesh position={[0,upper?-.04:.04,.11]} scale={[width,height,.23]}><sphereGeometry args={[1,32,24]}/><meshPhysicalMaterial color="#fff9ed" roughness={.18} clearcoat={.85} clearcoatRoughness={.13}/></mesh>
+ {posterior?[-1,1].map(side=><mesh key={side} position={[side*.13,upper?-.18:.18,.19]} scale={[.145,.15,.16]}><sphereGeometry args={[1,22,18]}/><meshPhysicalMaterial color="#fffdf6" roughness={.2} clearcoat={.9}/></mesh>):<mesh position={[0,upper?-.27:.27,.15]} scale={[width*.91,.09,.19]}><boxGeometry args={[1,1,1]}/><meshPhysicalMaterial color="#fffdf6" roughness={.17} clearcoat={.9}/></mesh>}
+ {canine&&<mesh position={[0,upper?-.38:.38,.15]} rotation={[0,0,Math.PI]}><coneGeometry args={[.13,.2,20]}/><meshPhysicalMaterial color="#fffaf0" roughness={.2}/></mesh>}
+ <mesh position={[0,upper?.29:-.29,-.09]} rotation={[upper?0:Math.PI,0,0]} scale={[.12,.28,.13]}><coneGeometry args={[1,1,20]}/><meshStandardMaterial color="#dfd1bb" roughness={.55}/></mesh>
+ </group>
+ {locked&&!affected&&<mesh position={[0,0,.19]} scale={[width*.9,.13,.14]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#7b2e48"/></mesh>}
+ <group ref={screw} visible={false} position={[0,0,.32]}><mesh rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.105,.085,.38,20]}/><meshStandardMaterial color="#b8c7d2" metalness={.86} roughness={.2}/></mesh>{[-.14,-.07,0,.07,.14].map(v=><mesh key={v} position={[0,v,.02]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.108,.014,6,20]}/><meshStandardMaterial color="#e1eaf1" metalness={.85}/></mesh>)}</group>
+ {name&&<group position={[0,upper?-.52:.52,.46]}><mesh scale={[.46,.18,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#664313':'#142b42'} transparent opacity={.93}/></mesh><Text position={[0,.052,.025]} fontSize={.12} maxWidth={.82} color="#fff">{name.slice(0,9)}</Text><Text position={[0,-.067,.025]} fontSize={.105} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
+ {champion&&<Text position={[0,upper?.73:-.73,.32]} fontSize={.26} color={gold}>♛{(rank??0)+1}</Text>}
  </group>;
 }
 function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue}){
