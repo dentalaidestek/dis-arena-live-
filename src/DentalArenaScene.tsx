@@ -56,7 +56,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  const expression=useRef<THREE.Group>(null);
  const lowerLip=useRef<THREE.Mesh>(null);
  const eyeLids=useRef<THREE.Group>(null);
- const reaction=useRef(0);
+ const reaction=useRef(0);const eyelash=useRef<THREE.Group>(null);
  useFrame(({clock},delta)=>{
   if(jaw.current)jaw.current.rotation.x=Math.sin(clock.elapsedTime*.7)*.012;
   const target=cue?.action==='extract'?-1:cue?.action==='implant'?1:0;
@@ -65,7 +65,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
   if(eyebrows.current){eyebrows.current.position.y=pain*.16+joy*.07;eyebrows.current.scale.y=1+pain*.42;}
   if(expression.current){expression.current.position.y=joy*.13-pain*.08;expression.current.scale.x=1+joy*.16-pain*.12;expression.current.scale.y=1+joy*.08+pain*.18;}
   if(lowerLip.current){lowerLip.current.position.y=-1.07-pain*.17+joy*.09;lowerLip.current.scale.x=3.07+joy*.2;}
-  if(eyeLids.current)eyeLids.current.scale.y=1+pain*.9-joy*.25;
+  if(eyeLids.current)eyeLids.current.scale.y=1+pain*.9-joy*.25;if(eyelash.current)eyelash.current.position.y=pain*.06;
  });
  return <group ref={jaw} position={[0,-.05,0]}>
  {/* Dental chair and patient's shoulders */}
@@ -98,6 +98,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
 
   <mesh position={[side*2.85,.03,-.03]} scale={[.55,.75,.2]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color="#d99480" transparent opacity={.56}/></mesh>
  </React.Fragment>)}
+ <group ref={eyelash}>{[-1,1].map(side=>[-1,0,1].map(k=><mesh key={side+'-'+k} position={[side*1.45+k*.28,1.51,-.13]} rotation={[0,0,k*.22]} scale={[.025,.12,.028]}><capsuleGeometry args={[1,1,4,8]}/><meshStandardMaterial color="#33232c"/></mesh>))}</group>
  {/* Mouth cavity with shaded gingival rim */}
  <mesh position={[0,-.14,-.04]} scale={[3.82,1.82,.24]}><sphereGeometry args={[1,64,32]}/><meshPhysicalMaterial color="#a63e58" roughness={.45} clearcoat={.2}/></mesh>
  {/* Open mouth cavity and lips */}
@@ -115,8 +116,8 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  </group>;
 }
 function Doctor({side,active,targetId}:{side:'bad'|'good';active:boolean;targetId?:number}){
- const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);const wrist=useRef<THREE.Group>(null);const head=useRef<THREE.Group>(null);const blink=useRef<THREE.Group>(null);
- useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){const toward=targetId===undefined?0:(targetId%16-7.5)/7.5;const desired=active?(bad?-.68:.68)+toward*.12+Math.sin(clock.elapsedTime*8)*.09:(bad?-.15:.15);arm.current.rotation.z=THREE.MathUtils.lerp(arm.current.rotation.z,desired,.13);}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}if(wrist.current){wrist.current.rotation.z=THREE.MathUtils.lerp(wrist.current.rotation.z,active?(bad?-.45:.45)+Math.sin(clock.elapsedTime*9)*.14:0,.14);}if(head.current){head.current.rotation.z=THREE.MathUtils.lerp(head.current.rotation.z,active?(bad?-.12:.12):0,.08);}if(blink.current){const phase=clock.elapsedTime*1.3+(bad?0:1.4);blink.current.scale.y=Math.max(.08,1-.94*Math.pow(Math.max(0,Math.sin(phase)),40));}});
+ const bad=side==='bad';const ref=useRef<THREE.Group>(null);const arm=useRef<THREE.Group>(null);const tool=useRef<THREE.Group>(null);const support=useRef<THREE.Group>(null);const wrist=useRef<THREE.Group>(null);const hand=useRef<THREE.Group>(null);const head=useRef<THREE.Group>(null);const blink=useRef<THREE.Group>(null);
+ useFrame(({clock})=>{if(ref.current){ref.current.position.y=-.8+Math.sin(clock.elapsedTime*1.8+(bad?0:1))*.065;ref.current.position.x=bad?-5.55:5.55;ref.current.rotation.z=0}if(arm.current){const toward=targetId===undefined?0:(targetId%16-7.5)/7.5;const desired=active?(bad?-.68:.68)+toward*.12+Math.sin(clock.elapsedTime*8)*.09:(bad?-.15:.15);arm.current.rotation.z=THREE.MathUtils.lerp(arm.current.rotation.z,desired,.13);}if(tool.current){tool.current.rotation.z=active?Math.sin(clock.elapsedTime*12)*.12:0}if(support.current){support.current.rotation.z=active?(bad?.42:-.42):0;}if(wrist.current){wrist.current.rotation.z=THREE.MathUtils.lerp(wrist.current.rotation.z,active?(bad?-.45:.45)+Math.sin(clock.elapsedTime*9)*.14:0,.14);}if(head.current){head.current.rotation.z=THREE.MathUtils.lerp(head.current.rotation.z,active?(bad?-.12:.12):0,.08);}if(hand.current){const reach=active?1:0;hand.current.position.x=THREE.MathUtils.lerp(hand.current.position.x,(bad?-.53:.53)+reach*(bad?-.45:.45),.1);hand.current.position.y=THREE.MathUtils.lerp(hand.current.position.y,.3+reach*.46,.1);}if(blink.current){const phase=clock.elapsedTime*1.3+(bad?0:1.4);blink.current.scale.y=Math.max(.08,1-.94*Math.pow(Math.max(0,Math.sin(phase)),40));}});
  return <group ref={ref} position={[bad?-5.55:5.55,-.8,.3]} scale={1.45}>
  <mesh position={[0,-1.55,0]} scale={[.9,1.1,.52]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'} roughness={.55}/></mesh>
  {/* Stethoscope loop and clinic gloves */}
@@ -152,7 +153,7 @@ function Doctor({side,active,targetId}:{side:'bad'|'good';active:boolean;targetI
  </group>
  <group ref={arm} position={[bad?.68:-.68,-.96,.3]}>
  <mesh position={[bad?.27:-.27,-.12,0]} rotation={[0,0,bad?-.65:.65]} scale={[.18,.75,.2]}><capsuleGeometry args={[1,1,6,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh>
- <mesh position={[bad?.53:-.53,.3,.06]} scale={[.18,.22,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>
+ <group ref={hand} position={[bad?.53:-.53,.3,.06]}><mesh scale={[.18,.22,.2]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>{[-1,0,1].map(f=><mesh key={f} position={[f*.095,.17,.08]} rotation={[0,0,f*.14]} scale={[.045,.15,.055]}><capsuleGeometry args={[1,1,4,8]}/><meshStandardMaterial color="#d8edf3"/></mesh>)}</group>
  <group ref={wrist} position={[bad?.53:-.53,.57,.14]}><group ref={tool}>
  <mesh scale={[.055,.42,.06]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#d9e9f0" metalness={.85} roughness={.16}/></mesh>
  {bad?<mesh position={[0,.28,0]} rotation={[0,0,.4]} scale={[.15,.045,.07]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#e3f3ff" metalness={.9}/></mesh>:<mesh position={[0,.31,0]} scale={[.09,.22,.09]}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#c8d2e4" metalness={.9}/></mesh>}
