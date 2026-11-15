@@ -1,6 +1,6 @@
 # Diş Arena — 28 diş, iki hekim, 10 dakika
 
-Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davranışlar [oyun kurallarında](docs/GAME_RULES.md), doğrulama ve yayın engelleri [kabul raporunda](docs/ACCEPTANCE.md) bulunur. Eski HP/32 diş modülleri ana ekranda kullanılmaz.
+Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davranışlar [oyun kurallarında](docs/GAME_RULES.md), doğrulama ve yayın engelleri [kabul raporunda](docs/ACCEPTANCE.md) bulunur. Eski HP/32 diş modülleri ana ekranda kullanılmaz. Güncel ekran görüntüleri, değişen dosyalar ve CI kanıtları [teslim kaydındadır](docs/DELIVERY.md).
 
 | Canlı işlem | Doğrulanmış birim değer | Etki |
 |---|---:|---|

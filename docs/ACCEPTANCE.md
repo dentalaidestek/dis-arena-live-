@@ -22,16 +22,22 @@
 | `npm run test:python` | TikTokLive 7.0.1 bağımlılıklarıyla 10 geçti |
 | `npm run test:provider` | 1 geçti; gerçek protobuf sınıfıyla sentetik 1000 seri artışı → Python → SQLite =1000; replay +0 |
 | `npm run build` | TypeScript/Vite geçti; yaklaşık 1,27 MB JS paket boyutu uyarısı sürüyor |
-| Chromium Playwright | Önceki kaynak paketi `bfffb63` üzerinde 5 kabul testi geçti; son etiket/güvenli alan ve eski tur görsellerinin ayıklanması düzeltmeleri yeni CI'da tekrar çalıştırılır |
+| Chromium Playwright | Son uygulama kaynağı `70c13d4` üzerinde 6 kabul testi geçti |
 | `git diff --check` | Temiz |
 
 Gerçek GitHub Actions Chromium/SwiftShader testleri: 360×800, 393×873, 1080×1920 OBS, 1280×1000 masaüstü; WebGL FPS>0, tarayıcı hatası olmaması ve taşma kontrolü; şifreli mobil yönetim/çıkış; çekim→implant→demo çürütme→iyileştirme; tam ekran gir/çık sırasında turun korunması; oda şifresinin admin yetkisi vermemesi. Her prosedürde hedef Ahmet / FDI 11 kontrol edilip 3D işlem sırasında ekran görüntüsü alınır.
 
-`bfffb63` üzerindeki üç iş akışı başarılı: Diş Arena CI 43734355307, Verify Diş Arena 43734355296, Arena visual acceptance 43734355364. Tarayıcı ekranları artifact `arena-visual-acceptance` içinde saklanır. Yeni commit için güncel Actions sonuçları ayrıca kontrol edilmelidir. Bu gerçek tarayıcı doğrulamasıdır; mobil emülasyonu gerçek Android GPU testi değildir.
+`70c13d441376b1ebec4fd6376f8f03548f2b1b64` üzerinde üç iş akışı başarılı:
+
+- [Diş Arena CI](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281416)
+- [Verify Diş Arena](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281524)
+- [Arena visual acceptance](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281393)
+
+Son tarayıcı testi Gül ×1000, +100 hediye, dört dondurulan kazanan ve temiz yeni turu da doğrular. PNG asılları artifact `14170930160` içinde, kalıcı WebP kopyaları [screenshots](screenshots/) altında ve [teslim kaydında](DELIVERY.md) bulunur. Bu gerçek tarayıcı doğrulamasıdır; mobil emülasyonu gerçek Android GPU testi değildir. Görseller açılarak incelendi; gözlerin ağız arkasında kalması ve acı ifadesinde kaşın yerinden çıkması düzeltilip yeniden yakalandı.
 
 ## Eski testlerin durumu
 
-`npm run test:legacy` ile önce tüm eski testler de çalıştırıldı. Başlangıç commit'i temiz bir geçici dizine çıkartılıp aynı komut tekrar çalıştırıldı: **82 testten 22'si başlangıçta da başarısızdı**. Güncel testler eklenmeden önceki sonuçla hata isimleri aynıdır; eski akış hataları düzeltilmiş gibi gösterilmedi. Aktif uygulama bu HP/sahiplenme modüllerini çağırmaz.
+`npm run test:legacy` ile önce tüm eski testler de çalıştırıldı. Son geniş test: **98 testten 76 geçti, 22 başarısız**. Başlangıç commit'i temiz bir geçici dizine çıkartılıp aynı komut tekrar çalıştırıldı: **82 testten 22'si başlangıçta da başarısızdı**. Güncel testler eklenmeden önceki sonuçla hata isimleri aynıdır; eski akış hataları düzeltilmiş gibi gösterilmedi. Aktif uygulama bu HP/sahiplenme modüllerini çağırmaz.
 
 Başarısız eski testler:
 
