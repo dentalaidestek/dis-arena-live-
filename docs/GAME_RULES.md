@@ -5,7 +5,7 @@ Eski 32 diş/HP/eleme kuralları ana uygulama için geçerli değildir.
 - 28 diş, üstte ve altta 14'er; iki hekim; ilk geçerli hediye ile 600 saniye.
 - Puanlar benzersiz TikTok kullanıcı ID'sinde tutulur. Kullanıcı adı değişebilir.
 - Sıralama: toplam jeton azalan, katılım zamanı artan, kullanıcı ID'si deterministik sözlü sırası. İlk 28 dişlere, ilk dört iki üst/iki alt merkezi kesiciye yerleşir.
-- Çekim ve implant farklı 20 jetonluk hediyelerdir. Çürütme 10; iyileştirme şimdilik ayrı bir 10 jetonluk hediyedir (belirtilmeyen fiyat için uygulama varsayımı).
+- Çekim ve implant farklı 20 jetonluk hediyelerdir. Çürütme 10; iyileştirme ayrı bir 10 jetonluk hediyedir (kullanıcının son onayı).
 - Çekim/çürütme gönderenin hediye öncesi hemen önündekini hedefler; birinci ikinciyi hedefler. İlk hediyesini gönderen, henüz önceki sıralamada bulunmayan oyuncunun saldırı hedefi yoktur.
 - Çekim 30 saniye, çürütme 15 saniye kilitler. Kilitli hedefe yeni saldırı kilidi uzatmaz veya başka durumla değiştirmez. Eski jetonlar korunur.
 - Kilitli gönderenden gelen normal hediyeler puan vermez. Çekimde yalnız implant, çürükte yalnız iyileştirme kilidi kaldırır ve hediye değerini puana ekler. Kilitli olmayan oyuncunun savunma hediyesi normal puandır.

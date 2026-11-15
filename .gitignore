@@ -9,3 +9,5 @@ data/
 *.sqlite-shm
 *.sqlite-wal
 __pycache__/
+test-results/
+playwright-report/

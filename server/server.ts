@@ -7,16 +7,19 @@ import {spawn,type ChildProcess} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {ArenaStore,type Receipt} from './store';
 import type {Procedure} from '../src/coinArena';
+import {runDemo} from './demo';
 export const validUsername=(s:unknown):s is string=>typeof s==='string'&&/^@?[a-zA-Z0-9_][a-zA-Z0-9_.]{1,23}$/.test(s)&&!s.endsWith('.')&&!s.includes('..');
 export const authorized=(provided:unknown,token:string)=>typeof provided==='string'&&Buffer.byteLength(provided)===Buffer.byteLength('Bearer '+token)&&timingSafeEqual(Buffer.from(provided),Buffer.from('Bearer '+token));
-export function createArenaServer(options:{directory:string;adminToken:string;bridgeToken:string;port?:number;origins?:string[]}){
+export function createArenaServer(options:{directory:string;adminToken:string;bridgeToken:string;port?:number;origins?:string[];setupCode?:string;setupExpiresAt?:number;demoSeed?:boolean}){
  mkdirSync(options.directory,{recursive:true});
  const stores={live:new ArenaStore(join(options.directory,'live.sqlite')),demo:new ArenaStore(join(options.directory,'demo.sqlite'))};
+ if(options.demoSeed&&(!stores.demo.state().players.length||stores.demo.state().finishedAt))runDemo(stores.demo,{action:'populate'});
+ let setupUsed=false;
  const wss=new WebSocketServer({noServer:true,maxPayload:1024});
  let child:ChildProcess|undefined,bridge={state:'disconnected',username:'',error:''};
  let pending=0;const MAX_PENDING=128;let skippedVisuals=0;let visuals:{mode:string;receipt:Receipt}[]=[];
  const clients=new Map<WebSocket,'live'|'demo'>();
- const allowed=(req:IncomingMessage)=>!req.headers.origin||(options.origins??['http://localhost:5173','http://127.0.0.1:5173','http://localhost:8787','http://127.0.0.1:8787']).includes(req.headers.origin);
+ const allowed=(req:IncomingMessage)=>!req.headers.origin||(options.origins??['http://localhost:5173','http://127.0.0.1:5173',`http://localhost:${options.port??8787}`,`http://127.0.0.1:${options.port??8787}`]).includes(req.headers.origin);
  function snapshot(mode:'live'|'demo'){return {type:'snapshot',mode,state:stores[mode].state(),bridge,skippedVisuals,serverNow:Date.now()}}
  const reply=(res:any,status:number,data:unknown)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data))};
  const server=createServer(async(req,res)=>{
@@ -32,13 +35,20 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.woff':'font/woff','.woff2':'font/woff2'} as Record<string,string>)[extname(file)]??'application/octet-stream','X-Content-Type-Options':'nosniff'});createReadStream(file).pipe(res);return;
   }
   if(!allowed(req)){reply(res,403,{error:'Origin engellendi'});return;}
+  if(req.method==='GET'&&url.pathname==='/api/health'){reply(res,200,{ready:true});return;}
+  const setupRoute=req.method==='POST'&&url.pathname==='/api/session';
   const bridgeRoute=url.pathname.startsWith('/api/bridge/');
-  if(!authorized(req.headers.authorization,bridgeRoute?options.bridgeToken:options.adminToken)){reply(res,401,{error:'Yetkisiz'});return;}
+  if(!setupRoute&&!authorized(req.headers.authorization,bridgeRoute?options.bridgeToken:options.adminToken)){reply(res,401,{error:'Yetkisiz'});return;}
   if(pending>=MAX_PENDING){reply(res,503,{error:'Kuyruk dolu; aynı olay kimliğiyle tekrar deneyin'});return;}
   pending++;let size=0;const chunks:Buffer[]=[];
   try{
    for await(const chunk of req){size+=chunk.length;if(size>1_048_576){reply(res,413,{error:'Mesaj çok büyük'});return;}chunks.push(chunk)}
    const body=size?JSON.parse(Buffer.concat(chunks).toString()):{};
+   if(setupRoute){
+    const local=['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress??'');
+    if(!local||setupUsed||!options.setupCode||Date.now()>(options.setupExpiresAt??0)||!authorized('Bearer '+body.code,options.setupCode)){reply(res,401,{error:'Kurulum kodu geçersiz veya süresi dolmuş; başlatıcıyı yeniden açın'});return;}
+    setupUsed=true;reply(res,200,{token:options.adminToken});return;
+   }
    if(req.method==='GET'&&url.pathname==='/api/admin'){reply(res,200,{...snapshot(mode),catalog:store.catalog(),mappings:store.mappings(),diagnostics:store.diagnostics(),rounds:store.rounds(),pending});return;}
    if(req.method!=='POST'){reply(res,405,{});return;}
    if(bridgeRoute){
@@ -57,7 +67,7 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
     if(!validUsername(body.username)){reply(res,400,{error:'Geçerli TikTok kullanıcı adı gerekli'});return;}
     if(child){reply(res,409,{error:'Önce mevcut köprüyü durdurun'});return;}
     bridge={state:'connecting',username:body.username.replace(/^@/,''),error:''};
-    child=spawn(process.env.ARENA_PYTHON??'python3',['scripts/tiktok_live_bridge.py',bridge.username],{env:{...process.env,ARENA_BRIDGE_TOKEN:options.bridgeToken,ARENA_SERVER_URL:`http://127.0.0.1:${options.port??8787}`,ARENA_DATA_DIR:options.directory},stdio:['ignore','pipe','pipe']});
+    child=spawn(process.env.ARENA_PYTHON??'python3',['scripts/tiktok_live_bridge.py',bridge.username],{env:{...process.env,ARENA_BRIDGE_TOKEN:options.bridgeToken,ARENA_SERVER_URL:`http://127.0.0.1:${(server.address() as {port:number})?.port??options.port??8787}`,ARENA_DATA_DIR:options.directory},stdio:['ignore','pipe','pipe']});
     child.stdout?.on('data',()=>{});child.stderr?.on('data',data=>{bridge.error=String(data).slice(-300)});
     child.once('error',e=>{bridge.state='error';bridge.error=e.message;child=undefined});
     child.once('exit',()=>{bridge.state='disconnected';child=undefined});reply(res,200,{ok:true});return;
@@ -65,21 +75,9 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    if(url.pathname==='/api/disconnect'){child?.kill('SIGTERM');bridge.state='disconnected';reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/demo'){
     if(mode!=='demo'){reply(res,403,{error:'Testler yalnız demo veritabanına yazılır'});return;}
-    const now=Date.now();
-    const gifts=[{giftId:'demo-rose',name:'Demo Gül',coins:1,streak:true},{giftId:'demo-extract',name:'Demo Çekim',coins:20,streak:false},{giftId:'demo-implant',name:'Demo İmplant',coins:20,streak:false},{giftId:'demo-decay',name:'Demo Çürütme',coins:10,streak:false},{giftId:'demo-heal',name:'Demo İyileştirme',coins:10,streak:false}];
-    store.setCatalog(gifts,'demo-only',now);for(const proc of ['extract','implant','decay','heal'] as Procedure[])store.mapGift('demo-'+proc,proc);
-    if(body.action==='finish'){const state=store.state();if(state.startedAt)store.tick(state.startedAt+600000);reply(res,200,{ok:true});return;}
-    if(body.action==='populate')store.newRound(now);
-    let result:Receipt|undefined;
-    const loops=body.action==='populate'?28:body.action==='burst'?100:1;
-    for(let i=0;i<loops;i++){
-     const procedure=['extract','implant','decay','heal'].includes(body.action)?body.action:'rose';
-     const def=gifts.find(g=>g.giftId==='demo-'+procedure)!;
-     const resultUser=body.action==='populate'?'demo-'+i:body.userId||'demo-1';
-     result=store.ingest({type:'gift',roomId:'demo',eventId:randomUUID(),giftId:def.giftId,giftName:def.name,userId:resultUser,username:body.action==='populate'?'Oyuncu'+(i+1):resultUser,coins:def.coins,timestamp:Date.now(),streak:def.streak,streakId:randomUUID(),repeatCount:body.action==='populate'?2800-i*80:body.action==='rose1000'?1000:1});
-     if(result.visuals.length){if(visuals.length<500)visuals.push({mode:'demo',receipt:result});else skippedVisuals+=result.visuals.length;}
-    }
-    reply(res,200,result);return;
+    const result=runDemo(store,body);
+    if(result?.visuals.length){if(visuals.length<500)visuals.push({mode:'demo',receipt:result});else skippedVisuals+=result.visuals.length;}
+    reply(res,200,result??{message:body.action==='finish'?'Demo tur tamamlandı':'Demo hazır'});return;
    }
    reply(res,404,{});
   }catch(e){reply(res,400,{error:e instanceof Error?e.message:'İşlem hatası'})}finally{pending--}
@@ -116,7 +114,16 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const tokenPath=join(directory,'tokens.json');
  if(!existsSync(tokenPath))writeFileSync(tokenPath,JSON.stringify({admin:randomBytes(32).toString('hex'),bridge:randomBytes(32).toString('hex')}),{mode:0o600});
  const tokens=JSON.parse(readFileSync(tokenPath,'utf8'));const port=Number(process.env.ARENA_PORT??8787);
- const app=createArenaServer({directory,adminToken:process.env.ARENA_ADMIN_TOKEN??tokens.admin,bridgeToken:process.env.ARENA_BRIDGE_TOKEN??tokens.bridge,port,origins:process.env.ARENA_ORIGINS?.split(',')});
- app.server.listen(port,process.env.ARENA_HOST??'127.0.0.1',()=>console.log(`Arena http://127.0.0.1:${port} | Admin anahtarı: ${tokenPath} (admin alanı)`));
+ const openMode=['demo','live'].includes(process.env.ARENA_OPEN_BROWSER??'')?process.env.ARENA_OPEN_BROWSER:undefined;
+ const setupCode=openMode?randomBytes(18).toString('hex'):undefined;
+ const app=createArenaServer({setupCode,setupExpiresAt:Date.now()+120000,demoSeed:process.env.ARENA_DEMO_SEED==='1',directory,adminToken:process.env.ARENA_ADMIN_TOKEN??tokens.admin,bridgeToken:process.env.ARENA_BRIDGE_TOKEN??tokens.bridge,port,origins:process.env.ARENA_ORIGINS?.split(',')});
+ app.server.listen(port,process.env.ARENA_HOST??'127.0.0.1',()=>{
+  const url=`http://127.0.0.1:${port}/?mode=${openMode??'live'}`;
+  console.log(`🦷 Arena hazır: ${url}\nDurdurmak için Ctrl+C`);
+  if(setupCode){
+   console.log(`Tek kullanımlık kurulum kodu (2 dakika): ${setupCode}`);
+   if(process.env.PREFIX?.includes('com.termux')&&process.env.ARENA_LAUNCH_NO_OPEN!=='1'){const opener=spawn('termux-open-url',[url+'#setup='+setupCode],{stdio:'ignore'});opener.once('error',()=>console.log('Tarayıcıyı açıp yukarıdaki kurulum kodunu girin'));}
+  }else console.log(`Admin anahtarı: ${tokenPath} (admin alanı)`);
+ });
  process.on('SIGTERM',()=>{app.close();process.exit(0)});process.on('SIGINT',()=>{app.close();process.exit(0)});
 }

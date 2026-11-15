@@ -5,9 +5,11 @@ import*as THREE from'three';
 import{POSITIONS,ranked,isLocked,type CoinArena}from'./coinArena';
 import type{AnimationCue}from'./ActionAnimation';
 import {sceneToothPosition,procedurePhase} from './procedureMotion';
+import {createCrownGeometry} from './toothGeometry';
 const gold='#ffcf56';
 // Reused for all 28 crowns/cusps; retained for this module's lifetime.
-const crownGeometry=new THREE.SphereGeometry(1,24,16);
+const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
+const cariesColor=new THREE.Color('#9b8538');
 const cuspGeometry=new THREE.SphereGeometry(1,18,12);
 const rootGeometry=new THREE.ConeGeometry(1,1,16);
 
@@ -27,7 +29,7 @@ function Tooth({id,rank,name,coins,locked,condition,now,activeCue}:{id:number;ra
   const smooth=procedurePhase(t).work;
   const decayed=locked&&condition==='decayed';
   const disease=affected&&activeCue?.action==='decay'?smooth:affected&&activeCue?.action==='heal'?1-smooth:decayed?1:0;
-  if(enamel.current)enamel.current.color.set('#fff9ed').lerp(new THREE.Color('#9b8538'),disease*.8);
+  if(enamel.current)enamel.current.color.set('#fff9ed').lerp(cariesColor,disease*.8);
   if(lesion.current){lesion.current.visible=disease>.01;lesion.current.scale.setScalar(Math.max(.001,disease));}
   if(healing.current){healing.current.visible=affected&&activeCue?.action==='heal'&&t>.25&&t<.9;healing.current.rotation.z+=delta*2;healing.current.scale.setScalar(.6+Math.sin(t*Math.PI)*.4);}
   if(tooth.current){
@@ -51,9 +53,8 @@ function Tooth({id,rank,name,coins,locked,condition,now,activeCue}:{id:number;ra
  {champion&&<><mesh position={[0,upper?.56:-.56,-.05]}><torusGeometry args={[.29,.028,8,32]}/><meshBasicMaterial color={gold}/></mesh><pointLight color="#ffd56a" intensity={.7} distance={1.3}/></>}
  <mesh position={[0,upper?-.12:.12,-.07]} scale={[width*1.33,.23,.27]}><sphereGeometry args={[1,20,14]}/><meshStandardMaterial color="#b84c68" roughness={.58}/></mesh>
  <group ref={tooth}>
- <mesh position={[0,upper?-.04:.04,.11]} scale={[width,height,.23]}><primitive object={crownGeometry} attach="geometry"/><meshPhysicalMaterial ref={enamel} color="#fff9ed" roughness={.18} clearcoat={.85} clearcoatRoughness={.13}/></mesh>
- {(posterior||premolar)?[-1,1].map(side=><mesh key={side} position={[side*.13,upper?-.18:.18,.19]} scale={[.145,.15,.16]}><primitive object={cuspGeometry} attach="geometry"/><meshPhysicalMaterial color="#fffdf6" roughness={.2} clearcoat={.9}/></mesh>):<mesh position={[0,upper?-.27:.27,.15]} scale={[width*.91,.09,.19]}><boxGeometry args={[1,1,1]}/><meshPhysicalMaterial color="#fffdf6" roughness={.17} clearcoat={.9}/></mesh>}
- {canine&&<mesh position={[0,upper?-.38:.38,.15]} rotation={[0,0,upper?Math.PI:0]}><coneGeometry args={[.13,.2,20]}/><meshPhysicalMaterial color="#fffaf0" roughness={.2}/></mesh>}
+ <mesh position={[0,upper?-.04:.04,.11]} rotation={[0,0,upper?0:Math.PI]} scale={[width,height,.28]}><primitive object={crowns[posterior?'molar':premolar?'premolar':canine?'canine':'incisor']} attach="geometry"/><meshPhysicalMaterial ref={enamel} color="#fff9ed" roughness={.18} clearcoat={.85} clearcoatRoughness={.13}/></mesh>
+ {(posterior||premolar)&&[-1,1].map(side=><mesh key={side} position={[side*.13,upper?-.18:.18,.19]} scale={[.145,.15,.16]}><primitive object={cuspGeometry} attach="geometry"/><meshPhysicalMaterial color="#fffdf6" roughness={.24} clearcoat={.6}/></mesh>)}
  <mesh position={[0,upper?.29:-.29,-.09]} rotation={[upper?0:Math.PI,0,0]} scale={[.12,.28,.13]}><primitive object={rootGeometry} attach="geometry"/><meshStandardMaterial color="#dfd1bb" roughness={.55}/></mesh>
  <group ref={lesion} visible={false} position={[0,upper?-.12:.12,.35]}>
  <mesh scale={[width*.65,.13,.035]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#392819" roughness={.96}/></mesh>
@@ -93,6 +94,10 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  {/* Dental chair and patient's shoulders */}
  <mesh position={[0,-3.45,-2.5]} scale={[3.8,1.6,.55]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#3e7d9b" roughness={.5}/></mesh>
  <mesh position={[0,-2.8,-2.1]} scale={[2.1,1.2,.6]}><sphereGeometry args={[1,32,20]}/><meshStandardMaterial color="#e8a587"/></mesh>
+ <mesh position={[0,-3.6,-2.9]} scale={[3.4,2.5,.45]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#24475d" roughness={.65}/></mesh>
+ <mesh position={[0,-3.9,-1.9]} scale={[2.05,1.3,.6]}><sphereGeometry args={[1,28,18]}/><meshStandardMaterial color="#263a54" roughness={.85}/></mesh>
+ <mesh position={[0,-3.36,-1.18]} rotation={[.09,0,0]} scale={[1.55,1.02,.08]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#9fbfc4" roughness={.85}/></mesh>
+ <mesh position={[0,-2.5,-1.1]} scale={[.42,.35,.12]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#e6a78d"/></mesh>
  {/* Patient head and cheeks, viewed face-on */}
  <mesh position={[0,0,-1.18]} scale={[4.6,3.5,.83]}><sphereGeometry args={[1,56,36]}/><meshStandardMaterial color="#e9a888" roughness={.73}/></mesh>
  <mesh position={[-3.9,-.12,-.35]} scale={[.9,1.9,.9]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#df987e"/></mesh>
@@ -181,10 +186,11 @@ function Doctor({side,active,targetId,cue}:{side:'bad'|'good';active:boolean;tar
 function CameraFit({onFps}:{onFps:(fps:number)=>void}){
  const {camera,size}=useThree();const frames=useRef(0),elapsed=useRef(0);
  useFrame((_,delta)=>{frames.current++;elapsed.current+=delta;if(elapsed.current>=2){onFps(Math.round(frames.current/elapsed.current));frames.current=0;elapsed.current=0;}});
- React.useEffect(()=>{const cam=camera as THREE.PerspectiveCamera;const aspect=size.width/size.height;cam.position.z=Math.max(13.8,8.6/(Math.tan(THREE.MathUtils.degToRad(cam.fov/2))*aspect));cam.updateProjectionMatrix();},[camera,size.width,size.height]);
+ React.useEffect(()=>{const cam=camera as THREE.PerspectiveCamera;const aspect=size.width/size.height;cam.position.z=Math.max(13.8,7.8/(Math.tan(THREE.MathUtils.degToRad(cam.fov/2))*aspect));cam.updateProjectionMatrix();},[camera,size.width,size.height]);
  return null;
 }
 function OperatingArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:AnimationCue}){
+ const operatingGroup=useRef<THREE.Group>(null);
  const upper=useRef<THREE.Mesh>(null),lower=useRef<THREE.Mesh>(null),hand=useRef<THREE.Group>(null),instrument=useRef<THREE.Group>(null);
  const start=useRef(0),last=useRef<number|undefined>(undefined);
  const vectors=useMemo(()=>({shoulder:new THREE.Vector3(bad?.68:-.68,-.96,.3),elbow:new THREE.Vector3(),wrist:new THREE.Vector3(),target:new THREE.Vector3(),rest:new THREE.Vector3(bad?.9:-.9,-1.35,.9),mid:new THREE.Vector3(),axis:new THREE.Vector3(0,1,0),direction:new THREE.Vector3()}),[bad]);
@@ -193,7 +199,8 @@ function OperatingArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
   const t=cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0;
   const phase=procedurePhase(t);const v=vectors;
   const target=sceneToothPosition(cue?.targetId??7);
-  v.target.set((target[0]-(bad?-5.55:5.55))/1.45,(target[1]+.8)/1.45,(target[2]+.6-.3)/1.45);
+  v.target.set(target[0],target[1],target[2]+.56);
+  if(operatingGroup.current){operatingGroup.current.updateWorldMatrix(true,false);operatingGroup.current.worldToLocal(v.target);}
   v.wrist.copy(v.rest).lerp(v.target,active?phase.reach:0);
   v.elbow.copy(v.shoulder).lerp(v.wrist,.48);v.elbow.y-=.48;v.elbow.z+=.35;
   for(const [mesh,a,b] of [[upper.current,v.shoulder,v.elbow],[lower.current,v.elbow,v.wrist]] as const){if(!mesh)continue;mesh.position.copy(a).add(b).multiplyScalar(.5);v.direction.copy(b).sub(a);mesh.scale.set(.11,v.direction.length(),.12);mesh.quaternion.setFromUnitVectors(v.axis,v.direction.normalize());}
@@ -201,7 +208,7 @@ function OperatingArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
   if(instrument.current){instrument.current.position.copy(v.wrist);instrument.current.rotation.z=active?Math.sin(t*40)*.07:0;instrument.current.rotation.y=active&&cue?.action==='implant'?t*32:0;}
  });
  const healing=cue?.action==='heal',decay=cue?.action==='decay';
- return <group><mesh ref={upper}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh><mesh ref={lower}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#edf5f8"/></mesh>
+ return <group ref={operatingGroup}><mesh ref={upper}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color={bad?'#711c5a':'#0d9cba'}/></mesh><mesh ref={lower}><cylinderGeometry args={[1,1,1,12]}/><meshStandardMaterial color="#edf5f8"/></mesh>
  <group ref={hand}><mesh scale={[.17,.15,.13]}><sphereGeometry args={[1,16,12]}/><meshStandardMaterial color="#d8edf3"/></mesh>{[-1,0,1].map(f=><mesh key={f} position={[f*.08,.1,-.03]} scale={[.035,.13,.035]}><capsuleGeometry args={[1,1,4,8]}/><meshStandardMaterial color="#d8edf3"/></mesh>)}</group>
  <group ref={instrument}>
  <mesh position={[0,0,-.16]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.04,.05,.35,12]}/><meshStandardMaterial color={healing?'#67ffe1':decay?'#c4a84c':'#c6d6df'} metalness={.8} roughness={.2}/></mesh>
@@ -209,7 +216,7 @@ function OperatingArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
  </group></group>;
 }
 function Scene({state,now,cue,quality,onFps}:{state:CoinArena;now:number;cue?:AnimationCue;quality:'low'|'high';onFps:(fps:number)=>void}){
- return <Canvas gl={{antialias:quality==='high',alpha:true,powerPreference:quality==='high'?'high-performance':'low-power'}} dpr={quality==='high'?[1,1.7]:1} camera={{position:[0,0,13.8],fov:52}}><CameraFit onFps={onFps}/><ambientLight intensity={1.6}/><hemisphereLight args={['#b3deff','#4b153f',2]}/><pointLight position={[-5,5,6]} intensity={95} color="#64c6ff"/><pointLight position={[5,3,5]} intensity={95} color="#ff8dd4"/>
+ return <Canvas fallback={<SceneFallback/>} gl={{antialias:quality==='high',alpha:true,powerPreference:quality==='high'?'high-performance':'low-power'}} dpr={quality==='high'?[1,1.7]:1} camera={{position:[0,0,13.8],fov:52}}><CameraFit onFps={onFps}/><ambientLight intensity={.95}/><hemisphereLight args={['#d4e5f1','#473b46',1.6]}/><pointLight position={[-5,5,6]} intensity={100} color="#c4e3ff"/><pointLight position={[5,3,5]} intensity={85} color="#ffe0c7"/>
  {/* Clinical overhead lighting and room furnishings */}
  <mesh position={[0,4.4,-2.7]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[1.45,1.45,.14,48]}/><meshStandardMaterial color="#e5f5ff" emissive="#80c5ff" emissiveIntensity={.8}/></mesh>
  <mesh position={[0,4.45,-2.5]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[1.24,.11,12,64]}/><meshStandardMaterial color="#f8fdff" emissive="#c7f1ff" emissiveIntensity={1.5}/></mesh>
@@ -219,5 +226,10 @@ function Scene({state,now,cue,quality,onFps}:{state:CoinArena;now:number;cue?:An
  <group position={[0,.2,0]}><Patient state={state} now={now} cue={cue}/><Doctor side="bad" active={cue?.action==='extract'||cue?.action==='decay'} targetId={cue?.targetId} cue={cue}/><Doctor side="good" active={cue?.action==='implant'||cue?.action==='heal'} targetId={cue?.targetId} cue={cue}/></group>
  </Canvas>;
 }
+function SceneFallback(){return <div className="scene-fallback"><strong>3D görünüm açılamadı</strong><p>Chrome’da donanım hızlandırmayı açıp sayfayı yeniden yükleyin. Puanlar sunucuda korunur; yayıncı kontrolleri kullanılabilir.</p></div>}
+class SceneBoundary extends React.Component<{children:React.ReactNode},{failed:boolean}>{
+ state={failed:false};static getDerivedStateFromError(){return {failed:true}}
+ render(){return this.state.failed?<SceneFallback/>:this.props.children}
+}
 const ACTION_LABELS:Record<string,string>={extract:'🦷 KÖTÜ HEKİM · ÇEKİM',decay:'☣ KÖTÜ HEKİM · ÇÜRÜTME',implant:'🔩 İYİ HEKİM · İMPLANT',heal:'✚ İYİ HEKİM · İYİLEŞTİRME'};
-export function DentalArenaScene({state,now,cue,quality='high',onFps=()=>{}}:{state:CoinArena;now:number;cue?:AnimationCue;quality?:'low'|'high';onFps?:(fps:number)=>void}){return <div className="dental-3d-stage"><div className="dental-clinic-bg"><div className="dental-light dental-light-left"/><div className="dental-light dental-light-right"/></div><div className="dental-3d-title">🦷 DİŞ ARENA <span>2 ÜST · 2 ALT · 4 KAZANAN</span></div><Scene state={state} now={now} cue={cue} quality={quality} onFps={onFps}/>{cue&&<div className={'dental-action-banner '+(['extract','decay'].includes(cue.action)?'danger':'success')}>{ACTION_LABELS[cue.action]}<small> @{cue.user}</small></div>}</div>}
+export function DentalArenaScene({state,now,cue,quality='high',onFps=()=>{}}:{state:CoinArena;now:number;cue?:AnimationCue;quality?:'low'|'high';onFps?:(fps:number)=>void}){return <div className="dental-3d-stage"><div className="dental-clinic-bg"><div className="dental-light dental-light-left"/><div className="dental-light dental-light-right"/></div><div className="dental-3d-title">🦷 DİŞ ARENA <span>2 ÜST · 2 ALT · 4 KAZANAN</span></div><SceneBoundary><React.Suspense fallback={<div className="scene-fallback"><strong>3D klinik hazırlanıyor…</strong></div>}><Scene state={state} now={now} cue={cue} quality={quality} onFps={onFps}/></React.Suspense></SceneBoundary>{cue&&<div className={'dental-action-banner '+(['extract','decay'].includes(cue.action)?'danger':'success')}>{ACTION_LABELS[cue.action]}<small> @{cue.user}</small></div>}</div>}

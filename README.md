@@ -9,7 +9,11 @@ Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davr
 | Çürütme | 10 jeton | Aynı hedefleme kuralıyla 15 sn kilitler |
 | İyileştirme | 10 jeton* | Gönderenin çürük kilidini kaldırır |
 
-*İyileştirmenin fiyatı kullanıcı tarafından belirtilmedi; mevcut uygulama 10 jeton varsayar. Dört işlem dört ayrı doğrulanmış hediye ID'si kullanır. Hiçbir gerçek TikTok ID'si uydurulmamıştır. Çay 50 jeton kuralı kaldırılmıştır; gerçek katalogda 20 jeton olmayan Çay, çekim hediyesi olarak seçilemez.
+*İyileştirme bedeli kullanıcı tarafından 15 Kasım 2026 tarihinde 10 jeton olarak kesinleştirildi. Dört işlem dört ayrı doğrulanmış hediye ID'si kullanır. Hiçbir gerçek TikTok ID'si uydurulmamıştır. Çay 50 jeton kuralı kaldırılmıştır; gerçek katalogda 20 jeton olmayan Çay, çekim hediyesi olarak seçilemez.
+
+## Termux
+
+Mevcut depoda `bash termux-preview.sh` komutu sunucuyu ve otomatik girişli 28 oyunculu demoyu birlikte açar. Python gerekmez. Ayrıntılar: [Termux testi](docs/TERMUX.md).
 
 ## Çalıştırma
 

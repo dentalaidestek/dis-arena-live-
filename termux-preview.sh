@@ -1,14 +1,19 @@
 #!/data/data/com.termux/files/usr/bin/bash
-set -e
+set -euo pipefail
 cd "$(dirname "$0")"
-echo "🦷 Diş Arena v2 — 10 dakikalık oyun önizlemesi"
 if ! command -v node >/dev/null 2>&1; then
-  echo "Node.js bulunamadı. Termux'ta: pkg install nodejs-lts -y"
-  exit 1
+  if command -v pkg >/dev/null 2>&1; then
+    echo 'Node.js hazırlanıyor…'
+    pkg install nodejs-lts -y
+  else
+    echo 'Node.js 22.13+ gerekli.'
+    exit 1
+  fi
 fi
-if [ ! -d node_modules ]; then npm ci; fi
-echo ""
-echo "📱 Telefonda aç: http://127.0.0.1:5173"
-echo "🎁 Sayfanın altındaki 'Yayıncı test ve tur kontrolü' bölümünden hediye simülasyonu yap."
-echo "🛑 Durdurmak için Ctrl+C"
-npm run dev -- --host 0.0.0.0
+if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);if(a<22||(a===22&&b<13))process.exit(1);require('node:sqlite')" >/dev/null 2>&1; then
+  if command -v pkg >/dev/null 2>&1; then
+    echo 'Node.js ve SQLite desteği güncelleniyor…'
+    pkg install nodejs-lts -y
+  fi
+fi
+exec node scripts/launch.mjs "$@"
