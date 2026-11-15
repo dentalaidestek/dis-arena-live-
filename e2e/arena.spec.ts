@@ -19,6 +19,7 @@ test('viewer composition at desktop, 360x800, 393x873 and 1080x1920 OBS',async({
  for(const [width,height,path,name] of [[1280,1000,'/arena?mode=demo','desktop'],[360,800,'/demo','phone-360'],[393,873,'/demo','phone-393'],[1080,1920,'/obs?mode=demo','obs-1080x1920']] as const){
   await page.setViewportSize({width,height});const errors=await ready(page,path);
   await expect(page.locator('input,select,button')).toHaveCount(0);await expect(page.locator('.admin-page')).toHaveCount(0);
+  await expect(page.getByTestId('tooth-inspector')).toContainText('Ahmet');await expect(page.locator('.optical-label')).toContainText('28 DİŞ');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+1)).toBeTruthy();
   await page.screenshot({path:info.outputPath(name+'.png')});expect(errors).toEqual([]);
  }

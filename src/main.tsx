@@ -5,6 +5,7 @@ import {AdminPanel} from './AdminPanel';
 import './style.css';
 import './presentation.css';
 import './broadcast.css';
+import './clinic.css';
 const route=arenaRoute(location.pathname,location.search);
 const setup=new URLSearchParams(location.hash.slice(1)).get('setup');
 if(setup&&route.page!=='admin')location.replace('/admin?mode='+route.mode+location.hash);
