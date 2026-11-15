@@ -86,7 +86,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
   const target=cue?.action==='extract'||cue?.action==='decay'?-1:cue?.action==='implant'||cue?.action==='heal'?1:0;
   reaction.current=THREE.MathUtils.damp(reaction.current,target,3.4,delta);
   const pain=Math.max(0,-reaction.current),joy=Math.max(0,reaction.current);
-  if(eyebrows.current){eyebrows.current.position.y=pain*.16+joy*.07;eyebrows.current.scale.y=1+pain*.42;}
+  if(eyebrows.current){eyebrows.current.position.y=pain*.03+joy*.025;for(const brow of eyebrows.current.children){const side=Math.sign(brow.position.x);brow.rotation.z=side*(-.13-pain*.18+joy*.10);}}
   if(expression.current){expression.current.position.y=joy*.13-pain*.08;expression.current.scale.x=1+joy*.16-pain*.12;expression.current.scale.y=1+joy*.08+pain*.18;}
   if(lowerLip.current){lowerLip.current.position.y=-1.07-pain*.17+joy*.09;lowerLip.current.scale.x=3.07+joy*.2;}
   if(eyeLids.current){for(const lid of eyeLids.current.children){lid.scale.y=.055+pain*.15;lid.position.y=2.32-pain*.13;lid.position.z=.56;}}if(eyelash.current)eyelash.current.position.y=-pain*.08;
