@@ -35,7 +35,7 @@ npm start
 | `/admin?mode=demo` | Yalnız demo verisine uygulanan test araçları |
 | `/obs?mode=demo` | Demo yayın görünümü |
 
-Eski `/?mode=demo` ve `/?view=obs` adresleri yeni sayfalara yönlenir. Termux başlatıcısı `/admin` sayfasını iki dakikalık, tek kullanımlık yerel kurulum koduyla açar. İlk kurulumda en az 8 karakterlik yayıncı şifresi belirlenir. Elle `npm start` kullanıyorsanız `data/tokens.json` içindeki yerel admin anahtarıyla paneldeki ilk kurulum bölümünü kullanabilirsiniz. Anahtarı paylaşmayın veya OBS URL'sine eklemeyin.
+Eski `/?mode=demo` ve `/?view=obs` adresleri yeni sayfalara yönlenir. Termux başlatıcısı `/admin` sayfasını iki dakikalık, tek kullanımlık yerel kurulum koduyla açar. İlk kurulumda en az 8 karakterlik yayıncı şifresi belirlenir. Elle `npm start` kullanıyorsanız konsolda yazılan iki dakikalık kurulum kodunu `/admin` içindeki ilk kurulum bölümüne girin. `data/tokens.json` içindeki ayrı anahtarlar yalnız güvenilir CLI/köprü entegrasyonları içindir. Anahtarı paylaşmayın veya OBS URL'sine eklemeyin.
 
 Şifreler scrypt ile tuzlanıp `access.sqlite` içinde saklanır. Oturumlar HttpOnly/SameSite cookie kullanır; sunucuda yalnız token özeti saklanır. Beş hatalı deneme 15 dakika sınırlandırılır. Oda izleme şifresi isteğe bağlı ve yönetici şifresinden ayrı yetkidedir. Yönetici API'leri ayrıca kontrol edilir; çıkış oturumu iptal eder. HTTPS reverse proxy arkasında `ARENA_SECURE_COOKIES=1` kullanın. HTTP Termux yerel bağlantısında Secure cookie kapalıdır.
 

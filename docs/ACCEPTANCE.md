@@ -18,7 +18,7 @@
 
 | Kontrol | Gerçek sonuç |
 |---|---|
-| `npm test` | 62 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
+| `npm test` | 63 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
 | `npm run test:python` | TikTokLive 7.0.1 bağımlılıklarıyla 10 geçti |
 | `npm run test:provider` | 1 geçti; gerçek protobuf sınıfıyla sentetik 1000 seri artışı → Python → SQLite =1000; replay +0 |
 | `npm run build` | TypeScript/Vite geçti; yaklaşık 1,27 MB JS paket boyutu uyarısı sürüyor |

@@ -146,14 +146,14 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(!existsSync(tokenPath))writeFileSync(tokenPath,JSON.stringify({admin:randomBytes(32).toString('hex'),bridge:randomBytes(32).toString('hex')}),{mode:0o600});
  const tokens=JSON.parse(readFileSync(tokenPath,'utf8'));const port=Number(process.env.ARENA_PORT??8787);
  const openMode=['demo','live'].includes(process.env.ARENA_OPEN_BROWSER??'')?process.env.ARENA_OPEN_BROWSER:undefined;
- const setupCode=openMode?randomBytes(18).toString('hex'):undefined;
+ const setupCode=randomBytes(18).toString('hex');
  const app=createArenaServer({consoleLogs:true,secureCookies:process.env.ARENA_SECURE_COOKIES==='1',setupCode,setupExpiresAt:Date.now()+120000,demoSeed:process.env.ARENA_DEMO_SEED==='1',directory,adminToken:process.env.ARENA_ADMIN_TOKEN??tokens.admin,bridgeToken:process.env.ARENA_BRIDGE_TOKEN??tokens.bridge,port,origins:process.env.ARENA_ORIGINS?.split(',')});
  app.server.listen(port,process.env.ARENA_HOST??'127.0.0.1',()=>{
   const url=`http://127.0.0.1:${port}/admin?mode=${openMode??'live'}`;
   console.log(`🦷 Arena hazır: ${url}\nDurdurmak için Ctrl+C`);
   if(setupCode){
    console.log(`Tek kullanımlık kurulum kodu (2 dakika): ${setupCode}`);
-   if(process.env.PREFIX?.includes('com.termux')&&process.env.ARENA_LAUNCH_NO_OPEN!=='1'){const opener=spawn('termux-open-url',[url+'#setup='+setupCode],{stdio:'ignore'});opener.once('error',()=>console.log('Tarayıcıyı açıp yukarıdaki kurulum kodunu girin'));}
+   if(openMode&&process.env.PREFIX?.includes('com.termux')&&process.env.ARENA_LAUNCH_NO_OPEN!=='1'){const opener=spawn('termux-open-url',[url+'#setup='+setupCode],{stdio:'ignore'});opener.once('error',()=>console.log('Tarayıcıyı açıp yukarıdaki kurulum kodunu girin'));}
   }else console.log(`Admin anahtarı: ${tokenPath} (admin alanı)`);
  });
  process.on('SIGTERM',()=>{app.close();process.exit(0)});process.on('SIGINT',()=>{app.close();process.exit(0)});
