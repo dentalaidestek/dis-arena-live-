@@ -91,13 +91,13 @@ export function Clinician({bad,cue}:{bad:boolean;cue?:AnimationCue}){
  useFrame(({clock},delta)=>{
   if(cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,reach=active?procedurePhase(t).reach:0;
-  if(root.current){root.current.position.x=side*(3.40-reach*1.75);root.current.position.y=.15+Math.sin(clock.elapsedTime*1.5)*.016;}
+  if(root.current){root.current.position.x=side*(3.40-reach*1.75);root.current.position.y=.15;}
   if(head.current){head.current.rotation.z=THREE.MathUtils.damp(head.current.rotation.z,side*.10*reach,5,delta);head.current.rotation.y=side*-.1;}
  });
  return <group ref={root} position={[side*3.4,.15,-.08]}>
   <Block position={[0,1.32,0]} size={[1.34,1.88,.65]} color={coat} radius={.20}/>
   <Block position={[0,1.77,.354]} size={[.37,.78,.045]} color={bad?'#844154':'#297b83'} radius={.025}/>
-  {[-1,1].map(s=><group key={s}><mesh position={[s*.23,2.03,.36]} rotation={[0,0,s*.33]}><boxGeometry args={[.27,.52,.035]}/><meshStandardMaterial color="#f3f7f6"/></mesh><Block position={[s*.36,.92,.342]} size={[.32,.24,.035]} color="#d1dfe0" radius={.02}/><Limb from={[s*.31,.38,0]} to={[s*.31,-1.15,.05]} radius={.19} color={navy}/><Block position={[s*.31,-1.3,.16]} size={[.43,.23,.75]} color="#dae5e5" radius={.09}/></group>)}
+  {[-1,1].map(s=><group key={s}><mesh position={[s*.23,2.03,.36]} rotation={[0,0,s*.33]}><boxGeometry args={[.27,.52,.035]}/><meshStandardMaterial color="#f3f7f6"/></mesh><Block position={[s*.36,.92,.342]} size={[.32,.24,.035]} color="#d1dfe0" radius={.02}/><Limb from={[s*.31,.38,0]} to={[s*.31,-1.70,.05]} radius={.19} color={navy}/><Block position={[s*.31,-1.87,.16]} size={[.43,.23,.75]} color="#dae5e5" radius={.09}/></group>)}
   <Block position={[side*.38,1.8,.36]} size={[.25,.23,.025]} color="#648b9b" radius={.025}/>
   <Block position={[side*.38,1.8,.38]} size={[.16,.035,.015]} color="#e4eded" radius={.01}/>
   <Orb position={[0,2.39,0]} scale={[.18,.28,.19]} color={skin}/>

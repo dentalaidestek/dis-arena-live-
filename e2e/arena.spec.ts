@@ -21,7 +21,14 @@ test('viewer composition at desktop, 360x800, 393x873 and 1080x1920 OBS',async({
   await expect(page.locator('input,select,button')).toHaveCount(0);await expect(page.locator('.admin-page')).toHaveCount(0);
   await expect(page.getByTestId('tooth-inspector')).toContainText('Ahmet');await expect(page.locator('.optical-label')).toContainText('28 DİŞ');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+1)).toBeTruthy();
-  await page.screenshot({path:info.outputPath(name+'.png')});expect(errors).toEqual([]);
+  await page.screenshot({path:info.outputPath(name+'.png')});
+  if(name==='phone-393'){
+   const canvas=page.locator('canvas'),bounds=(await canvas.boundingBox())!;
+   await canvas.click({position:{x:bounds.width*.17,y:bounds.height*.695}});
+   await expect(page.getByTestId('tooth-inspector')).toContainText('DİŞ 17');
+   await page.screenshot({path:info.outputPath('tooth-inspector.png')});
+  }
+  expect(errors).toEqual([]);
  }
 });
 test('password login, mobile admin controls and logout',async({page},info)=>{

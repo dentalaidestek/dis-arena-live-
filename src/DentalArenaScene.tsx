@@ -42,8 +42,8 @@ function Tooth({id,rank,locked,condition,cue,mini=false,selected=false,onPick}:T
   {locked&&condition==='extracted'&&!affected&&<mesh geometry={sphere} dispose={null} position={[0,.04,.0]} scale={[width*.8,.18,.08]}><meshStandardMaterial color="#663740" roughness={.8}/></mesh>}
   <group ref={screw} visible={false} position={[0,0,.11]}><mesh><cylinderGeometry args={[.07,.065,.38,16]}/><meshStandardMaterial color="#a9bcc3" metalness={.9} roughness={.28}/></mesh>{[-.14,-.07,0,.07,.14].map(v=><mesh key={v} position={[0,v,0]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.075,.01,6,16]}/><meshStandardMaterial color="#d3dfe0" metalness={.8} roughness={.25}/></mesh>)}</group>
   {!mini&&<>
-   <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.14,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
-   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.135} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
+   <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
+   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
@@ -98,7 +98,7 @@ export function DentalArenaScene({state,now,cue,quality='high',onFps=()=>{}}:{st
  return <div className={'dental-3d-stage clinic-edition '+(cue?'is-treating':'')}>
   <SceneBoundary><React.Suspense fallback={<div className="scene-fallback"><strong>Klinik hazırlanıyor…</strong></div>}><Scene state={state} now={now} cue={cue} quality={quality} onFps={onFps} selected={chosen} onPick={setSelected}/></React.Suspense></SceneBoundary>
   <div className="clinic-edition-label"><span/>DENTAL STUDIO <small>CANLI ARENA</small></div>
-  <div className="optical-label">AĞIZ YAKIN PLANI <span>28 DİŞ</span></div>
+  <div className="optical-label">AĞIZ YAKIN PLANI <span>28 DİŞ · DOKUN</span></div>
   {!cue&&<div className="dental-focus-card" data-testid="tooth-inspector"><span>DİŞ {toothLabel(chosen)}</span><b>{owner?.username??'Katılımcı bekleniyor'}</b><strong>{owner?owner.coins.toLocaleString('tr-TR')+' JETON':'Dişe dokun, oyuncuyu gör'}</strong></div>}
   {cue&&<div className={'dental-action-banner '+(['extract','decay'].includes(cue.action)?'danger':'success')}>{ACTION_LABELS[cue.action]}<small>@{cue.user}</small></div>}
  </div>;
