@@ -89,7 +89,7 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
   if(eyebrows.current){eyebrows.current.position.y=pain*.16+joy*.07;eyebrows.current.scale.y=1+pain*.42;}
   if(expression.current){expression.current.position.y=joy*.13-pain*.08;expression.current.scale.x=1+joy*.16-pain*.12;expression.current.scale.y=1+joy*.08+pain*.18;}
   if(lowerLip.current){lowerLip.current.position.y=-1.07-pain*.17+joy*.09;lowerLip.current.scale.x=3.07+joy*.2;}
-  if(eyeLids.current){for(const lid of eyeLids.current.children){lid.scale.y=.055+pain*.15;lid.position.y=1.42-pain*.13;lid.position.z=-.02;}}if(eyelash.current)eyelash.current.position.y=-pain*.08;
+  if(eyeLids.current){for(const lid of eyeLids.current.children){lid.scale.y=.055+pain*.15;lid.position.y=2.32-pain*.13;lid.position.z=.56;}}if(eyelash.current)eyelash.current.position.y=-pain*.08;
  });
  return <group ref={jaw} position={[0,-.05,0]}>
  {/* Dental chair and patient's shoulders */}
@@ -109,24 +109,24 @@ function Patient({state,now,cue}:{state:CoinArena;now:number;cue?:AnimationCue})
  <mesh position={[0,2.9,-.84]} scale={[3.25,.9,.7]}><sphereGeometry args={[1,48,28]}/><meshStandardMaterial color="#30252b" roughness={.92}/></mesh>
  {[-1,1].map(side=><mesh key={side} position={[side*3.27,1.55,-.62]} rotation={[0,0,side*.16]} scale={[.48,1.4,.48]}><sphereGeometry args={[1,24,20]}/><meshStandardMaterial color="#33252d"/></mesh>)}
  {/* Nose and nostrils */}
- <mesh position={[0,.65,.08]} scale={[.44,.68,.45]}><sphereGeometry args={[1,28,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
- {[-1,1].map(side=><mesh key={side} position={[side*.26,.31,.46]} scale={[.11,.06,.03]}><sphereGeometry args={[1,14,12]}/><meshStandardMaterial color="#9d6459"/></mesh>)}
+ <mesh position={[0,1.45,.48]} scale={[.30,.40,.30]}><sphereGeometry args={[1,28,20]}/><meshStandardMaterial color="#e5a48b"/></mesh>
+ {[-1,1].map(side=><mesh key={side} position={[side*.18,1.23,.75]} scale={[.075,.045,.03]}><sphereGeometry args={[1,14,12]}/><meshStandardMaterial color="#9d6459"/></mesh>)}
  {/* Facial expression is driven by the real extraction / implant event */}
  <group ref={eyebrows}>
- {[-1,1].map(side=><mesh key={side} position={[side*1.45,1.66,-.25]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>)}
+ {[-1,1].map(side=><mesh key={side} position={[side*1.45,2.55,.25]} rotation={[0,0,side*-.13]} scale={[.75,.085,.09]}><sphereGeometry args={[1,20,12]}/><meshStandardMaterial color="#5b302d"/></mesh>)}
  </group>
  <group ref={eyeLids}>
- {[-1,1].map(side=><mesh key={side} position={[side*1.45,1.42,-.12]} scale={[.64,.055,.07]}><sphereGeometry args={[1,24,12]}/><meshStandardMaterial color="#d99480"/></mesh>)}
+ {[-1,1].map(side=><mesh key={side} position={[side*1.45,2.32,.56]} scale={[.64,.055,.07]}><sphereGeometry args={[1,24,12]}/><meshStandardMaterial color="#d99480"/></mesh>)}
  </group>
  {/* Patient's eyes, brows and cheek details */}
  {[-1,1].map(side=><React.Fragment key={side}>
-  <mesh position={[side*1.45,1.25,-.35]} scale={[.67,.28,.17]}><sphereGeometry args={[1,28,16]}/><meshStandardMaterial color="#f5f0eb"/></mesh>
-  <mesh position={[side*1.45,1.25,-.16]} scale={[.16,.21,.06]}><sphereGeometry args={[1,20,16]}/><meshStandardMaterial color="#3b6175"/></mesh>
-  <mesh position={[side*1.45,1.25,-.08]} scale={[.08,.12,.03]}><sphereGeometry args={[1,16,12]}/><meshBasicMaterial color="#111c29"/></mesh>
+  <mesh position={[side*1.45,2.1,.34]} scale={[.67,.28,.17]}><sphereGeometry args={[1,28,16]}/><meshStandardMaterial color="#f5f0eb"/></mesh>
+  <mesh position={[side*1.45,2.1,.52]} scale={[.16,.21,.06]}><sphereGeometry args={[1,20,16]}/><meshStandardMaterial color="#3b6175"/></mesh>
+  <mesh position={[side*1.45,2.1,.59]} scale={[.08,.12,.03]}><sphereGeometry args={[1,16,12]}/><meshBasicMaterial color="#111c29"/></mesh>
 
   <mesh position={[side*2.85,.03,-.03]} scale={[.55,.75,.2]}><sphereGeometry args={[1,24,16]}/><meshStandardMaterial color="#d99480" transparent opacity={.56}/></mesh>
  </React.Fragment>)}
- <group ref={eyelash}>{[-1,1].map(side=>[-1,0,1].map(k=><mesh key={side+'-'+k} position={[side*1.45+k*.28,1.51,-.13]} rotation={[0,0,k*.22]} scale={[.025,.12,.028]}><capsuleGeometry args={[1,1,4,8]}/><meshStandardMaterial color="#33232c"/></mesh>))}</group>
+ <group ref={eyelash}>{[-1,1].map(side=>[-1,0,1].map(k=><mesh key={side+'-'+k} position={[side*1.45+k*.28,2.36,.53]} rotation={[0,0,k*.22]} scale={[.025,.12,.028]}><capsuleGeometry args={[1,1,4,8]}/><meshStandardMaterial color="#33232c"/></mesh>))}</group>
  {/* Mouth cavity with shaded gingival rim */}
  <mesh position={[0,-.14,-.04]} scale={[3.82,1.82,.24]}><sphereGeometry args={[1,64,32]}/><meshPhysicalMaterial color="#a63e58" roughness={.45} clearcoat={.2}/></mesh>
  {/* Open mouth cavity and lips */}
