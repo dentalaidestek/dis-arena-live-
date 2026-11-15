@@ -9,6 +9,7 @@ const parse=<T>(v:unknown):T=>JSON.parse(String(v));
 const text=(v:unknown,max=128):v is string=>typeof v==='string'&&v.length>0&&v.length<=max;
 export class ArenaStore {
  readonly db:DatabaseSync;
+ private cachedCatalog?:{version:string;verified:number;gifts:CatalogGift[]};private giftIndex=new Map<string,CatalogGift>();
  constructor(path:string,now=Date.now(),readonly experimental=false){
   this.db=new DatabaseSync(path);this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
    CREATE TABLE IF NOT EXISTS rounds(id TEXT PRIMARY KEY,created INTEGER NOT NULL,state TEXT NOT NULL);
@@ -32,7 +33,13 @@ export class ArenaStore {
  graphics(){return String(this.db.prepare("SELECT value FROM settings WHERE key='graphics'").get()?.value??'low')}
  setGraphics(value:string){if(!['low','high'].includes(value))throw Error('Geçersiz grafik kalitesi');this.db.prepare("INSERT INTO settings VALUES('graphics',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(value)}
  rounds(){return this.db.prepare('SELECT id,created,json_extract(state,\'$.finishedAt\') AS finishedAt FROM rounds ORDER BY rowid DESC LIMIT 100').all()}
- catalog(){const r=this.db.prepare("SELECT * FROM catalogs WHERE version=(SELECT value FROM settings WHERE key='catalog-version')").get();return r?{version:String(r.version),verified:Number(r.verified),gifts:parse<CatalogGift[]>(r.gifts)}:{version:'unavailable',verified:0,gifts:[]}}
+ catalog(){const r=this.db.prepare("SELECT version,verified FROM catalogs WHERE version=(SELECT value FROM settings WHERE key='catalog-version')").get();
+  if(!r)return {version:'unavailable',verified:0,gifts:[] as CatalogGift[]};
+  if(this.cachedCatalog?.version===r.version&&this.cachedCatalog.verified===Number(r.verified))return this.cachedCatalog;
+  const gifts=parse<CatalogGift[]>(this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(String(r.version))!.gifts);
+  this.giftIndex=new Map(gifts.map(g=>[g.giftId,g]));return this.cachedCatalog={version:String(r.version),verified:Number(r.verified),gifts};
+ }
+ publicGifts(){this.catalog();const mapped=this.mappings();return Object.fromEntries((['extract','implant'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,verified:true}:{name:action==='extract'?'Çay':'Parfüm',coins:PROCEDURE_COINS[action],verified:false}]}))}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
   if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'))throw Error('Geçersiz katalog');
   const old=this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(version);
@@ -66,7 +73,7 @@ export class ArenaStore {
    }
    let state=this.tick(now);const before=state;
    let result=empty('Katalog veya seri doğrulanamadı');const catalog=this.catalog();
-   const gift=catalog.gifts.find(g=>g.giftId===p.giftId);
+   const gift=this.giftIndex.get(p.giftId);
    const count=p.repeatCount??1;
    const valid=gift&&gift.coins===p.coins&&gift.streak===(p.streak===true)&&Number.isSafeInteger(count)&&count>0&&count<=100000&&(!p.streak||text(p.streakId))&&(!p.streak?count===1:true);
    const created=Number(this.db.prepare('SELECT created FROM rounds WHERE id=?').get(state.roundId)!.created);

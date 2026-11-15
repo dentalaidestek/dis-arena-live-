@@ -20,3 +20,14 @@ test('imported old replay IDs remain blocked after migration',()=>{const s=new A
 test('providers that reuse a message ID for cumulative updates still advance exactly once',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog(catalog,'v',1000);assert.equal(s.ingest(packet('same',10),1000).delta,10);assert.equal(s.ingest(packet('same',15),1001).delta,5);assert.equal(s.ingest(packet('same',15),1002).duplicate,true);assert.equal(s.state().players[0].coins,15);s.close()});
 test('live mode cannot map decay or heal and treats retired mappings as normal gifts',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'d',name:'D',coins:10,streak:false}],'v',1000);assert.throws(()=>s.mapGift('d','decay'),/demo/);s.db.prepare('INSERT INTO mappings VALUES(?,?)').run('d','decay');const p={...packet('normal'),giftId:'d',coins:10,streak:false,repeatCount:1};assert.equal(s.ingest(p,1000).action,'score');s.close()});
 test('an old 20-coin extraction mapping becomes ordinary score under the 50-coin rule',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'old',name:'Old mapping',coins:20,streak:false}],'v',1000);s.db.prepare('INSERT INTO mappings VALUES(?,?)').run('old','extract');const r=s.ingest({...packet('old20'),giftId:'old',coins:20,streak:false,repeatCount:1},1000);assert.equal(r.action,'score');assert.equal(s.state().players[0].coins,20);s.close()});
+
+test('viewer gift names follow verified mapping and refreshed catalogue prices',()=>{
+ const s=new ArenaStore(':memory:',1000);
+ s.setCatalog([{giftId:'tea',name:'Doğrulanmış Çay',coins:50,streak:false},{giftId:'perfume',name:'Parfüm',coins:20,streak:false}],'one',1000);
+ assert.equal(s.publicGifts().extract.verified,false);s.mapGift('tea','extract');s.mapGift('perfume','implant');
+ assert.equal(s.publicGifts().extract.name,'Doğrulanmış Çay');assert.equal(s.publicGifts().implant.verified,true);
+ s.setCatalog([{giftId:'tea',name:'Yeni fiyat',coins:60,streak:false}],'two',1001);
+ assert.equal(s.publicGifts().extract.verified,false);assert.equal(s.publicGifts().implant.verified,false);
+ const receipt=s.ingest({...packet('refresh'),giftId:'tea',coins:60,streak:false,repeatCount:1},1002);
+ assert.equal(receipt.accepted,true);assert.equal(receipt.action,'score');assert.equal(s.state().players[0].coins,60);s.close();
+});

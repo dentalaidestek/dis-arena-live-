@@ -6,7 +6,8 @@ import {randomBytes,timingSafeEqual,randomUUID} from 'node:crypto';
 import {spawn,type ChildProcess} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {ArenaStore,type Receipt} from './store';
-import type {Procedure} from '../src/coinArena';
+import {timeLeft,type Procedure} from '../src/coinArena';
+import {toothLabel} from '../src/routes';
 import {runDemo} from './demo';
 import {AccessStore,cookieToken,sessionCookie,type Role} from './access';
 import {ConsoleMonitor} from './consoleMonitor';
@@ -24,12 +25,12 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
  let pending=0;const MAX_PENDING=128;let skippedVisuals=0;let visuals:{mode:string;receipt:Receipt}[]=[];
  const clients=new Map<WebSocket,'live'|'demo'>();const clientRequests=new Map<WebSocket,IncomingMessage>();
  const allowed=(req:IncomingMessage)=>!req.headers.origin||(options.origins??['http://localhost:5173','http://127.0.0.1:5173',`http://localhost:${options.port??8787}`,`http://127.0.0.1:${options.port??8787}`]).includes(req.headers.origin);
- function snapshot(mode:'live'|'demo'){return {type:'snapshot',mode,state:stores[mode].state(),roundNumber:stores[mode].roundNumber(),graphics:stores[mode].graphics(),events:feeds[mode],bridge,skippedVisuals,serverNow:Date.now()}}
+ function snapshot(mode:'live'|'demo'){return {type:'snapshot',mode,state:stores[mode].state(),roundNumber:stores[mode].roundNumber(),graphics:stores[mode].graphics(),gifts:stores[mode].publicGifts(),events:feeds[mode],bridge,skippedVisuals,serverNow:Date.now()}}
  function isAdmin(req:IncomingMessage){return authorized(req.headers.authorization,options.adminToken)||access.valid(cookieToken(req.headers.cookie,'admin'),'admin')}
  function mayView(req:IncomingMessage){return !access.configured('viewer')||isAdmin(req)||access.valid(cookieToken(req.headers.cookie,'viewer'),'viewer')}
  function publish(mode:'live'|'demo',result:Receipt|undefined,packet?:any){
   if(!result)return;if(result.visuals.length){if(visuals.length<500)visuals.push({mode,receipt:result});else skippedVisuals+=result.visuals.length;}
-  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((result.action??'GIFT').toUpperCase(),result.message);}
+  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((result.action??'GIFT').toUpperCase(),result.message+(result.visuals[0]?' · Diş '+toothLabel(result.visuals[0].targetId):''));if(packet)monitor.write('GIFT',`@${packet.username} — ${packet.giftName} ×${result.delta}`);}
   else if(!result.accepted&&!result.duplicate)monitor.write('ERROR',result.message);
  }
 
@@ -84,13 +85,13 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
      const result=stores.live.ingest(body);publish('live',result,body);
      reply(res,200,result);return;
     }
-    if(url.pathname==='/api/bridge/catalog'){stores.live.setCatalog(body.gifts,body.version);reply(res,200,{ok:true});return;}
+    if(url.pathname==='/api/bridge/catalog'){stores.live.setCatalog(body.gifts,body.version);last='';reply(res,200,{ok:true});return;}
     if(url.pathname==='/api/bridge/status'){bridge={state:String(body.state).slice(0,60),username:String(body.username??'').slice(0,32),error:String(body.error??'').slice(0,300)};monitor.write(bridge.state==='live-connected'?'LIVE':bridge.state==='connecting'?'RECONNECT':'WARN',bridge.state+' '+bridge.error);reply(res,200,{ok:true});return;}
     reply(res,404,{});return;
    }
    if(url.pathname==='/api/round'){store.newRound();feeds[mode]=[];monitor.write('ROUND','Yeni tur: '+store.roundNumber());reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/import'){store.importLegacy(body);reply(res,200,{ok:true});return;}
-   if(url.pathname==='/api/mapping'){store.mapGift(String(body.giftId),body.procedure as Procedure);reply(res,200,{ok:true});return;}
+   if(url.pathname==='/api/mapping'){store.mapGift(String(body.giftId),body.procedure as Procedure);last='';reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/connect'){
     if(!validUsername(body.username)){reply(res,400,{error:'Geçerli TikTok kullanıcı adı gerekli'});return;}
     if(child){reply(res,409,{error:'Önce mevcut köprüyü durdurun'});return;}
@@ -118,7 +119,8 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    ws.on('message',()=>ws.close(1008,'Read only'));ws.on('close',()=>{clients.delete(ws);clientRequests.delete(ws)});ws.on('error',()=>{clients.delete(ws);clientRequests.delete(ws)});
   });
  });
- let last='';const timer=setInterval(()=>{
+ let last='',nextReport=Date.now()+30000;const timer=setInterval(()=>{
+  if(Date.now()>=nextReport){nextReport=Date.now()+30000;const s=stores.live.state();if(s.startedAt)monitor.write('ROUND',String(stores.live.roundNumber())+' — Kalan '+Math.ceil(timeLeft(s,Date.now())/1000)+' sn');}
   stores.live.tick();stores.demo.tick();
   const hash=stores.live.digest()+stores.demo.digest()+stores.live.graphics()+stores.demo.graphics()+JSON.stringify(bridge);
   const changed=hash!==last;last=hash;const events=visuals;visuals=[];

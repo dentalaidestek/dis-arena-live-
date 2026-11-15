@@ -6,6 +6,7 @@ import{POSITIONS,ranked,isLocked,type CoinArena}from'./coinArena';
 import type{AnimationCue}from'./ActionAnimation';
 import {sceneToothPosition,procedurePhase} from './procedureMotion';
 import {createCrownGeometry} from './toothGeometry';
+import {toothLabel} from './routes';
 const gold='#ffcf56';
 // Reused for all 28 crowns/cusps; retained for this module's lifetime.
 const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
@@ -67,7 +68,7 @@ function Tooth({id,rank,name,coins,locked,condition,now,activeCue}:{id:number;ra
  </group>
  {locked&&condition!=='decayed'&&!affected&&<mesh position={[0,0,.19]} scale={[width*.9,.13,.14]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#7b2e48"/></mesh>}
  <group ref={screw} visible={false} position={[0,0,.32]}><mesh><cylinderGeometry args={[.105,.085,.38,20]}/><meshStandardMaterial color="#b8c7d2" metalness={.86} roughness={.2}/></mesh>{[-.14,-.07,0,.07,.14].map(v=><mesh key={v} position={[0,v,.02]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.108,.014,6,20]}/><meshStandardMaterial color="#e1eaf1" metalness={.85}/></mesh>)}</group>
- {name&&<group position={[0,upper?-.52:.52,.46]}><mesh scale={[.40,.18,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#664313':'#142b42'} transparent opacity={.93}/></mesh><Text font="/fonts/DejaVuSans.ttf" position={[0,.052,.025]} fontSize={.095} maxWidth={.38} color="#fff">{name.slice(0,5)}</Text><Text font="/fonts/DejaVuSans.ttf" position={[0,-.067,.025]} fontSize={.09} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
+ {name&&<group position={[0,upper?.45:-.45,.46]}><mesh scale={[.40,.18,.02]}><planeGeometry args={[1,1]}/><meshBasicMaterial color={champion?'#664313':'#142b42'} transparent opacity={.93}/></mesh><Text font="/fonts/DejaVuSans.ttf" position={[0,.052,.025]} fontSize={.095} maxWidth={.38} color="#fff">{toothLabel(id)+' '+name.slice(0,3)}</Text><Text font="/fonts/DejaVuSans.ttf" position={[0,-.067,.025]} fontSize={.09} color={gold}>{coins?.toLocaleString('tr-TR')}</Text></group>}
  {champion&&<Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.73:-.73,.32]} fontSize={.26} color={gold}>♛{(rank??0)+1}</Text>}
  </group>;
 }
@@ -180,7 +181,7 @@ function Doctor({side,active,targetId,cue}:{side:'bad'|'good';active:boolean;tar
  </group>
  <OperatingArm bad={bad} active={active} cue={cue}/>
  <Text font="/fonts/DejaVuSans.ttf" position={[0,-2.8,.4]} fontSize={.27} color={bad?'#ff8ab6':'#8cfce7'}>{bad?'KÖTÜ HEKİM':'İYİ HEKİM'}</Text>
- <Text font="/fonts/DejaVuSans.ttf" position={[0,-3.15,.4]} fontSize={.17} color="#ffffff">{bad?'ÇEKİM · ÇÜRÜTME':'İMPLANT · İYİLEŞTİRME'}</Text>
+ <Text font="/fonts/DejaVuSans.ttf" position={[0,-3.15,.4]} fontSize={.17} color="#ffffff">{bad?'ÇEKİM':'İMPLANT'}</Text>
  </group>;
 }
 function CameraFit({onFps}:{onFps:(fps:number)=>void}){

@@ -1,32 +1,33 @@
-# Diş Arena — doğrulama ve devam kaydı
+# Diş Arena — kabul ve devam kaydı
 
-Tarih: 15 Kasım 2026. Başlangıç: `152578e1f3d840d062a79ccec761de08835a6634`, mevcut PR #1. Başlangıçtaki iki CI iş akışı başarılıydı. Bu kayıt gerçek LIVE veya görsel kalite onayı değildir.
+15 Kasım 2026 · PR #1 · `feature/coin-arena-20261112`. Main merge veya production dağıtımı yapılmadı.
 
-## Uygulanan paket
+## Teslim edilen davranış
 
-- Çekim 20 jeton / 30 sn, implant ayrı 20 jeton, çürütme 10 jeton / 15 sn, iyileştirme ayrı 10 jeton varsayımı. Farklı durumlar birbirinin savunmasıyla açılmaz. Kilit uzatılmaz; hedef eski sıralamaya ve eski dişe sabitlenir.
-- Paylaşılan TypeScript motoru artık Node SQLite sunucusunda çalışır; React puan yazamaz. Kalıcı ve benzersiz olay kaydı, seri ilerlemesi, önceki/sonraki puan, hedefler, katalog sürümü ve tur durumu transaction içinde kaydedilir.
-- Canlı/demo ayrı veritabanları. 600 saniye sonunda donan ilk dört ve önceki turlar korunur. Eski localStorage için yalnız boş veritabanına aktarım ve eski ID koruması vardır.
-- Python ara seri bildirimlerini iletir; gerçek sağlayıcı oda/kullanıcı/hediye/seri/mesaj kimliklerini korur. SQLite outbox, HTTP ACK/retry, katalog çekme, yapılandırılmış durumlar ve jitter/backoff eklenmiştir.
-- İki ayrı Bearer yetkisi, origin denetimi, salt okunur WebSocket, mesaj/kuyruk/izleyici tampon sınırları vardır.
-- Yayıncı paneli, katalog eşleştirme, sayaçlar, ayrı demo araçları, OBS 9:16 CSS, düşük/yüksek DPR seçimi ve FPS sayacı eklenmiştir.
-- Mevcut 3D sahne korunarak çürük lezyonu ve mine rengi, iyileştirme/restorasyon efekti, ortak diş koordinatına yönelen eklemli kol/alet, hasta tepkisi ve seri işlem kuyruğu eklenmiştir. İşlem öncesi ağız yerleşimi görsel boyunca korunur. Font yerel dosyaya taşınmıştır. Bu değişikliklerin estetik kalitesi doğrulanmadı.
-- Yedekleme/sağlama toplamı/integrity_check, geri yükleme öncesi otomatik yedek, Dockerfile ve güncellenmiş CI eklenmiştir. Docker derlemesi yapılmadı.
+- `/arena` canlı izleyici, `/demo` ayrı demo izleyici, `/obs` temiz 9:16, `/admin` ayrı yayıncı yönetimi. Eski query adresleri yönlenir. İzleyici DOM'unda yönetici formu/düğmesi yoktur.
+- Yayıncı ve isteğe bağlı oda şifreleri ayrı yetkilerdir. scrypt + rastgele tuz, SQLite şifre özetleri, HttpOnly/SameSite oturum, oturum iptali, yanlış giriş sınırı ve ayrı API kontrolü vardır. HTTPS'te Secure cookie ortam değişkeniyle açılır. Tek kullanımlık yerel kurulum kodu 2 dakika geçerlidir.
+- Son talimata göre canlı Çay/çekim **50**, Parfüm/implant **20** jetondur. Çürütme/iyileştirme yalnız ayrı demo içinde tutulur. Hedef hediye öncesindeki sıralama/dişe sabittir; kilit uzatılmaz. Eski yanlış fiyatlı atama normal puanı kaybetmeden saldırısız işlenir.
+- Node tek otoritedir. SQLite transaction olay, seri ilerlemesi ve tur durumunu birlikte saklar; tarayıcı render'ı puan yazamaz. Kalıcı idempotency 10.000 sınırıyla kırpılmaz. Canlı/demo veritabanları ayrıdır.
+- Python kalıcı outbox ve ACK/retry, kullanıcı adı kontrolü, sağlayıcı kimliklerinin korunması, katalog aktarımı ve backoff/jitter korunmuştur. Eksik katalog/seri kimliğinde puan uydurulmaz. Gerçek katalogdaki eşleştirilmiş ad izleyicide gösterilir; doğrulanmayan eşleme açıkça bekleniyor görünür.
+- Üst dört lider, gerçek FDI diş numaraları, sayaç/tur, lider değişimi, rekabet ve üç satırlık canlı olay akışı vardır. Sağdaki boş sıralama paneli kaldırıldı. OBS üst/alt TikTok güvenli alanları CSS değişkenleriyle ayarlanır.
+- Aynı prosedürel 3D sahnede dört ayrı taç geometrisi, daha büyük hekimler, küçültülmüş kafa, düzeltilmiş burun/yüz, ağız dışına taşınmış FDI etiketleri; eklemli kol, hedefe uzanan alet, diş çekimi/boşluk, implant vidası/restorasyon ve yüz tepkileri vardır. Puanlar anlık, görseller ayrı sınırlı kuyruktadır; taşma puanı silmez.
+- Native tam ekran ve panele dönüş aynı round ID, başlangıç zamanı ve oyuncuları korur. Grafik tercihi ayrı demo/canlı kaynakta sunucuda tutulur.
+- Termux tek komut başlatıcı mevcut veriyi korur; demo Python olmadan açılır. Konsol yoğun hediyeleri gruplar. Yedekleme `access.sqlite` şifre özetlerini de kapsar.
 
-## Çalıştırılan doğrulamalar
+## Çalıştırılan testler
 
-| Kontrol | Sonuç |
+| Kontrol | Gerçek sonuç |
 |---|---|
-| `npm test` | 45 test geçti; güncel motor, SQLite, HTTP/WS, seri ve görsel kuyruk matematiği |
-| `npm run test:python` | 10 test geçti; gerçek TikTokLive 7.0.1 protobuf nesnesi dahil |
-| `npm run test:provider` | 1 test geçti; gerçek protobuf → Python adaptörü → SQLite, 1000 artış = 1000 jeton; tekrar oynatma 0 ek puan |
-| `npm run build` | TypeScript ve Vite derlemesi geçti; yaklaşık 1,25 MB JS için Vite paket boyutu uyarısı var |
+| `npm test` | 61 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
+| `npm run test:python` | TikTokLive 7.0.1 bağımlılıklarıyla 10 geçti |
+| `npm run test:provider` | 1 geçti; gerçek protobuf sınıfıyla sentetik 1000 seri artışı → Python → SQLite =1000; replay +0 |
+| `npm run build` | TypeScript/Vite geçti; yaklaşık 1,27 MB JS paket boyutu uyarısı sürüyor |
+| Chromium Playwright | Önceki kaynak paketi `bfffb63` üzerinde 5 kabul testi geçti; son etiket/güvenli alan düzeltmeleri yeni CI'da tekrar çalıştırılır |
 | `git diff --check` | Temiz |
-| Disk yük fixture'ı | 28 kullanıcı / 10.000 paket: 2306 ms, 4337 paket/sn; p50 0,158 ms, p95 0,377 ms, p99 0,845 ms |
-| Eksik/bozuk kullanıcı adı | Sağlayıcı başlatılmadan CLI ve HTTP seviyesinde reddedildi |
-| Yedek geri yükleme | Satırlar korundu; bozulmuş sağlama toplamı reddedildi |
 
-Disk ölçümü tek geliştirme ortamında, SQLite WAL + synchronous FULL ile ve doğrudan store çağrısıyla yapıldı. Ağ/Python/3D/OBS dahil gerçek yayın kapasitesini veya uzun süreli yük dayanıklılığını göstermez. Python sağlayıcı bağımlılığından websockets legacy deprecation uyarıları geliyor.
+Gerçek GitHub Actions Chromium/SwiftShader testleri: 360×800, 393×873, 1080×1920 OBS, 1280×1000 masaüstü; WebGL FPS>0, tarayıcı hatası olmaması ve taşma kontrolü; şifreli mobil yönetim/çıkış; çekim→implant→demo çürütme→iyileştirme; tam ekran gir/çık sırasında turun korunması; oda şifresinin admin yetkisi vermemesi. Her prosedürde hedef Ahmet / FDI 11 kontrol edilip 3D işlem sırasında ekran görüntüsü alınır.
+
+`bfffb63` üzerindeki üç iş akışı başarılı: Diş Arena CI 43734355307, Verify Diş Arena 43734355296, Arena visual acceptance 43734355364. Tarayıcı ekranları artifact `arena-visual-acceptance` içinde saklanır. Yeni commit için güncel Actions sonuçları ayrıca kontrol edilmelidir. Bu gerçek tarayıcı doğrulamasıdır; mobil emülasyonu gerçek Android GPU testi değildir.
 
 ## Eski testlerin durumu
 
@@ -44,15 +45,14 @@ Başarısız eski testler:
 - `toothEconomy.test.ts`: front incisors cost more than middle and posterior teeth; cheap gifts cannot heal expensive owned incisors; screenshot gift names have unique consistent prices.
 - `toothGiftAssignments.test.ts`: assigned teeth have distinct gifts with exact mirrored price bands.
 
-## Yayın öncesi açık işler
+## Açık kabul işleri ve sınırlar
 
-1. Gerçek yayıncı kullanıcı adı bu görevde verilmedi. Gerçek LIVE bağlantısı, oda çözümleme ve gerçek Gül/20 jeton/10 jeton hediyeleri denenmedi. Gerçek katalogdan dört farklı ID seçilmeli; ID veya fiyat uydurulmadı.
-2. Önceki “Diş Arena Canlı Yarış HUD'u.png” referansı bulundu ve dosya içeriği okundu. Görsel, yatay 1672×941 HUD tarif ediyor. Yeni talimattaki hasta/iki hekim/dikey sahneyle birebir eşleşme iddiası yok.
-3. Bulut tarayıcı `127.0.0.1:8787` adresine `ERR_CONNECTION_REFUSED` verdi; başarısız sayfa gözlemi de tarayıcı URL politikasıyla engellendi. Alternatif tarayıcı yüzeyiyle engel aşılmadı. Gerçek WebGL render, masaüstü/mobil taşma, 1080×1920 OBS ekranı, hasta/alet hareketi ve FPS gözlemi yapılmadı. Matematik testleri görsel kabul yerine geçmez.
-4. Mevcut karakterler prosedürel Three.js modelleridir; rigged profesyonel sanatçı karakter paketi eklenmedi. Çürütme/iyileştirme estetiği ve anatomi görsel inceleme bekler.
-5. İyileştirme 10 jeton varsayımı kullanıcı tarafından ayrıca belirtilmiş bir fiyat değildir. Yayın kuralında kesinleştirilmeli.
-6. Uzun süreli gerçek LIVE + OBS yük denemesi, gerçek cihazlar ve Docker çalıştırma doğrulanmadı. Eski localStorage kaydında hiç saklanmamış veya daha önce kırpılmış geçmiş olaylar geri kazanılamaz.
+1. Gerçek yayıncı adı verilmedi: aktif TikTok LIVE oda çözümleme/gerçek hediye teslimatı/gerçek katalog ID seçimi yapılmadı. Panelden 50 ve 20 jetonluk doğrulanmış iki farklı gerçek hediye eşleştirilmeli. Üçüncü taraf TikTokLive sıfır veri kaybı garantisi vermez.
+2. Yeni sürüm kullanıcı telefonunda Android + Termux ile henüz denenmedi. Önceki çalışan kurulum korunmuştur; Node SQLite ve Python 3.14 bağımlılık uyumu cihazda doğrulanmalı. Uzun süreli canlı + OBS yayın testi yapılmadı.
+3. Karakterler hâlâ prosedürel/stilize Three.js modelleridir; profesyonel sanatçı yapımı rigged karakter kalitesi iddia edilmez. 28 oyuncunun tam adı mobil ağız üzerinde okunamaz: kısa etiket + FDI kullanılır, ilk dört ve yönetim tablosu tam adları gösterir.
+4. Docker imajı/çok sunuculu dağıtım doğrulanmadı. JS paket boyutu uyarısı ve TikTokLive websockets legacy deprecation uyarısı sürüyor. Aktif motor testleri geçse de yukarıdaki 22 eski HP testi başarısızdır.
+5. Animasyon kuyruğu sınırlıdır; yoğun trafik ve yeniden bağlantı kaçırılan görselleri özetleyebilir, kalıcı puanı ve olay kaydını değiştirmez. Eski uygulamanın daha önce silmiş olduğu olay kimlikleri kurtarılamaz.
 
-## Sıradaki teknik adım
+## Cihazda sıradaki adım
 
-Bu commit'in CI sonucunu kontrol et. Ardından erişilebilir aynı makinedeki tarayıcıda ayrı demo veritabanıyla dört işlemi 1080×1920 ve dar mobil görünümde görsel olarak doğrula. Gerçek yayıncıyla katalog yükle, iki farklı 20 jetonluk ve iki farklı 10 jetonluk ID eşleştir, ×1→×10→×15 / bağlantı kopması / tur sonu gerçek olay kabul testlerini çalıştır. Bu doğrulamalar olmadan PR taslak kalmalı; merge/deploy yapılmamalı.
+`git pull --ff-only` ardından `bash termux-preview.sh`; yayıncı şifresiyle girip dört işlem turunu çalıştırın. `/demo` ve `/obs?mode=demo` görüntülerini cihazda kontrol edin. Ardından `--live` ile gerçek kullanıcıyı bağlayıp katalogdan 50/20 ID eşleştirin; gerçek Gül serisi, kopma/yeniden bağlantı ve tur sonunu deneyin. Bu kabul tamamlanana kadar PR taslak kalmalıdır.

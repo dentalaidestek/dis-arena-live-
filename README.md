@@ -2,14 +2,12 @@
 
 Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davranışlar [oyun kurallarında](docs/GAME_RULES.md), doğrulama ve yayın engelleri [kabul raporunda](docs/ACCEPTANCE.md) bulunur. Eski HP/32 diş modülleri ana ekranda kullanılmaz.
 
-| İşlem | Birim hediye | Etki |
+| Canlı işlem | Doğrulanmış birim değer | Etki |
 |---|---:|---|
-| Çekim | 20 jeton | Önceki sıralamadaki hemen öndeki oyuncuyu 30 sn kilitler |
-| İmplant | 20 jeton | Gönderenin çekim kilidini kaldırır |
-| Çürütme | 10 jeton | Aynı hedefleme kuralıyla 15 sn kilitler |
-| İyileştirme | 10 jeton* | Gönderenin çürük kilidini kaldırır |
+| Çay / çekim | 50 jeton | Hediye öncesindeki rakibi 30 saniye kilitler |
+| Parfüm / implant | 20 jeton | Gönderenin çekim kilidini kaldırır |
 
-*İyileştirme bedeli kullanıcı tarafından 15 Kasım 2026 tarihinde 10 jeton olarak kesinleştirildi. Dört işlem dört ayrı doğrulanmış hediye ID'si kullanır. Hiçbir gerçek TikTok ID'si uydurulmamıştır. Çay 50 jeton kuralı kaldırılmıştır; gerçek katalogda 20 jeton olmayan Çay, çekim hediyesi olarak seçilemez.
+Son kullanıcı talimatıyla ana oyun Çay 50 / Parfüm 20 kurallarına döndü. Çürütme 10 / iyileştirme 10 kodları yalnız ayrı demoda korunur. Gerçek hediye ID'si uydurulmaz: yayın kataloğundan farklı ve doğru fiyatlı ID'ler yayıncı tarafından seçilir. Katalogdaki gerçek ad izleyici kartına aktarılır; yanlış fiyatlı eski atamalar saldırı oluşturmaz, normal doğrulanmış puan olarak işlenir.
 
 ## Termux
 
@@ -26,15 +24,24 @@ npm run build
 npm start
 ```
 
-`http://127.0.0.1:8787` yayıncı ekranıdır. Yönetici anahtarı ilk açılışta `data/tokens.json` dosyasının `admin` alanında oluşturulur; panelde bir kez girilir, sekme oturumunda saklanır. Anahtarı OBS URL'sine eklemeyin. Kullanıcı adını panelden yazıp **Bağlan** seçilir; Python köprüsü otomatik başlatılır, ayrı Termux oturumu gerekmez. Kullanıcı adı verilmeden sağlayıcı bağlantısı açılmaz.
+İzleyici ve yayıncı sayfaları ayrıdır:
 
-- Demo: `http://127.0.0.1:8787/?mode=demo`
-- OBS canlı: `http://127.0.0.1:8787/?view=obs`
-- OBS demo: `http://127.0.0.1:8787/?view=obs&mode=demo`
-- OBS Browser Source alanı: **1080 × 1920**. Görsel kabul kontrolü hâlâ gereklidir.
-- Geliştirme: `npm start` yanında `npm run dev`; Vite API ve WebSocket'i aynı sunucuya yönlendirir.
+| Adres | İçerik |
+|---|---|
+| `/arena` | Canlı izleyici sahnesi; yönetici kontrolleri yok |
+| `/admin` | Sunucuda doğrulanan yayıncı şifresi; yönetim ve bağlantı |
+| `/obs` | Temiz 9:16 yayın; OBS Browser Source **1080 × 1920** |
+| `/demo` | Canlıdan ayrı demo sahnesi |
+| `/admin?mode=demo` | Yalnız demo verisine uygulanan test araçları |
+| `/obs?mode=demo` | Demo yayın görünümü |
 
-Demo araçları yalnız `demo.sqlite` dosyasına yazar. Canlıya test hediyesi ekleme yolu yoktur. 28 oyuncu, dört işlem, Gül ×1000, 100 hediye ve tur sonu panelden denenebilir. Önce 28 oyuncuyu oluşturun. Saldırı için göndereni, savunma için kilitlenen oyuncuyu seçin.
+Eski `/?mode=demo` ve `/?view=obs` adresleri yeni sayfalara yönlenir. Termux başlatıcısı `/admin` sayfasını iki dakikalık, tek kullanımlık yerel kurulum koduyla açar. İlk kurulumda en az 8 karakterlik yayıncı şifresi belirlenir. Elle `npm start` kullanıyorsanız `data/tokens.json` içindeki yerel admin anahtarıyla paneldeki ilk kurulum bölümünü kullanabilirsiniz. Anahtarı paylaşmayın veya OBS URL'sine eklemeyin.
+
+Şifreler scrypt ile tuzlanıp `access.sqlite` içinde saklanır. Oturumlar HttpOnly/SameSite cookie kullanır; sunucuda yalnız token özeti saklanır. Beş hatalı deneme 15 dakika sınırlandırılır. Oda izleme şifresi isteğe bağlı ve yönetici şifresinden ayrı yetkidedir. Yönetici API'leri ayrıca kontrol edilir; çıkış oturumu iptal eder. HTTPS reverse proxy arkasında `ARENA_SECURE_COOKIES=1` kullanın. HTTP Termux yerel bağlantısında Secure cookie kapalıdır.
+
+Yayıncı panelindeki **Tam ekran yayın** oyunu sıfırlamadan ve TikTok köprüsünü kesmeden sahneyi açar; **Yayıncıya dön** paneli geri getirir. OBS sayfasında dönüş düğmesi dahi yoktur. Grafik kalitesi sunucu üzerinden canlı/demo için ayrı seçilir. Yayında üst %6 / alt %7 güvenli boşluk vardır; CSS `--tiktok-safe-top` / `--tiktok-safe-bottom` ile yayının arayüzüne göre ayarlanabilir.
+
+Demo araçları yalnız `demo.sqlite` dosyasına yazar. 28 oyuncu, dört işlem, Gül ×1000, 100 hediye ve tur sonu burada denenir. Canlı yarışa test hediyesi eklenmez. Geliştirme: `npm start` yanında `npm run dev`; Vite API/WebSocket'i aynı sunucuya yönlendirir.
 
 ## Mimari
 
@@ -56,6 +63,7 @@ Animasyon sırasında işlemin önceki diş yerleşimi sabitlenir; güncel sıra
 | `ARENA_ORIGINS` | Yerel 5173/8787 origin'leri | Virgülle ayrılmış izinli web origin'leri |
 | `ARENA_ADMIN_TOKEN` | Üretilen yerel anahtar | Yönetici API erişimi |
 | `ARENA_BRIDGE_TOKEN` | Ayrı üretilen anahtar | Sağlayıcı ingest erişimi |
+| `ARENA_SECURE_COOKIES` | `0` | HTTPS üzerinde oturum cookie Secure bayrağı |
 | `ARENA_PYTHON` | `python3` | Python çalıştırıcısı |
 | `ARENA_SERVER_URL` | `http://127.0.0.1:8787` | Ayrı çalıştırılan Python köprüsünün hedefi |
 
@@ -69,6 +77,7 @@ npm run test:python
 npm run test:provider
 npm run build
 npm run benchmark
+npm run test:ui
 npm run test:legacy
 ```
 
@@ -82,6 +91,6 @@ python3 scripts/arena_backup.py backup --directory data --output backups/yayin-o
 python3 scripts/arena_backup.py restore --backup backups/yayin-oncesi --directory data
 ```
 
-SQLite online backup API'si WAL içeriğini de kapsar. Sağlama toplamı ve integrity_check doğrulanır. Geri yükleme mevcut veriyi önce ayrı bir `before-restore` yedeğine alır; PID dosyası aktif sunucu gösterirse reddeder. Anahtarlar yedek paketine alınmaz, ayrıca güvenli tutulmalıdır.
+SQLite online backup API'si WAL içeriğini de kapsar. Sağlama toplamı ve integrity_check doğrulanır. Geri yükleme mevcut veriyi önce ayrı bir `before-restore` yedeğine alır; PID dosyası aktif sunucu gösterirse reddeder. `access.sqlite` içindeki şifre özetleri de yedeklenir; yedekleri özel tutun. Bearer anahtarları yedek paketine alınmaz, ayrıca güvenli tutulmalıdır.
 
 Eski `dis-arena-coin-v2` localStorage kaydı varsa panelde içe aktarma görünür. Yalnız boş veritabanına aktarılır; orijinal kayıt değiştirilmez ve ek bir kopyası SQLite'a kaydedilir. Mevcut eski olay kimlikleri korunur. Önceki uygulamanın silmiş olduğu 10.000 öncesi kimlikleri veya hiç kaydetmediği seri ilerlemesi sonradan geri oluşturulamaz; eski turu aktardıktan sonra gerçek LIVE'a geçmeden yeni tur açılması gerekir. Geri alma: sunucuyu durdurun, veritabanını yedekleyin, önceki kodu ayrı veri diziniyle başlatın; yeni SQLite dosyalarını silmeyin.
