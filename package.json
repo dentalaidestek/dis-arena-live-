@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node --import tsx --test src/coinArena.test.ts src/bridgeGift.test.ts src/proceduresV3.test.ts src/visualQueue.test.ts src/procedureMotion.test.ts src/toothGeometry.test.ts server/*.test.ts scripts/launcher.test.ts",
+    "test": "node --import tsx --test src/coinArena.test.ts src/bridgeGift.test.ts src/proceduresV3.test.ts src/visualQueue.test.ts src/procedureMotion.test.ts src/toothGeometry.test.ts src/routes.test.ts server/*.test.ts scripts/launcher.test.ts",
     "test:legacy": "node --import tsx --test src/*.test.ts",
     "test:python": "python3 -m unittest discover -s scripts -p \"test_*.py\"",
     "start": "node --import tsx server/server.ts",

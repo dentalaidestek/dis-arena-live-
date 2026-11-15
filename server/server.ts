@@ -8,25 +8,39 @@ import {fileURLToPath} from 'node:url';
 import {ArenaStore,type Receipt} from './store';
 import type {Procedure} from '../src/coinArena';
 import {runDemo} from './demo';
+import {AccessStore,cookieToken,sessionCookie,type Role} from './access';
+import {ConsoleMonitor} from './consoleMonitor';
 export const validUsername=(s:unknown):s is string=>typeof s==='string'&&/^@?[a-zA-Z0-9_][a-zA-Z0-9_.]{1,23}$/.test(s)&&!s.endsWith('.')&&!s.includes('..');
 export const authorized=(provided:unknown,token:string)=>typeof provided==='string'&&Buffer.byteLength(provided)===Buffer.byteLength('Bearer '+token)&&timingSafeEqual(Buffer.from(provided),Buffer.from('Bearer '+token));
-export function createArenaServer(options:{directory:string;adminToken:string;bridgeToken:string;port?:number;origins?:string[];setupCode?:string;setupExpiresAt?:number;demoSeed?:boolean}){
+export function createArenaServer(options:{directory:string;adminToken:string;bridgeToken:string;port?:number;origins?:string[];setupCode?:string;setupExpiresAt?:number;demoSeed?:boolean;secureCookies?:boolean;consoleLogs?:boolean}){
  mkdirSync(options.directory,{recursive:true});
- const stores={live:new ArenaStore(join(options.directory,'live.sqlite')),demo:new ArenaStore(join(options.directory,'demo.sqlite'))};
+ const stores={live:new ArenaStore(join(options.directory,'live.sqlite')),demo:new ArenaStore(join(options.directory,'demo.sqlite'),Date.now(),true)};
  if(options.demoSeed&&(!stores.demo.state().players.length||stores.demo.state().finishedAt))runDemo(stores.demo,{action:'populate'});
+ const access=new AccessStore(join(options.directory,'access.sqlite'));const monitor=new ConsoleMonitor(options.consoleLogs===true);
  let setupUsed=false;
+ const feeds:{live:any[];demo:any[]}={live:[],demo:[]};
  const wss=new WebSocketServer({noServer:true,maxPayload:1024});
  let child:ChildProcess|undefined,bridge={state:'disconnected',username:'',error:''};
  let pending=0;const MAX_PENDING=128;let skippedVisuals=0;let visuals:{mode:string;receipt:Receipt}[]=[];
- const clients=new Map<WebSocket,'live'|'demo'>();
+ const clients=new Map<WebSocket,'live'|'demo'>();const clientRequests=new Map<WebSocket,IncomingMessage>();
  const allowed=(req:IncomingMessage)=>!req.headers.origin||(options.origins??['http://localhost:5173','http://127.0.0.1:5173',`http://localhost:${options.port??8787}`,`http://127.0.0.1:${options.port??8787}`]).includes(req.headers.origin);
- function snapshot(mode:'live'|'demo'){return {type:'snapshot',mode,state:stores[mode].state(),bridge,skippedVisuals,serverNow:Date.now()}}
+ function snapshot(mode:'live'|'demo'){return {type:'snapshot',mode,state:stores[mode].state(),roundNumber:stores[mode].roundNumber(),graphics:stores[mode].graphics(),events:feeds[mode],bridge,skippedVisuals,serverNow:Date.now()}}
+ function isAdmin(req:IncomingMessage){return authorized(req.headers.authorization,options.adminToken)||access.valid(cookieToken(req.headers.cookie,'admin'),'admin')}
+ function mayView(req:IncomingMessage){return !access.configured('viewer')||isAdmin(req)||access.valid(cookieToken(req.headers.cookie,'viewer'),'viewer')}
+ function publish(mode:'live'|'demo',result:Receipt|undefined,packet?:any){
+  if(!result)return;if(result.visuals.length){if(visuals.length<500)visuals.push({mode,receipt:result});else skippedVisuals+=result.visuals.length;}
+  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((result.action??'GIFT').toUpperCase(),result.message);}
+  else if(!result.accepted&&!result.duplicate)monitor.write('ERROR',result.message);
+ }
+
  const reply=(res:any,status:number,data:unknown)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data))};
  const server=createServer(async(req,res)=>{
   req.setTimeout(15000,()=>req.destroy());
   const url=new URL(req.url??'/','http://localhost');
   const mode=url.searchParams.get('mode')==='demo'?'demo':'live';const store=stores[mode];
   if(!url.pathname.startsWith('/api/')){
+   if(url.pathname==='/'){const mode=url.searchParams.get('mode')==='demo'?'demo':'live';res.writeHead(302,{Location:url.searchParams.get('view')==='obs'?'/obs?mode='+mode:mode==='demo'?'/demo':'/arena'});res.end();return;}
+
    let decoded:string;try{decoded=decodeURIComponent(url.pathname)}catch{reply(res,400,{error:'Geçersiz URL'});return;}
    const path=resolve('dist','.'+decoded);const root=resolve('dist');
    if(!path.startsWith(root+'/')&&path!==root){reply(res,404,{});return;}
@@ -36,9 +50,12 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
   }
   if(!allowed(req)){reply(res,403,{error:'Origin engellendi'});return;}
   if(req.method==='GET'&&url.pathname==='/api/health'){reply(res,200,{ready:true});return;}
+  if(req.method==='GET'&&url.pathname==='/api/access'){reply(res,200,{adminConfigured:access.configured('admin'),roomProtected:access.configured('viewer'),admin:isAdmin(req),viewer:mayView(req)});return;}
   const setupRoute=req.method==='POST'&&url.pathname==='/api/session';
+  const loginRoute=req.method==='POST'&&url.pathname==='/api/login';
+  const logoutRoute=req.method==='POST'&&url.pathname==='/api/logout';
   const bridgeRoute=url.pathname.startsWith('/api/bridge/');
-  if(!setupRoute&&!authorized(req.headers.authorization,bridgeRoute?options.bridgeToken:options.adminToken)){reply(res,401,{error:'Yetkisiz'});return;}
+  if(!setupRoute&&!loginRoute&&!logoutRoute&&!(bridgeRoute?authorized(req.headers.authorization,options.bridgeToken):isAdmin(req))){reply(res,401,{error:'Yetkisiz'});return;}
   if(pending>=MAX_PENDING){reply(res,503,{error:'Kuyruk dolu; aynı olay kimliğiyle tekrar deneyin'});return;}
   pending++;let size=0;const chunks:Buffer[]=[];
   try{
@@ -47,20 +64,31 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    if(setupRoute){
     const local=['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress??'');
     if(!local||setupUsed||!options.setupCode||Date.now()>(options.setupExpiresAt??0)||!authorized('Bearer '+body.code,options.setupCode)){reply(res,401,{error:'Kurulum kodu geçersiz veya süresi dolmuş; başlatıcıyı yeniden açın'});return;}
-    setupUsed=true;reply(res,200,{token:options.adminToken});return;
+    setupUsed=true;res.setHeader('Set-Cookie',sessionCookie('admin',access.issue('admin'),options.secureCookies));reply(res,200,{ok:true});return;
    }
-   if(req.method==='GET'&&url.pathname==='/api/admin'){reply(res,200,{...snapshot(mode),catalog:store.catalog(),mappings:store.mappings(),diagnostics:store.diagnostics(),rounds:store.rounds(),pending});return;}
+   if(loginRoute){
+    const role:Role=body.role==='viewer'?'viewer':'admin';
+    try{const session=await access.login(role,body.password,req.socket.remoteAddress??'local');if(!session){reply(res,401,{error:'Şifre yanlış veya bu giriş henüz yapılandırılmadı'});return;}res.setHeader('Set-Cookie',sessionCookie(role,session,options.secureCookies));reply(res,200,{ok:true,role});}catch(e){reply(res,429,{error:e instanceof Error?e.message:'Giriş sınırlandı'});}return;
+   }
+   if(logoutRoute){for(const role of ['admin','viewer'] as const)access.logout(cookieToken(req.headers.cookie,role));res.setHeader('Set-Cookie',[sessionCookie('admin','',options.secureCookies),sessionCookie('viewer','',options.secureCookies)]);reply(res,200,{ok:true});return;}
+   if(req.method==='GET'&&url.pathname==='/api/admin'){reply(res,200,{...snapshot(mode),catalog:store.catalog(),mappings:store.mappings(),diagnostics:store.diagnostics(),rounds:store.rounds(),pending,adminConfigured:access.configured('admin'),roomProtected:access.configured('viewer')});return;}
    if(req.method!=='POST'){reply(res,405,{});return;}
+   if(url.pathname==='/api/password'){
+    const role:Role=body.role==='viewer'?'viewer':'admin';await access.setPassword(role,body.password);
+    if(role==='admin')res.setHeader('Set-Cookie',sessionCookie('admin',access.issue('admin'),options.secureCookies));reply(res,200,{ok:true});return;
+   }
+   if(url.pathname==='/api/room'&&body.enabled===false){access.db.prepare("DELETE FROM passwords WHERE role='viewer'").run();access.db.prepare("DELETE FROM sessions WHERE role='viewer'").run();reply(res,200,{ok:true});return;}
+   if(url.pathname==='/api/graphics'){store.setGraphics(body.quality);reply(res,200,{ok:true});return;}
    if(bridgeRoute){
     if(url.pathname==='/api/bridge/gift'){
-     const result=stores.live.ingest(body);if(result.visuals.length){if(visuals.length<500)visuals.push({mode:'live',receipt:result});else skippedVisuals+=result.visuals.length;}
+     const result=stores.live.ingest(body);publish('live',result,body);
      reply(res,200,result);return;
     }
     if(url.pathname==='/api/bridge/catalog'){stores.live.setCatalog(body.gifts,body.version);reply(res,200,{ok:true});return;}
-    if(url.pathname==='/api/bridge/status'){bridge={state:String(body.state).slice(0,60),username:String(body.username??'').slice(0,32),error:String(body.error??'').slice(0,300)};reply(res,200,{ok:true});return;}
+    if(url.pathname==='/api/bridge/status'){bridge={state:String(body.state).slice(0,60),username:String(body.username??'').slice(0,32),error:String(body.error??'').slice(0,300)};monitor.write(bridge.state==='live-connected'?'LIVE':bridge.state==='connecting'?'RECONNECT':'WARN',bridge.state+' '+bridge.error);reply(res,200,{ok:true});return;}
     reply(res,404,{});return;
    }
-   if(url.pathname==='/api/round'){store.newRound();reply(res,200,{ok:true});return;}
+   if(url.pathname==='/api/round'){store.newRound();feeds[mode]=[];monitor.write('ROUND','Yeni tur: '+store.roundNumber());reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/import'){store.importLegacy(body);reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/mapping'){store.mapGift(String(body.giftId),body.procedure as Procedure);reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/connect'){
@@ -76,31 +104,32 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    if(url.pathname==='/api/demo'){
     if(mode!=='demo'){reply(res,403,{error:'Testler yalnız demo veritabanına yazılır'});return;}
     const result=runDemo(store,body);
-    if(result?.visuals.length){if(visuals.length<500)visuals.push({mode:'demo',receipt:result});else skippedVisuals+=result.visuals.length;}
+    publish('demo',result);
     reply(res,200,result??{message:body.action==='finish'?'Demo tur tamamlandı':'Demo hazır'});return;
    }
    reply(res,404,{});
   }catch(e){reply(res,400,{error:e instanceof Error?e.message:'İşlem hatası'})}finally{pending--}
  });
  server.on('upgrade',(req,socket,head)=>{
-  if(!allowed(req)||clients.size>=64){socket.destroy();return;}
+  if(!allowed(req)||!mayView(req)||clients.size>=64){socket.destroy();return;}
   const url=new URL(req.url??'/','http://localhost');if(url.pathname!=='/arena'){socket.destroy();return;}
   wss.handleUpgrade(req,socket,head,ws=>{
-   const mode=url.searchParams.get('mode')==='demo'?'demo':'live';clients.set(ws,mode);ws.send(JSON.stringify(snapshot(mode)));
-   ws.on('message',()=>ws.close(1008,'Read only'));ws.on('close',()=>clients.delete(ws));ws.on('error',()=>clients.delete(ws));
+   const mode=url.searchParams.get('mode')==='demo'?'demo':'live';clients.set(ws,mode);clientRequests.set(ws,req);ws.send(JSON.stringify(snapshot(mode)));
+   ws.on('message',()=>ws.close(1008,'Read only'));ws.on('close',()=>{clients.delete(ws);clientRequests.delete(ws)});ws.on('error',()=>{clients.delete(ws);clientRequests.delete(ws)});
   });
  });
  let last='';const timer=setInterval(()=>{
   stores.live.tick();stores.demo.tick();
-  const hash=stores.live.digest()+stores.demo.digest()+JSON.stringify(bridge);
+  const hash=stores.live.digest()+stores.demo.digest()+stores.live.graphics()+stores.demo.graphics()+JSON.stringify(bridge);
   const changed=hash!==last;last=hash;const events=visuals;visuals=[];
   for(const [ws,mode] of clients){
    if(ws.readyState!==WebSocket.OPEN)continue;
+   if(!mayView(clientRequests.get(ws)!)){ws.close(1008,'Room login required');continue;}
    if(ws.bufferedAmount>2_000_000){ws.close(1013,'Slow viewer; reconnect for snapshot');continue;}
    if(changed||events.some(e=>e.mode===mode))ws.send(JSON.stringify({...snapshot(mode),visuals:events.filter(e=>e.mode===mode).flatMap(e=>e.receipt.visuals)}));
   }
  },100);
- return {server,stores,close(){clearInterval(timer);child?.kill('SIGTERM');for(const ws of clients.keys())ws.close();wss.close();server.close();stores.live.close();stores.demo.close()}};
+ return {server,stores,access,close(){monitor.close();access.close();clearInterval(timer);child?.kill('SIGTERM');for(const ws of clients.keys())ws.close();wss.close();server.close();stores.live.close();stores.demo.close()}};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const directory=resolve(process.env.ARENA_DATA_DIR??'data');mkdirSync(directory,{recursive:true});
@@ -116,9 +145,9 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const tokens=JSON.parse(readFileSync(tokenPath,'utf8'));const port=Number(process.env.ARENA_PORT??8787);
  const openMode=['demo','live'].includes(process.env.ARENA_OPEN_BROWSER??'')?process.env.ARENA_OPEN_BROWSER:undefined;
  const setupCode=openMode?randomBytes(18).toString('hex'):undefined;
- const app=createArenaServer({setupCode,setupExpiresAt:Date.now()+120000,demoSeed:process.env.ARENA_DEMO_SEED==='1',directory,adminToken:process.env.ARENA_ADMIN_TOKEN??tokens.admin,bridgeToken:process.env.ARENA_BRIDGE_TOKEN??tokens.bridge,port,origins:process.env.ARENA_ORIGINS?.split(',')});
+ const app=createArenaServer({consoleLogs:true,secureCookies:process.env.ARENA_SECURE_COOKIES==='1',setupCode,setupExpiresAt:Date.now()+120000,demoSeed:process.env.ARENA_DEMO_SEED==='1',directory,adminToken:process.env.ARENA_ADMIN_TOKEN??tokens.admin,bridgeToken:process.env.ARENA_BRIDGE_TOKEN??tokens.bridge,port,origins:process.env.ARENA_ORIGINS?.split(',')});
  app.server.listen(port,process.env.ARENA_HOST??'127.0.0.1',()=>{
-  const url=`http://127.0.0.1:${port}/?mode=${openMode??'live'}`;
+  const url=`http://127.0.0.1:${port}/admin?mode=${openMode??'live'}`;
   console.log(`🦷 Arena hazır: ${url}\nDurdurmak için Ctrl+C`);
   if(setupCode){
    console.log(`Tek kullanımlık kurulum kodu (2 dakika): ${setupCode}`);

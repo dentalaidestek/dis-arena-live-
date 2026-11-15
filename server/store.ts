@@ -9,7 +9,7 @@ const parse=<T>(v:unknown):T=>JSON.parse(String(v));
 const text=(v:unknown,max=128):v is string=>typeof v==='string'&&v.length>0&&v.length<=max;
 export class ArenaStore {
  readonly db:DatabaseSync;
- constructor(path:string,now=Date.now()){
+ constructor(path:string,now=Date.now(),readonly experimental=false){
   this.db=new DatabaseSync(path);this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
    CREATE TABLE IF NOT EXISTS rounds(id TEXT PRIMARY KEY,created INTEGER NOT NULL,state TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE NOT NULL,round_id TEXT NOT NULL,received INTEGER NOT NULL,raw TEXT NOT NULL,result TEXT NOT NULL);
@@ -28,6 +28,9 @@ export class ArenaStore {
   const s=newCoinArena();s.roundId=randomUUID();
   this.db.prepare('INSERT INTO rounds VALUES(?,?,?)').run(s.roundId,now,JSON.stringify(s));return s;
  }
+ roundNumber(){return Number(this.db.prepare('SELECT count(*) AS n FROM rounds').get()!.n)}
+ graphics(){return String(this.db.prepare("SELECT value FROM settings WHERE key='graphics'").get()?.value??'low')}
+ setGraphics(value:string){if(!['low','high'].includes(value))throw Error('Geçersiz grafik kalitesi');this.db.prepare("INSERT INTO settings VALUES('graphics',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(value)}
  rounds(){return this.db.prepare('SELECT id,created,json_extract(state,\'$.finishedAt\') AS finishedAt FROM rounds ORDER BY rowid DESC LIMIT 100').all()}
  catalog(){const r=this.db.prepare("SELECT * FROM catalogs WHERE version=(SELECT value FROM settings WHERE key='catalog-version')").get();return r?{version:String(r.version),verified:Number(r.verified),gifts:parse<CatalogGift[]>(r.gifts)}:{version:'unavailable',verified:0,gifts:[]}}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
@@ -39,6 +42,7 @@ export class ArenaStore {
  }
  mappings(){return this.db.prepare('SELECT gift_id,procedure FROM mappings').all()}
  mapGift(id:string,procedure:Procedure){
+  if(!this.experimental&&(procedure==='decay'||procedure==='heal'))throw Error('Bu işlem yalnız demo modunda eşleştirilebilir');
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
   if(!gift||!['extract','implant','decay','heal'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure])throw Error('Doğrulanmış hediye ve jeton değeri gerekli');
   if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
@@ -70,7 +74,8 @@ export class ArenaStore {
     const key=JSON.stringify([p.roomId,p.userId,p.giftId,p.streakId]);
     const previous=p.streak?this.db.prepare('SELECT count,unit FROM streaks WHERE id=?').get(key):undefined;
     const delta=Math.max(0,count-Number(previous?.count??0));
-    const procedure=(this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId)?.procedure??'score') as Procedure;
+    const mapped=(this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId)?.procedure??'score') as Procedure;
+    const procedure=(!this.experimental&&(mapped==='decay'||mapped==='heal'))||(mapped!=='score'&&gift.coins!==PROCEDURE_COINS[mapped])?'score':mapped;
     if(previous&&Number(previous.unit)!==p.coins)result=empty('Seri birim fiyatı değişti');
     else if(procedure!=='score'&&delta>1000)result=empty('İşlem serisi 1000 sınırını aştı; olay incelemeye alındı');
     else if(!Number.isSafeInteger(delta*p.coins))result=empty('Jeton taşması');

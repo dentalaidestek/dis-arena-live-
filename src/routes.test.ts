@@ -1,0 +1,3 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {arenaRoute,toothLabel} from './routes';import {POSITIONS} from './coinArena';
+test('viewer, admin, OBS and legacy routes preserve the correct data partition',()=>{assert.deepEqual(arenaRoute('/demo',''),{page:'viewer',mode:'demo',obs:false});assert.equal(arenaRoute('/admin','?mode=demo').page,'admin');assert.equal(arenaRoute('/obs','').obs,true);assert.equal(arenaRoute('/','?mode=demo&view=obs').mode,'demo');assert.equal(arenaRoute('/arena','').page,'viewer')});
+test('the four winner positions are real FDI central incisors',()=>{assert.deepEqual(POSITIONS.slice(0,4).map(toothLabel),['11','21','41','31']);assert.equal(new Set(POSITIONS.map(toothLabel)).size,28)});

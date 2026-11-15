@@ -1,47 +1,54 @@
 import {test,expect,type Page} from '@playwright/test';
 const auth={Authorization:'Bearer ui-fixture-admin'};
-async function ready(page:Page){
- const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.addInitScript(()=>sessionStorage.setItem('arena-admin','ui-fixture-admin'));
- await page.goto('/?mode=demo');
- await expect(page.locator('.coin-rank')).toHaveCount(28);
- await expect.poll(async()=>Number(await page.locator('.coin-mouth').getAttribute('data-fps')),{timeout:60000}).toBeGreaterThan(0);
- await expect(page.getByText('3D görünüm açılamadı',{exact:true})).toHaveCount(0);
+const ownerPassword='fixture-publisher-password';
+async function ready(page:Page,path='/demo'){
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(path);
+ await expect(page.locator('.leader-card')).toHaveCount(4);
+ await expect.poll(async()=>Number(await page.locator('.broadcast-shell').getAttribute('data-fps')),{timeout:60000}).toBeGreaterThan(0);
+ // Canvas keeps its HTML fallback in the DOM even while WebGL is rendering.
+ await expect(page.getByText('3D görünüm açılamadı',{exact:true})).not.toBeVisible();
  return errors;
 }
-test.beforeEach(async({request})=>{expect((await request.post('/api/demo?mode=demo',{headers:auth,data:{action:'populate'}})).ok()).toBeTruthy()});
-test('desktop clinic, readable leaderboard, controls and local assets',async({page},info)=>{
- const external:string[]=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:8787')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url())});
- const errors=await ready(page);
- await expect(page.getByTestId('quick-extract')).toBeEnabled();await expect(page.locator('.coin-rank').first()).toContainText('Ahmet');
- await page.screenshot({path:info.outputPath('desktop.png'),fullPage:true});
- expect(errors).toEqual([]);expect(external).toEqual([]);
+async function admin(page:Page){await page.goto('/admin?mode=demo');await page.getByLabel('Yayıncı şifresi',{exact:true}).fill(ownerPassword);await page.getByRole('button',{name:'Giriş yap',exact:true}).click();await expect(page.getByRole('heading',{name:'Yayıncı yönetimi'})).toBeVisible();}
+test.beforeEach(async({request})=>{
+ expect((await request.post('/api/password',{headers:auth,data:{role:'admin',password:ownerPassword}})).ok()).toBeTruthy();
+ await request.post('/api/room',{headers:auth,data:{enabled:false}});
+ expect((await request.post('/api/demo?mode=demo',{headers:auth,data:{action:'populate'}})).ok()).toBeTruthy();
 });
-test('390px phone layout has no horizontal overflow and all demo controls work',async({page},info)=>{
- await page.setViewportSize({width:390,height:844});const errors=await ready(page);
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
- await page.getByRole('button',{name:'Gül ×1000',exact:true}).click();
- await expect(page.getByRole('status')).toContainText('+1000');
- await page.locator('.coin-mouth').scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('phone.png'),fullPage:true});expect(errors).toEqual([]);
-});
-test('four sequential 3D procedures use their real target and restore both locks',async({page},info)=>{
- const errors=await ready(page);const target=page.locator('[data-user="demo-0"]');
- for(const action of ['extract','implant','decay','heal']){
-  await page.getByTestId('quick-'+action).click();await expect(page.locator('.dental-action-banner')).toBeVisible();
-  if(action==='extract')await expect(target).toContainText('ÇEKİLDİ');
-  if(action==='decay')await expect(target).toContainText('ÇÜRÜK');
-  if(action==='implant'||action==='heal')await expect(target).not.toContainText(/ÇEKİLDİ|ÇÜRÜK/);
-  await page.screenshot({path:info.outputPath(action+'.png')});
-  await expect(page.locator('.dental-action-banner')).toHaveCount(0,{timeout:15000});
+test('viewer composition at desktop, 360x800, 393x873 and 1080x1920 OBS',async({page},info)=>{
+ for(const [width,height,path,name] of [[1280,1000,'/arena?mode=demo','desktop'],[360,800,'/demo','phone-360'],[393,873,'/demo','phone-393'],[1080,1920,'/obs?mode=demo','obs-1080x1920']] as const){
+  await page.setViewportSize({width,height});const errors=await ready(page,path);
+  await expect(page.locator('input,select,button')).toHaveCount(0);await expect(page.locator('.admin-page')).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+1)).toBeTruthy();
+  await page.screenshot({path:info.outputPath(name+'.png')});expect(errors).toEqual([]);
  }
- await expect(target).toContainText('10.030');expect(errors).toEqual([]);
 });
-test('1080x1920 OBS frame stays inside the viewport and excludes admin controls',async({page},info)=>{
- await page.setViewportSize({width:1080,height:1920});const errors=await ready(page);await page.goto('/?view=obs&mode=demo');
- await expect(page.locator('.coin-rank')).toHaveCount(28);
- await expect.poll(async()=>Number(await page.locator('.coin-mouth').getAttribute('data-fps')),{timeout:60000}).toBeGreaterThan(0);
- expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1&&document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
- await expect(page.locator('.broadcaster-panel')).toHaveCount(0);await expect(page.locator('.quick-test')).toHaveCount(0);
- const canvas=await page.locator('canvas').boundingBox();expect(canvas!.height).toBeGreaterThan(700);
- await page.screenshot({path:info.outputPath('obs-1080x1920.png')});expect(errors).toEqual([]);
+test('password login, mobile admin controls and logout',async({page},info)=>{
+ await page.setViewportSize({width:393,height:873});await page.goto('/admin?mode=demo');await expect(page.locator('.admin-page')).toHaveCount(0);
+ await page.getByLabel('Yayıncı şifresi',{exact:true}).fill('wrong-password');await page.getByRole('button',{name:'Giriş yap',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Şifre yanlış');
+ await page.getByLabel('Yayıncı şifresi',{exact:true}).fill(ownerPassword);await page.getByRole('button',{name:'Giriş yap',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(28);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await page.screenshot({path:info.outputPath('admin-phone.png'),fullPage:true});
+ await page.getByRole('button',{name:'Oturumu kapat',exact:true}).click();await expect(page.getByLabel('Yayıncı şifresi',{exact:true})).toBeVisible();await expect(page.locator('.admin-page')).toHaveCount(0);
+});
+test('automatic extraction and implant, with preserved experimental demo procedures',async({page,context,request},info)=>{
+ await admin(page);const viewer=await context.newPage();const errors=await ready(viewer);
+ for(const action of ['extract','implant','decay','heal']){
+  await page.getByTestId('demo-'+action).click();await expect(viewer.locator('.dental-action-banner')).toBeVisible();await expect(viewer.locator('.procedure-target')).toContainText('Ahmet');await expect(viewer.locator('.procedure-target')).toContainText('11');
+  await viewer.waitForTimeout(1700); // Capture the treatment phase of the 3.8s 3D procedure.
+  await viewer.screenshot({path:info.outputPath(action+'.png')});await expect(viewer.locator('.dental-action-banner')).toHaveCount(0,{timeout:15000});
+ }
+ const state=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;expect(state.players.find((p:any)=>p.userId==='demo-0').coins).toBe(10030);expect(state.players.find((p:any)=>p.userId==='demo-0').lockedUntil).toBe(0);expect(errors).toEqual([]);
+});
+test('fullscreen returns to admin without resetting the server round',async({page,request},info)=>{
+ await admin(page);const before=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;
+ await page.getByRole('button',{name:'Tam ekran yayın',exact:true}).click();await expect(page.locator('.broadcast-shell')).toBeVisible();await expect(page.locator('.admin-page')).toHaveCount(0);
+ await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBeTruthy();await expect.poll(async()=>Number(await page.locator('.broadcast-shell').getAttribute('data-fps')),{timeout:60000}).toBeGreaterThan(0);
+ await page.screenshot({path:info.outputPath('fullscreen.png')});await page.getByRole('button',{name:'Yayıncıya dön',exact:false}).click();await expect(page.locator('.admin-page')).toBeVisible();
+ const after=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;expect(after.roundId).toBe(before.roundId);expect(after.startedAt).toBe(before.startedAt);expect(after.players).toEqual(before.players);
+});
+test('room password grants viewing but no publisher commands',async({page,request})=>{
+ await request.post('/api/password',{headers:auth,data:{role:'viewer',password:'fixture-room-password'}});
+ await page.goto('/demo');await expect(page.getByLabel('Oda şifresi',{exact:true})).toBeVisible();await page.getByLabel('Oda şifresi',{exact:true}).fill('fixture-room-password');await page.getByRole('button',{name:'Oyuna gir',exact:true}).click();await expect(page.locator('.leader-card')).toHaveCount(4);
+ await page.goto('/admin');await expect(page.locator('.admin-page')).toHaveCount(0);await expect(page.getByLabel('Yayıncı şifresi',{exact:true})).toBeVisible();
+ await request.post('/api/room',{headers:auth,data:{enabled:false}});
 });

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
-DATABASES=('live.sqlite','demo.sqlite','bridge-outbox.sqlite')
+DATABASES=('live.sqlite','demo.sqlite','bridge-outbox.sqlite','access.sqlite')
 def checksum(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def backup(directory,output):
     directory=Path(directory);output=Path(output);output.mkdir(parents=True,exist_ok=False)
