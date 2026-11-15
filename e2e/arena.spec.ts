@@ -31,7 +31,7 @@ test('password login, mobile admin controls and logout',async({page},info)=>{
  await page.getByRole('button',{name:'Oturumu kapat',exact:true}).click();await expect(page.getByLabel('Yayıncı şifresi',{exact:true})).toBeVisible();await expect(page.locator('.admin-page')).toHaveCount(0);
 });
 test('automatic extraction and implant, with preserved experimental demo procedures',async({page,context,request},info)=>{
- await admin(page);const viewer=await context.newPage();const errors=await ready(viewer);
+ await admin(page);const viewer=await context.newPage();await viewer.setViewportSize({width:393,height:873});const errors=await ready(viewer);
  for(const action of ['extract','implant','decay','heal']){
   await page.getByTestId('demo-'+action).click();await expect(viewer.locator('.dental-action-banner')).toBeVisible();await expect(viewer.locator('.procedure-target')).toContainText('Ahmet');await expect(viewer.locator('.procedure-target')).toContainText('11');
   await viewer.waitForTimeout(1700); // Capture the treatment phase of the 3.8s 3D procedure.
@@ -51,4 +51,20 @@ test('room password grants viewing but no publisher commands',async({page,reques
  await page.goto('/demo');await expect(page.getByLabel('Oda şifresi',{exact:true})).toBeVisible();await page.getByLabel('Oda şifresi',{exact:true}).fill('fixture-room-password');await page.getByRole('button',{name:'Oyuna gir',exact:true}).click();await expect(page.locator('.leader-card')).toHaveCount(4);
  await page.goto('/admin');await expect(page.locator('.admin-page')).toHaveCount(0);await expect(page.getByLabel('Yayıncı şifresi',{exact:true})).toBeVisible();
  await request.post('/api/room',{headers:auth,data:{enabled:false}});
+});
+
+test('demo rose1000, 100 gifts, frozen winners and a clean new round',async({page,context,request})=>{
+ await admin(page);const viewer=await context.newPage();await ready(viewer);
+ const snapshot=async()=> (await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;
+ const total=(s:any)=>s.players.reduce((sum:number,p:any)=>sum+p.coins,0);
+ const before=await snapshot();await page.getByTestId('demo-rose1000').click();
+ await expect.poll(async()=>total(await snapshot())).toBe(total(before)+1000);
+ await expect(page.getByTestId('demo-burst')).toBeEnabled();await page.getByTestId('demo-burst').click();
+ await expect.poll(async()=>total(await snapshot())).toBe(total(before)+1100);
+ await expect(page.getByTestId('demo-finish')).toBeEnabled();await page.getByTestId('demo-finish').click();
+ await expect(viewer.locator('.round-finished')).toBeVisible();const finished=await snapshot();expect(finished.winners).toHaveLength(4);
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Yeni tur',exact:true}).click();
+ await expect.poll(async()=>(await snapshot()).roundId).not.toBe(before.roundId);
+ await expect(viewer.locator('.round-finished')).toHaveCount(0);await expect(viewer.locator('.broadcast-clock strong')).toHaveText('10:00');
+ expect((await snapshot()).players).toHaveLength(0);
 });

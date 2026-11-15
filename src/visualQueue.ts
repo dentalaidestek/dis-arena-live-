@@ -8,3 +8,5 @@ export function appendVisuals(queue:VisualQueue,events:VisualEvent[]):VisualQueu
  return {waiting:all.slice(overflow),skipped:queue.skipped+overflow};
 }
 export const visualDuration=(waiting:number)=>waiting>20?1600:waiting>5?2400:3800;
+
+export const visualsForRound=(events:VisualEvent[],roundId:string)=>events.filter(event=>event.before.roundId===roundId);

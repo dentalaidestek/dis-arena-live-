@@ -18,11 +18,11 @@
 
 | Kontrol | Gerçek sonuç |
 |---|---|
-| `npm test` | 61 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
+| `npm test` | 62 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
 | `npm run test:python` | TikTokLive 7.0.1 bağımlılıklarıyla 10 geçti |
 | `npm run test:provider` | 1 geçti; gerçek protobuf sınıfıyla sentetik 1000 seri artışı → Python → SQLite =1000; replay +0 |
 | `npm run build` | TypeScript/Vite geçti; yaklaşık 1,27 MB JS paket boyutu uyarısı sürüyor |
-| Chromium Playwright | Önceki kaynak paketi `bfffb63` üzerinde 5 kabul testi geçti; son etiket/güvenli alan düzeltmeleri yeni CI'da tekrar çalıştırılır |
+| Chromium Playwright | Önceki kaynak paketi `bfffb63` üzerinde 5 kabul testi geçti; son etiket/güvenli alan ve eski tur görsellerinin ayıklanması düzeltmeleri yeni CI'da tekrar çalıştırılır |
 | `git diff --check` | Temiz |
 
 Gerçek GitHub Actions Chromium/SwiftShader testleri: 360×800, 393×873, 1080×1920 OBS, 1280×1000 masaüstü; WebGL FPS>0, tarayıcı hatası olmaması ve taşma kontrolü; şifreli mobil yönetim/çıkış; çekim→implant→demo çürütme→iyileştirme; tam ekran gir/çık sırasında turun korunması; oda şifresinin admin yetkisi vermemesi. Her prosedürde hedef Ahmet / FDI 11 kontrol edilip 3D işlem sırasında ekran görüntüsü alınır.
