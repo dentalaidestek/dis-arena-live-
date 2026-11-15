@@ -1,48 +1,16 @@
-# SON DİŞ AYAKTA — OYUN KURALLARI (v0.4, yerel demo)
+# Güncel oyun kuralları — 15 Kasım 2026
 
-## Kesinleşen temel kurallar
-- Dikey 9:16 yayın, merkezde anatomik 32 dişli ağız; büyük gerçekçi insan yüzü yok.
-- Her diş tek bir izleyici hesabına aittir. Sahiplik TikTok kullanıcı adıyla gösterilir, eşsiz kullanıcı ID'siyle korunur. Bir kullanıcı yalnız bir diş alabilir; çekilen diş başka kullanıcıya verilmez.
-- Her diş 100 HP başlar. 0 HP otomatik çekim değildir.
-- Çürütme: -10 HP; kırma: -30 HP; tedavi: +25 HP, en fazla 100.
-- Çürük kalkanı yalnız çürütmeyi; kırık kalkanı yalnız kırmayı engeller. Kalkan süreli değil, saldırı başına 1 azalır.
-- Kalkan varken saldırı hasarı ve yeni çürük/kırık izi oluşmaz.
-- Çekim ancak 20 HP veya altında yapılabilir. Çekilmiş dişe yalnız implant uygulanır.
-- İmplant dişi 50 HP ile geri getirir, eski iz ve kalkanları sıfırlar.
-- Aktif diş sayısı sekize indiğinde implant kilitlenir; iki dişte final başlar. Tek diş kalınca kazanan belirlenir ve tur biter.
-- Bütün dişler eşitken lider yoktur; eşit liderlikte önceki lider korunabilir. Lider karakter diş sahibinin kullanıcı adını gösterir.
-- Kullanıcı adı/avatar kartı eylemle görünür; TikTok'ta olmayan ad-soyad uydurulmaz.
-- Kötü karakterler çürütme/kırma/çekim, iyi karakterler tedavi/koruma/implant işlemlerini sahnede yapar.
-- Oyun durumu animasyonun bitmesini beklemez; efektler ayrı kuyrukta oynar.
+Eski 32 diş/HP/eleme kuralları ana uygulama için geçerli değildir.
 
-## Otomatik baskı (onaylanan yeni kural)
-- Son elemeden itibaren 10 dakika boyunca hiç yeni diş çekilmezse baskı başlar.
-- Baskı aktif kaldığı sürece her 60 saniyede tüm çekilmemiş dişlere eşit −2 HP uygulanır; 0 altına inmez.
-- Baskı kalkan tüketmez, yeni çürük/kırık izi oluşturmaz ve otomatik çekim yapmaz.
-- Yeni bir çekim olduğunda baskı sayacı sıfırlanır. Tedavi veya kalkan işlemi sayacı sıfırlamaz.
-- Baskı sisteminin başlaması bir çekim garantisi değildir: dişin çekimi yine ayrı bir eylem gerektirir.
-- Yayın öncesinde bu mekanik izleyiciye açıkça gösterilmeli; otomatik ücretli hediye eşlemesi yapılmamalı.
-
-## Turnuva evreleri
-- 32 → 16 → 8 → 4 → 2 → 1 aktif diş. Bunlar eleme sayacı eşikleridir; eşleşmeli futbol fikstürü değildir.
-- Son 8'e girince implant yasaktır; son iki dişte büyük final, tek dişte şampiyonluk ekranı gösterilir.
-- 32 kontenjan izleyici kullanıcı adlarına ayrılır; futbol kulüpleri artık oyunun sahibi değildir.
-
-## Eş zamanlı eylem ve animasyon
-- Olaylar tekil kimlik ile oyun durumuna geliş sırasıyla uygulanır. Aynı dişte önce kalkan sonra saldırı ile önce saldırı sonra kalkan farklı sonuç verir.
-- İyi ve kötü ekipler aynı anda sahneye çıkabilir: her tarafta en fazla iki hekim, toplam dört hekim.
-- Farklı dişlere eş zamanlı görsel işlem yapılabilir. Aynı dişin animasyonları geliş sırasını korur.
-- Kuyruk doluluğunda görsel işlemler sessizce silinmez. Bu bir prototip uygulamasıdır; kalıcı sunucu kuyruğu ve yük testleri yayından önce gereklidir.
-
-## Diş sahiplenme
-- Sahiplenme 32 dişle sınırlıdır, diş seçimi yayıncı test panelinden simüle edilir.
-- Ücretsiz sahiplenme ve yerel test modu mevcut. Ön kesiciler için premium hediye fikri gerçek fiyat veya etkin TikTok eşlemesi değildir.
-- Çekilen diş 17 veya daha fazla aktif diş varken farklı bir kullanıcı tarafından daha yüksek maliyet kategorisindeki implantla devralınabilir. Eski sahip elenir, yeni sahip tek diş hakkını kullanır ve diş 50 HP ile geri döner. Son 16'da yeni kullanıcıyla devralma yasaktır. Son 8'de bütün implantlar yasaktır.
-- Kazanan son aktif dişin sahibidir; diş sahipsizse kullanıcı şampiyonluğu verilmez.
-- Ücretli hediye üzerinden sahiplenme, satın alma, ödül veya şans oyunu entegrasyonu platform/hukuk kontrolü olmadan açılmaz.
-
-## Platform ve yayın sınırı
-Gerçek TikTok hediye eşlemesi kapalıdır. Yetkili olay erişimi ve güncel platform politikaları doğrulanmadan hediyelerin sonucu değiştirmesi etkinleştirilmeyecek. Bahis, ödül karşılığı hediye ve yanıltıcı hediye teşviki yoktur.
-
-## Henüz kesinleşmeyenler
-Takımların son listesi, görsel lisansları, gerçek hediye haritası, tur süresi, eşitlik bozma kuralı ve resmi canlı olay kaynağı. Bunlar varsayılarak gerçek yayına çıkılmayacak.
+- 28 diş, üstte ve altta 14'er; iki hekim; ilk geçerli hediye ile 600 saniye.
+- Puanlar benzersiz TikTok kullanıcı ID'sinde tutulur. Kullanıcı adı değişebilir.
+- Sıralama: toplam jeton azalan, katılım zamanı artan, kullanıcı ID'si deterministik sözlü sırası. İlk 28 dişlere, ilk dört iki üst/iki alt merkezi kesiciye yerleşir.
+- Çekim ve implant farklı 20 jetonluk hediyelerdir. Çürütme 10; iyileştirme şimdilik ayrı bir 10 jetonluk hediyedir (belirtilmeyen fiyat için uygulama varsayımı).
+- Çekim/çürütme gönderenin hediye öncesi hemen önündekini hedefler; birinci ikinciyi hedefler. İlk hediyesini gönderen, henüz önceki sıralamada bulunmayan oyuncunun saldırı hedefi yoktur.
+- Çekim 30 saniye, çürütme 15 saniye kilitler. Kilitli hedefe yeni saldırı kilidi uzatmaz veya başka durumla değiştirmez. Eski jetonlar korunur.
+- Kilitli gönderenden gelen normal hediyeler puan vermez. Çekimde yalnız implant, çürükte yalnız iyileştirme kilidi kaldırır ve hediye değerini puana ekler. Kilitli olmayan oyuncunun savunma hediyesi normal puandır.
+- Süre dolduğu tam milisaniyede oyuncu serbesttir. Tur bitişinin tam milisaniyesindeki yeni hediye kabul edilmez. Kazananlar ve sonuç dondurularak saklanır.
+- Her paket sunucunun teslim alıp transaction başlattığı sırayla ve sunucu zamanı kullanılarak işlenir. Sağlayıcı zamanı ayrıca günlüğe yazılır; geçmiş tura ait veya gelecekteki şüpheli mesajlar reddedilir. Tur bittikten sonra gelen eski paketler geçmiş sonucu değiştirmez.
+- Gerçek işlem ataması hediye adına göre yapılmaz: doğrulanmış katalog ID'si ve birim fiyat eşleşmesi gerekir. Dört işlem dört farklı ID kullanır. 50 jetonluk Çay artık çekim değildir.
+- Gül serisinde yeni adet = max(0, yeni çarpan − işlenmiş çarpan). Seri sonu ikinci kez yazılmaz. Belirsiz seri kimliğinde puan tahmin edilmez.
+- Puanlar animasyon süresini beklemez. Görsel işlem kendi hedef kullanıcı/dişini ve işlem öncesi yerleşimi taşır. Görsel kuyruk özetlemesi puanları değiştirmez.

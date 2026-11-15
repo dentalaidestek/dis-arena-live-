@@ -1,3 +1,7 @@
+# Eski kurulum notları
+
+Bu dosya önceki doğrudan WebSocket/Termux denemesini arşivler. Güncel kurulum README.md ve TIKTOK_LIVE.md içindedir; yayıncı paneli köprüyü yönetir. Aşağıdaki adımlar güncel sunucu için kullanılmamalıdır.
+
 # Diş Arena — Termux ile geliştirme
 Termux uygulamasında:
 ```bash

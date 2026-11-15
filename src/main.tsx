@@ -1,67 +1,87 @@
-import React,{useEffect,useRef,useState} from 'react';
-import{createRoot}from'react-dom/client';
-import{Canvas,useFrame}from'@react-three/fiber';
-import{Text}from'@react-three/drei';
-import*as THREE from'three';
-import{initialTeeth}from'./engine';
-import{DentalProcedureFX}from'./DentalProcedureFX';
-import{ActionCharacter}from'./ActionAnimation';
-import{TreatmentScene}from'./TreatmentScene';
-import{ProcedureBroadcast}from'./ProcedureBroadcast';
-import{DoctorPortrait}from'./DoctorPortrait';
-import type{AnimationCue}from'./ActionAnimation';
-import{applyGift,loadCoinArena,saveCoinArena,newCoinArena,ranked,toothOf,timeLeft,isLocked,POSITIONS,TEA_COINS,IMPLANT_COINS,type Gift,type CoinArena}from'./coinArena';
-import{DentalArenaScene}from'./DentalArenaScene';
-import {normalizeBridgeGift,type StreakProgress} from './bridgeGift';
+import React,{useCallback,useEffect,useRef,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {DentalArenaScene} from './DentalArenaScene';
+import {newCoinArena,ranked,timeLeft,isLocked,type CoinArena,type Procedure} from './coinArena';
+import type {VisualEvent} from '../server/store';
+import {appendVisuals,visualDuration,type VisualQueue} from './visualQueue';
+import type {AnimationCue} from './ActionAnimation';
 import './style.css';
-const TEETH=initialTeeth();
-function Tooth3D({id,username,coins,rank,locked,highlight}:{id:number;username?:string;coins?:number;rank?:number;locked:boolean;highlight:boolean}){
- const group=useRef<THREE.Group>(null);const top=id<16;const slot=top?id: id-16;
- const angle=(slot/15-.5)*Math.PI*.91;const x=Math.sin(angle)*4.55;const z=-Math.cos(angle)*1.45;
- const y=top?1.28:-1.28;
- useFrame(({clock})=>{if(group.current)group.current.scale.setScalar(highlight?1.06+.035*Math.sin(clock.elapsedTime*4):1)});
- const color=locked?'#6b3546':'#fff1d9';
- return <group ref={group} position={[x,y,z]} rotation={[0,-angle,0]}>
- {highlight&&<><mesh position={[0,0,-.1]}><torusGeometry args={[.52,.055,12,40]}/><meshBasicMaterial color="#ffcf4d"/></mesh><pointLight position={[0,0,.7]} color="#ffd263" intensity={2} distance={2}/></>}
- {locked?<><mesh scale={[.36,.17,.3]}><sphereGeometry args={[1,24,12]}/><meshStandardMaterial color="#5b2638"/></mesh><Text position={[0,0,.4]} fontSize={.29} color="#ff7188">✕</Text></>:<>
- <mesh position={[0,top?.05:-.05,0]} scale={[top?.4:.34,top?.45:.35,.37]}><sphereGeometry args={[1,26,18]}/><meshPhysicalMaterial color={color} roughness={.25} clearcoat={.55}/></mesh>
- {[-1,1].map(s=><React.Fragment key={s}><mesh position={[s*.16,top?.34:-.34,.09]} scale={[.18,.18,.18]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color={color}/></mesh><mesh position={[s*.13,top?-.35:.35,-.04]} rotation={[0,0,s*.13]} scale={[.14,.32,.15]}><coneGeometry args={[1,1,16]}/><meshStandardMaterial color="#e2d5bf"/></mesh></React.Fragment>)}
- </>}
- {rank!==undefined&&rank<4&&<Text position={[0,top?.8:-.8,.35]} fontSize={.3} color="#ffcd49">{'♛ '+(rank+1)}</Text>}
- <Text position={[0,top?.59:-.59,.42]} fontSize={.13} maxWidth={1.3} color={username?'#ffffff':'#8fa3b6'}>{username?'@'+username.slice(0,10):''}</Text>
- {username&&<Text position={[0,top?-.7:.7,.3]} fontSize={.12} color="#ffcf6e">{String(coins??0)+' 🪙'}</Text>}
- </group>;
-}
-function Mouth({state,now,cues,onEffectDone}:{state:CoinArena;now:number;cues:AnimationCue[];onEffectDone:(id:number)=>void}){
- const players=ranked(state);const positions=new Map(players.slice(0,28).map((p,i)=>[POSITIONS[i],{...p,rank:i}]));
- return <Canvas gl={{alpha:true}} camera={{position:[0,0,12],fov:51}}><ambientLight intensity={2}/><pointLight position={[-5,4,5]} color="#f44d76" intensity={65}/><pointLight position={[5,3,5]} color="#46bbff" intensity={65}/>
- 
- 
- 
- {cues.map((c,i)=><React.Fragment key={c.id}><ActionCharacter cue={c} laneOffset={i%2===0?-.25:.25} onComplete={onEffectDone}/><TreatmentScene cue={c}/><DentalProcedureFX cue={c} onDone={()=>{}}/></React.Fragment>)}
- </Canvas>;
-}
+const params=new URLSearchParams(location.search);
+const MODE=params.get('mode')==='demo'?'demo':'live';
+const OBS=params.get('view')==='obs';
+const LABELS:Record<string,string>={extract:'Çekim',implant:'İmplant',decay:'Çürütme',heal:'İyileştirme'};
 function App(){
- const[state,setState]=useState(()=>loadCoinArena(window.localStorage));const stateRef=useRef(state);const[now,setNow]=useState(Date.now());const[cues,setCues]=useState<AnimationCue[]>([]);const[latest,setLatest]=useState('Hediyeler bekleniyor');const[status,setStatus]=useState('TikTok köprüsü bekleniyor');const[demoName,setDemoName]=useState('Ahmet');const[demoGift,setDemoGift]=useState('Gül');const[demoCoins,setDemoCoins]=useState(1);const serial=useRef(0);const cueTimers=useRef<number[]>([]);const streakProgress=useRef<StreakProgress>({});
- const players=ranked(state);const remaining=state.startedAt?timeLeft(state,now):600000;const finished=state.startedAt>0&&remaining===0;const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
- useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),250);return()=>clearInterval(timer)},[]);
- function receive(gift:Gift){const result=applyGift(stateRef.current,gift);setLatest(result.message);if(!result.accepted)return;stateRef.current=result.state;setState(result.state);saveCoinArena(window.localStorage,result.state);if((result.action==='extract'||result.action==='implant')&&result.targetId!==null){const cue:AnimationCue={id:++serial.current,action:result.action,team:'DİŞ '+(result.targetId+1),user:'@'+gift.username,targetId:result.targetId,blocked:false};setCues(old=>[...old.slice(-2),cue]);cueTimers.current.push(window.setTimeout(()=>setCues(old=>old.filter(item=>item.id!==cue.id)),4500));}}
- useEffect(()=>{let ws:WebSocket|null=null;let retry:number|undefined;let stopped=false;function connect(){if(stopped)return;try{ws=new WebSocket('ws://127.0.0.1:8765');ws.onopen=()=>setStatus('🟢 Köprü bağlı');ws.onmessage=e=>{try{const m=JSON.parse(String(e.data));if(m.type==='status'){setStatus(m.state==='live-connected'?'🟢 TikTok LIVE bağlı':'Köprü bağlı · yayın bekleniyor');return;}for(const gift of normalizeBridgeGift(m,streakProgress.current))receive(gift);}catch{setStatus('Köprü mesajı okunamadı')}};ws.onclose=()=>{if(stopped)return;setStatus('🔴 Bağlantı kesildi');retry=window.setTimeout(connect,3000)};ws.onerror=()=>setStatus('🔴 Köprü bağlantı hatası')}catch{setStatus('🔴 Köprü kullanılamıyor')}}connect();return()=>{stopped=true;if(retry)clearTimeout(retry);ws?.close()}},[]);
- useEffect(()=>()=>{cueTimers.current.forEach(window.clearTimeout)},[]);
- const previewAction=(action:'extract'|'implant')=>{
-  const target=POSITIONS[action==='extract'?0:2];
-  const cue:AnimationCue={id:++serial.current,action,team:'DİŞ '+target,user:'Demo',targetId:target,blocked:false};
-  setCues([cue]);cueTimers.current.push(window.setTimeout(()=>setCues(old=>old.filter(c=>c.id!==cue.id)),4500));
- };
- const demo=()=>receive({eventId:crypto.randomUUID(),userId:'demo-'+demoName.toLocaleLowerCase('tr-TR'),username:demoName,giftName:demoGift,coins:demoCoins,timestamp:Date.now()});
- const populate=()=>{const names=['Ahmet','Zeynep','Mehmet','Elif','Veli','Ali','Hasan','Cem','Deniz','Eren','Mert','Aslı','Ece','Kerem','Buse','Selin','Emre','Derya','Ayşe','Can','Ozan','İrem','Berk','Seda','Mina','Efe','Yusuf','Ada'];const now=Date.now();const next=newCoinArena(now);next.players=names.map((username,i)=>({userId:'demo-'+i,username,coins:Math.max(120,10000-Math.round(i*365)),joinedAt:now+i,lockedUntil:0}));stateRef.current=next;setState(next);saveCoinArena(window.localStorage,next);setLatest('28 oyunculu görsel demo başlatıldı');};
- const reset=()=>{if(!window.confirm('Yeni 10 dakikalık tur başlatılsın mı?'))return;const next=newCoinArena();stateRef.current=next;setState(next);saveCoinArena(window.localStorage,next);setCues([]);setLatest('Yeni tur başladı')};
- return <main className="coin-app"><header className="coin-header"><div className="coin-logo">🦷 DİŞ ARENA <small>CANLI JETON YARIŞI</small></div><div className="coin-clock">⏱ {clock} <small>/ 10:00</small></div><div className="coin-live">🔴 CANLI <small>{players.length} oyuncu</small></div></header>
- <section className="coin-main"><aside className="coin-activity"><h2>◉ CANLI AKIŞ</h2>{state.history.length?state.history.slice(0,6).map((m,i)=><div className="coin-activity-event" key={i}>{m}</div>):<p>Hediye etkinlikleri burada görünecek.</p>}</aside><div className="coin-mouth"><DentalArenaScene state={state} now={now} cue={cues[cues.length-1]}/><ProcedureBroadcast cues={cues}/></div>
- <aside className="coin-side"><h2>👑 CANLI SIRALAMA</h2>{players.slice(0,28).map((p,i)=><div key={p.userId} className={'coin-rank '+(i<4?'coin-winner':'')}><span>{i<4?'🏆':''}{i+1}</span><span className="coin-user">@{p.username}{isLocked(p,now)&&<small> 🦷 ÇEKİLDİ · {Math.ceil((p.lockedUntil-now)/1000)} sn</small>}</span><strong>{p.coins.toLocaleString('tr-TR')} 🪙</strong></div>)}{!players.length&&<p>İlk hediye geldiğinde 10 dakikalık tur başlar.</p>}</aside></section>
- <section className="coin-bottom"><div className="coin-doctor"><div><strong>⚔️ İKİ HEKİM · TEK ARENA</strong><small>🔴 Solda kötü hekim: Çekim</small><small>🟢 Sağda iyi hekim: İmplant</small><span className="doctor-active">● SAHNE AKTİF</span></div></div><div className="coin-tea"><div className="tea-icon">🫖</div><div><strong>ÇAY · {TEA_COINS} JETON</strong><span>🦷 Aktif diş → Çekim · 30 sn kilit</span></div><div className="implant-icon">🧴</div><div><strong>PARFÜM · {IMPLANT_COINS} JETON</strong><span>🔩 Çekilmiş diş → İmplant +20 puan</span></div></div><div className="coin-prizes"><strong>🏆 {finished?'KAZANANLAR':'İLK 4 ADAY'}</strong><div className="coin-prize-grid">{players.slice(0,4).map((p,i)=><span key={p.userId}><b>{i+1}. 👑</b> @{p.username} <em>{p.coins.toLocaleString('tr-TR')} 🪙</em></span>)}</div></div></section>
- <div className="coin-notice">{status} · {latest}</div><div className="coin-feed">{state.history.slice(0,5).map((m,i)=><div key={i}>{m}</div>)}</div><p className="coin-rule">28 diş · 10 dakika · tek sıralama · ilk 4 kazanır. Çekilmişken normal hediyeler puana eklenmez. Parfüm ile implant puan kazandırır. Çekim puan silmez. Hediyeler TikTok üzerinde ücretlidir.</p>
- <details className="coin-admin"><summary>⚙ Yayıncı test ve tur kontrolü</summary><div className="coin-demo"><input aria-label="Demo kullanıcı" value={demoName} onChange={e=>setDemoName(e.target.value)}/><select aria-label="Demo hediye" value={demoGift} onChange={e=>{const n=e.target.value;setDemoGift(n);setDemoCoins(n==='Çay'?50:n==='Parfüm'?20:n==='Finger Heart'?5:1)}}><option>Gül</option><option>Finger Heart</option><option>Parfüm</option><option>Çay</option></select><button onClick={demo} disabled={finished}>HEDİYE TESTİ</button><button onClick={populate}>28 OYUNCULU DEMO</button><button onClick={()=>previewAction("extract")}>🎬 ÇEKİM ANİMASYONU</button><button onClick={()=>previewAction("implant")}>🎬 İMPLANT ANİMASYONU</button><button onClick={reset}>YENİ TUR</button></div></details>
+ const [state,setState]=useState<CoinArena>(newCoinArena());const [now,setNow]=useState(Date.now());
+ const [connection,setConnection]=useState('Sunucuya bağlanıyor');const [bridge,setBridge]=useState<any>({state:'disconnected'});
+ const [queue,setQueue]=useState<VisualQueue>({waiting:[],skipped:0});const [active,setActive]=useState<(VisualEvent&{durationMs:number})|null>(null);
+ const [token,setToken]=useState(()=>sessionStorage.getItem('arena-admin')??'');const [username,setUsername]=useState('');
+ const [admin,setAdmin]=useState<any>(null);const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);
+ const [quality,setQuality]=useState<'low'|'high'>('high');const [fps,setFps]=useState(0);const [userId,setUserId]=useState('demo-1');
+ const [giftId,setGiftId]=useState('');const [procedure,setProcedure]=useState<Procedure>('extract');
+ const currentRound=useRef('');
+ const serverOffset=useRef(0);const replay=new Set<number>();const replayRef=useRef(replay);const run=useRef(false);
+ const update=useCallback((m:any)=>{
+  if(m.type!=='snapshot'||m.mode!==MODE)return;
+  if(currentRound.current&&currentRound.current!==m.state.roundId){setQueue({waiting:[],skipped:0});run.current=false;setActive(null);}
+  currentRound.current=m.state.roundId;
+  serverOffset.current=m.serverNow-Date.now();setState(m.state);setBridge(m.bridge);
+  if(Array.isArray(m.visuals)){
+   const fresh=m.visuals.filter((v:VisualEvent)=>{if(replayRef.current.has(v.id))return false;replayRef.current.add(v.id);return true});
+   // This is a viewer-only replay cache. Durable idempotency lives in SQLite.
+   if(replayRef.current.size>2000)replayRef.current=new Set([...replayRef.current].slice(-1000));
+   setQueue(q=>appendVisuals(q,fresh));
+  }
+ },[]);
+ useEffect(()=>{
+  let stopped=false,ws:WebSocket|undefined,retry:ReturnType<typeof setTimeout>|undefined,attempt=0;
+  const connect=()=>{
+   if(stopped)return;
+   ws=new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/arena?mode=${MODE}`);
+   ws.onopen=()=>{attempt=0;setConnection('Görüntü bağlantısı açık')};
+   ws.onmessage=e=>{try{update(JSON.parse(e.data))}catch{setNotice('Sunucu mesajı okunamadı')}};
+   ws.onerror=()=>setConnection('Sunucu bağlantı hatası');
+   ws.onclose=()=>{if(stopped)return;setConnection('Bağlantı kesildi · puanlar sunucuda korunuyor');retry=setTimeout(connect,Math.min(30000,1000*2**Math.min(attempt++,5))+Math.random()*700)};
+  };connect();return()=>{stopped=true;clearTimeout(retry);if(ws){ws.onclose=null;ws.close()}};
+ },[update]);
+ useEffect(()=>{const t=setInterval(()=>setNow(Date.now()+serverOffset.current),250);return()=>clearInterval(t)},[]);
+ useEffect(()=>{
+  if(active||run.current||!queue.waiting.length)return;
+  run.current=true;const next=queue.waiting[0];setQueue(q=>({...q,waiting:q.waiting.slice(1)}));setActive({...next,durationMs:visualDuration(queue.waiting.length)});
+ },[queue,active]);
+ useEffect(()=>{if(!active)return;const timer=setTimeout(()=>{run.current=false;setActive(null)},active.durationMs);return()=>clearTimeout(timer)},[active]);
+ async function refresh(){
+  if(!token)return;
+  try{const r=await fetch('/api/admin?mode='+MODE,{headers:{Authorization:'Bearer '+token}});const data=await r.json();if(!r.ok)throw Error(data.error);setAdmin(data);setBridge(data.bridge)}catch(e){setNotice(String(e))}
+ }
+ useEffect(()=>{if(OBS||!token)return;sessionStorage.setItem('arena-admin',token);refresh();const t=setInterval(refresh,2000);return()=>clearInterval(t)},[token]);
+ async function command(path:string,body:unknown){
+  if(busy)return;setBusy(true);
+  try{const r=await fetch('/api/'+path+'?mode='+MODE,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.error);setNotice(data.message??'İşlem tamamlandı');await refresh()}catch(e){setNotice(String(e))}finally{setBusy(false)}
+ }
+ const players=ranked(state);const remaining=state.finishedAt?0:state.startedAt?timeLeft(state,now):600000;
+ const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
+ const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId,user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
+ // Freeze ownership to the operation's original layout during its visual playback.
+ // The leaderboard continues to show the current authoritative result.
+ const sceneState=active?{...active.before,players:active.before.players.map(p=>p.userId===active.targetUserId?{...p,condition:active.action==='decay'?'decayed' as const:active.action==='extract'?'extracted' as const:undefined,lockedUntil:['decay','extract'].includes(active.action)?now+5000:0}:p)}:state;
+ const last=admin?.diagnostics?.recent?.[0];
+ return <main className={'coin-app '+(OBS?'obs-view':'')}>
+ <header className="coin-header"><div className="coin-logo">🦷 DİŞ ARENA<small>{MODE==='demo'?'DEMO · GERÇEK YARIŞTAN AYRI':'CANLI JETON YARIŞI'}</small></div><div className="coin-clock">{clock}<small>{state.finishedAt?'TUR TAMAMLANDI':'10 DAKİKA'}</small></div><div className="coin-live">{players.length} OYUNCU<small>{bridge.state==='live-connected'?'● TikTok LIVE bağlı':MODE==='demo'?'TEST SAHNESİ':'YAYIN BEKLENİYOR'}</small></div></header>
+ <section className="coin-main"><aside className="coin-activity"><h2>CANLI AKIŞ</h2>{state.history.slice(0,6).map((m,i)=><div className="coin-activity-event" key={i}>{m}</div>)}</aside>
+ <div className="coin-mouth"><DentalArenaScene state={sceneState} now={now} cue={cue} quality={quality} onFps={setFps}/></div>
+ <aside className="coin-side"><h2>CANLI SIRALAMA</h2>{players.slice(0,28).map((p,i)=><div key={p.userId} className={'coin-rank '+(i<4?'coin-winner':'')}><span>{i+1}</span><span className="coin-user">@{p.username}{isLocked(p,now)&&<small>{p.condition==='decayed'?'ÇÜRÜK':'ÇEKİLDİ'} · {Math.ceil((p.lockedUntil-now)/1000)} sn</small>}</span><strong>{p.coins.toLocaleString('tr-TR')}</strong></div>)}{!players.length&&<p>İlk geçerli hediyeyle tur başlar.</p>}</aside></section>
+ <section className="procedure-rules">{(['extract','implant','decay','heal'] as const).map((p,i)=><div key={p}><b>{['🦷','🔩','☣','✚'][i]} {LABELS[p]}</b><strong>{i<2?20:10} jeton</strong><small>{['30 sn kilit','Çekimi kaldırır','15 sn kilit','Çürüğü iyileştirir'][i]}</small></div>)}</section>
+ <section className="coin-prizes"><strong>{state.finishedAt?'🏆 KAZANANLAR':'👑 İLK DÖRT'}</strong><div className="coin-prize-grid">{(state.winners??players.slice(0,4)).map((p,i)=><span key={p.userId}>{i+1}. @{p.username} <em>{p.coins.toLocaleString('tr-TR')} 🪙</em></span>)}</div></section>
+ {!OBS&&<><div className="coin-notice" role="status">{connection} · {notice||bridge.error} · {fps} FPS · Animasyon kuyruğu {queue.waiting.length}{queue.skipped>0&&` · ${queue.skipped} görsel özetlendi`}</div>
+ <section className="broadcaster-panel"><div className="panel-heading"><h2>Yayıncı kontrolü</h2><a href={'?view=obs&mode='+MODE} target="_blank" rel="noreferrer">OBS 9:16 görünümü ↗</a><a href={'?mode='+(MODE==='demo'?'live':'demo')}>{MODE==='demo'?'Canlı yarışa dön':'Ayrı demo alanını aç'}</a></div>
+ <p>Çekim ve implant için farklı 20 jetonluk, çürütme ve iyileştirme için farklı 10 jetonluk katalog hediyeleri seçilir. İyileştirme bedeli şu an 10 jetondur.</p>
+ <div className="control-row"><label>Yönetici anahtarı<input type="password" autoComplete="off" value={token} onChange={e=>setToken(e.target.value)} placeholder="Sunucudaki admin anahtarı"/></label><label>TikTok kullanıcı adı<input value={username} onChange={e=>setUsername(e.target.value)} placeholder="@kullanici_adi"/></label><button disabled={busy||!token||!username} onClick={()=>command('connect',{username})}>Bağlan</button><button disabled={busy||!token} onClick={()=>command('disconnect',{})}>Bağlantıyı kes</button><label>Grafik kalitesi<select value={quality} onChange={e=>setQuality(e.target.value as 'low'|'high')}><option value="high">Yüksek</option><option value="low">Düşük</option></select></label></div>
+ {admin&&<><div className="diagnostic-grid"><div><small>Yayın</small><b>{bridge.state}</b></div><div><small>Kalıcı olay</small><b>{admin.diagnostics.events}</b></div><div><small>İşlenen hediye adedi</small><b>{admin.diagnostics.units}</b></div><div><small>Engellenen tekrar</small><b>{admin.diagnostics.duplicates}</b></div><div><small>İnceleme / reddedilen</small><b>{admin.diagnostics.invalid}</b></div><div><small>İşlem kuyruğu</small><b>{admin.pending}</b></div><div><small>Son hediye / ID</small><b>{last?.raw?.giftName??'—'} / {last?.raw?.giftId??'—'}</b></div><div><small>Birim / çarpan / yeni adet</small><b>{last?.raw?.coins??0} / ×{last?.raw?.repeatCount??0} / +{last?.result?.delta??0}</b></div><div><small>Son sonuç</small><b>{last?.result?.message??'—'}</b></div></div>
+ <details><summary>Hediye kataloğu ve işlem eşleştirmesi</summary><p>Sürüm {admin.catalog.version} · {admin.catalog.verified?new Date(admin.catalog.verified).toLocaleString('tr-TR'):'Katalog bekleniyor'}{now-admin.catalog.verified>86400000?' · ESKİ KATALOG':''}</p><div className="control-row"><label>Doğrulanmış hediye<select value={giftId} onChange={e=>setGiftId(e.target.value)}><option value="">Seçiniz</option>{admin.catalog.gifts.map((g:any)=><option key={g.giftId} value={g.giftId}>{g.name} · {g.coins} jeton · {g.giftId}</option>)}</select></label><label>İşlem<select value={procedure} onChange={e=>setProcedure(e.target.value as Procedure)}>{Object.entries(LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><button disabled={!giftId||busy} onClick={()=>command('mapping',{giftId,procedure})}>Eşleştir</button></div>{admin.mappings.map((m:any)=><p key={m.procedure}>{LABELS[m.procedure]} → {m.gift_id}</p>)}</details>
+ <details><summary>Son olaylar ve arşiv ({admin.rounds.length} tur)</summary>{admin.diagnostics.recent.map((e:any)=><p key={e.seq}>#{e.seq} {e.raw.username} · {e.raw.giftName} · {e.result.message}</p>)}{admin.rounds.map((r:any)=><p key={r.id}>{r.id} · {r.finishedAt?'Tamamlandı':'Açılmış tur'}</p>)}</details></>}
+ {MODE==='demo'&&<div className="demo-controls"><h3>Ayrı demo verileri</h3><label>Hedef / gönderen oyuncu<select value={userId} onChange={e=>setUserId(e.target.value)}>{players.map(p=><option value={p.userId} key={p.userId}>@{p.username}</option>)}</select></label><div className="control-row">{['populate','extract','implant','decay','heal','rose1000','burst','finish'].map(a=><button key={a} disabled={busy||!token} onClick={()=>command('demo',{action:a,userId})}>{({populate:'28 oyuncu oluştur',rose1000:'Gül ×1000',burst:'100 hediye',finish:'Tur sonu'} as Record<string,string>)[a]??LABELS[a]}</button>)}</div><p>Saldırılar seçilen oyuncunun hemen önündekini hedefler. Savunma için kilitlenen oyuncuyu seçin.</p></div>}
+ <div className="control-row"><button disabled={busy||!token} onClick={()=>{if(confirm('Mevcut tur arşivde korunarak yeni tur açılsın mı?')){setQueue({waiting:[],skipped:0});run.current=false;setActive(null);command('round',{})}}}>Yeni tur aç</button>{localStorage.getItem('dis-arena-coin-v2')&&<button disabled={busy||!token} onClick={()=>command('import',JSON.parse(localStorage.getItem('dis-arena-coin-v2')!))}>Eski yerel kaydı içe aktar</button>}</div>
+ </section></>}
  </main>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

@@ -1,0 +1,2 @@
+# Adapter fixture tests validate the schema from this exact version.
+TikTokLive==7.0.1
