@@ -10,7 +10,7 @@
 - Node tek otoritedir. SQLite transaction olay, seri ilerlemesi ve tur durumunu birlikte saklar; tarayıcı render'ı puan yazamaz. Kalıcı idempotency 10.000 sınırıyla kırpılmaz. Canlı/demo veritabanları ayrıdır.
 - Python kalıcı outbox ve ACK/retry, kullanıcı adı kontrolü, sağlayıcı kimliklerinin korunması, katalog aktarımı ve backoff/jitter korunmuştur. Eksik katalog/seri kimliğinde puan uydurulmaz. Gerçek katalogdaki eşleştirilmiş ad izleyicide gösterilir; doğrulanmayan eşleme açıkça bekleniyor görünür.
 - Üst dört lider, gerçek FDI diş numaraları, sayaç/tur, lider değişimi, rekabet ve üç satırlık canlı olay akışı vardır. Sağdaki boş sıralama paneli kaldırıldı. OBS üst/alt TikTok güvenli alanları CSS değişkenleriyle ayarlanır.
-- Aynı prosedürel 3D sahnede dört ayrı taç geometrisi, daha büyük hekimler, küçültülmüş kafa, düzeltilmiş burun/yüz, ağız dışına taşınmış FDI etiketleri; eklemli kol, hedefe uzanan alet, diş çekimi/boşluk, implant vidası/restorasyon ve yüz tepkileri vardır. Puanlar anlık, görseller ayrı sınırlı kuyruktadır; taşma puanı silmez.
+- Reddedilen maskot görünümü yeni klinik dioramasıyla değiştirildi: normal oranlı hasta/koltuk, ayakta iki hekim, ekipman ve optik ağız yakın planı. Aynı 28 diş durumu ve hedef hem hastanın ağzında hem büyütülmüş görünümde kullanılır. Eklemli kol, çekim/boşluk, implant/restorasyon ve yüz tepkileri korunur; dişe dokununca oyuncu kartı açılır. Puanlar anlık, görseller ayrı sınırlı kuyruktadır; taşma puanı silmez.
 - Native tam ekran ve panele dönüş aynı round ID, başlangıç zamanı ve oyuncuları korur. Grafik tercihi ayrı demo/canlı kaynakta sunucuda tutulur.
 - Termux tek komut başlatıcı mevcut veriyi korur; demo Python olmadan açılır. Konsol yoğun hediyeleri gruplar. Yedekleme `access.sqlite` şifre özetlerini de kapsar.
 
@@ -18,26 +18,26 @@
 
 | Kontrol | Gerçek sonuç |
 |---|---|
-| `npm test` | 63 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
+| `npm test` | 64 geçti; motor, seri, SQLite yeniden açma/idempotency, eşzamanlı HTTP, auth, yetki ayrımı, demo/launcher ve geometri matematiği |
 | `npm run test:python` | TikTokLive 7.0.1 bağımlılıklarıyla 10 geçti |
 | `npm run test:provider` | 1 geçti; gerçek protobuf sınıfıyla sentetik 1000 seri artışı → Python → SQLite =1000; replay +0 |
 | `npm run build` | TypeScript/Vite geçti; yaklaşık 1,27 MB JS paket boyutu uyarısı sürüyor |
-| Chromium Playwright | Son uygulama kaynağı `70c13d4` üzerinde 6 kabul testi geçti |
+| Chromium Playwright | Son uygulama kaynağı `81bcea2` üzerinde 6 kabul testi geçti |
 | `git diff --check` | Temiz |
 
 Gerçek GitHub Actions Chromium/SwiftShader testleri: 360×800, 393×873, 1080×1920 OBS, 1280×1000 masaüstü; WebGL FPS>0, tarayıcı hatası olmaması ve taşma kontrolü; şifreli mobil yönetim/çıkış; çekim→implant→demo çürütme→iyileştirme; tam ekran gir/çık sırasında turun korunması; oda şifresinin admin yetkisi vermemesi. Her prosedürde hedef Ahmet / FDI 11 kontrol edilip 3D işlem sırasında ekran görüntüsü alınır.
 
-`70c13d441376b1ebec4fd6376f8f03548f2b1b64` üzerinde üç iş akışı başarılı:
+`81bcea2f10a52fb8b12def90763172464d8f531d` üzerinde üç iş akışı başarılı:
 
-- [Diş Arena CI](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281416)
-- [Verify Diş Arena](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281524)
-- [Arena visual acceptance](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281393)
+- [Diş Arena CI](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889063)
+- [Verify Diş Arena](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889040)
+- [Arena visual acceptance](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889022)
 
-Son tarayıcı testi Gül ×1000, +100 hediye, dört dondurulan kazanan ve temiz yeni turu da doğrular. PNG asılları artifact `14170930160` içinde, kalıcı WebP kopyaları [screenshots](screenshots/) altında ve [teslim kaydında](DELIVERY.md) bulunur. Bu gerçek tarayıcı doğrulamasıdır; mobil emülasyonu gerçek Android GPU testi değildir. Görseller açılarak incelendi; gözlerin ağız arkasında kalması ve acı ifadesinde kaşın yerinden çıkması düzeltilip yeniden yakalandı.
+Son tarayıcı testi Gül ×1000, +100 hediye, dört dondurulan kazanan ve temiz yeni turu da doğrular. PNG asılları artifact `14172650178` içinde, kalıcı WebP kopyaları [screenshots](screenshots/) altında ve [teslim kaydında](DELIVERY.md) bulunur. Bu gerçek tarayıcı doğrulamasıdır; mobil emülasyonu gerçek Android GPU testi değildir. Görseller açılarak incelendi. Son tarayıcı testi büyütülmüş görünümde 17 numaralı dişe gerçek tıklamayı ve oyuncu kartını da doğrular. [Görsel yenileme kaydı](VISUAL_REDESIGN.md).
 
 ## Eski testlerin durumu
 
-`npm run test:legacy` ile önce tüm eski testler de çalıştırıldı. Son geniş test: **98 testten 76 geçti, 22 başarısız**. Başlangıç commit'i temiz bir geçici dizine çıkartılıp aynı komut tekrar çalıştırıldı: **82 testten 22'si başlangıçta da başarısızdı**. Güncel testler eklenmeden önceki sonuçla hata isimleri aynıdır; eski akış hataları düzeltilmiş gibi gösterilmedi. Aktif uygulama bu HP/sahiplenme modüllerini çağırmaz.
+`npm run test:legacy` ile önce tüm eski testler de çalıştırıldı. Önceki kaynakta ölçülen geniş test: **98 testten 76 geçti, 22 başarısız**. Başlangıç commit'i temiz bir geçici dizine çıkartılıp aynı komut tekrar çalıştırıldı: **82 testten 22'si başlangıçta da başarısızdı**. Güncel testler eklenmeden önceki sonuçla hata isimleri aynıdır; eski akış hataları düzeltilmiş gibi gösterilmedi. Aktif uygulama bu HP/sahiplenme modüllerini çağırmaz.
 
 Başarısız eski testler:
 
@@ -55,7 +55,7 @@ Başarısız eski testler:
 
 1. Gerçek yayıncı adı verilmedi: aktif TikTok LIVE oda çözümleme/gerçek hediye teslimatı/gerçek katalog ID seçimi yapılmadı. Panelden 50 ve 20 jetonluk doğrulanmış iki farklı gerçek hediye eşleştirilmeli. Üçüncü taraf TikTokLive sıfır veri kaybı garantisi vermez.
 2. Yeni sürüm kullanıcı telefonunda Android + Termux ile henüz denenmedi. Önceki çalışan kurulum korunmuştur; Node SQLite ve Python 3.14 bağımlılık uyumu cihazda doğrulanmalı. Uzun süreli canlı + OBS yayın testi yapılmadı.
-3. Karakterler hâlâ prosedürel/stilize Three.js modelleridir; profesyonel sanatçı yapımı rigged karakter kalitesi iddia edilmez. 28 oyuncunun tam adı mobil ağız üzerinde okunamaz: kısa etiket + FDI kullanılır, ilk dört ve yönetim tablosu tam adları gösterir.
+3. Karakterler hâlâ prosedürel/stilize Three.js modelleridir; profesyonel sanatçı yapımı rigged karakter kalitesi iddia edilmez. 28 oyuncunun tam adı dişlerin üzerine yığılmaz: FDI numarası kullanılır; seçilen dişin kartı, ilk dört ve yönetim tablosu tam adları gösterir.
 4. Docker imajı/çok sunuculu dağıtım doğrulanmadı. JS paket boyutu uyarısı ve TikTokLive websockets legacy deprecation uyarısı sürüyor. Aktif motor testleri geçse de yukarıdaki 22 eski HP testi başarısızdır.
 5. Animasyon kuyruğu sınırlıdır; yoğun trafik ve yeniden bağlantı kaçırılan görselleri özetleyebilir, kalıcı puanı ve olay kaydını değiştirmez. Eski uygulamanın daha önce silmiş olduğu olay kimlikleri kurtarılamaz.
 

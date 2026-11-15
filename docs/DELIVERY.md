@@ -1,6 +1,6 @@
 # Diş Arena — yayın görünümü teslim kaydı
 
-15 Kasım 2026. Uygulama kaynağı: `70c13d441376b1ebec4fd6376f8f03548f2b1b64`. Mevcut geliştirme dalı ve taslak [PR #1](https://github.com/dentalaidestek/dis-arena-live-/pull/1) güncellendi. Main birleştirilmedi; production dağıtımı yapılmadı.
+15 Kasım 2026. Uygulama kaynağı: `81bcea2f10a52fb8b12def90763172464d8f531d`. Mevcut geliştirme dalı ve taslak [PR #1](https://github.com/dentalaidestek/dis-arena-live-/pull/1) güncellendi. Main birleştirilmedi; production dağıtımı yapılmadı.
 
 ## Sayfalar ve akış
 
@@ -18,29 +18,31 @@
 
 Canlı oyun: **Çay 50 → 30 saniye çekim kilidi**, **Parfüm 20 → implant ve kilidi kaldırma**. Çürütme/iyileştirme yalnız ayrı demodadır. Gerçek katalog ID'si uydurulmadı; eşleme panelden doğrulanmalıdır. Kümülatif seri farkı kalıcı SQLite kaydıyla hesaplanır.
 
-Mevcut Three.js sahnesi korunmuştur. Dört taç formu, daha büyük iki hekim, daha dengeli hasta kafası, FDI/kısa isim plakaları, omuz-dirsek-bilek zinciri, hedef dişe uzanan alet, çekim/boşluk ve implant vidası/restorasyon geliştirilmiştir. Hasta acı/mutluluk geçişleri ve dört demo animasyonu gerçek WebGL sahnesinde oynar. İşlem hedefi sabit kalır; yeni tur önceki turun görsellerini reddeder. Karakterler stilize ve prosedüreldir; sanatçı üretimi rigged karakter kalitesi iddia edilmez.
+Son görsel geri bildirim üzerine klinik dioraması yeniden kuruldu. Hasta normal oranlarla koltukta oturur; iki hekim önlük/pantolon/ayakkabı ve eklemli kollarla ayakta durur. Muayene lambası, dolap, ekran ve alet sehpası vardır. Büyük ağız yakın planı hastanın gerçek küçük ağız modeliyle aynı 28 dişi ve aynı işlem hedefini gösterir. FDI numarasına dokununca oyuncu ve jetonu okunabilir kartta açılır. Lacivert, porselen beyazı, muted pembe ve turkuaz kullanılır. İşlem kuyruğu ve hedef sabitleme korunur. [Yeni görsel tasarım ve önce/sonra](VISUAL_REDESIGN.md).
+
+Karakterler hâlâ stilize, prosedürel Three.js modelleridir; sanatçı üretimi rigged karakter paketi iddiası yoktur.
 
 ## Test kanıtı
 
 | Kontrol | Sonuç |
 |---|---|
-| Güncel motor/sunucu testleri | 63 geçti |
+| Güncel motor/sunucu testleri | 64 geçti |
 | Python köprü/yedek testleri | 10 geçti |
 | Sağlayıcı protobuf → Python → SQLite | 1 geçti; sentetik ×1000 =1000, tekrar +0 |
 | Üretim build | Geçti |
 | `bash termux-preview.sh --check` | Geçti (Linux geliştirme ortamında) |
-| Eski HP modülleri dahil geniş test | 98 test: 76 geçti, başlangıçta da var olan 22 başarısızlık sürüyor |
+| Önceki kaynakta eski HP modülleri dahil geniş test | 98 test: 76 geçti, başlangıçta da var olan 22 başarısızlık sürüyor |
 | Disk SQLite fixture ölçümü | 10.000 paket / 28 kullanıcı: 1576 ms; 6344 paket/sn; p95 0,353 ms |
 
 Performans ölçümü yalnız bu ortamda doğrudan store çağrısıdır; TikTok/ağ/OBS/Android kapasite garantisi değildir. JS ~1,27 MB paket uyarısı ve sağlayıcı deprecation uyarısı sürüyor.
 
 Tarayıcı kabul kapsamı: 360×800 ve 393×873 mobil emülasyonu, 1080×1920 OBS, masaüstü; gerçek WebGL render/FPS ve taşma; yayıncı girişi/çıkışı; hedef Ahmet/FDI11 üzerinde çekim→implant→çürütme→iyileştirme; native tam ekran/turun korunması; oda/admin yetki ayrımı; Gül1000 +100 hediye, dondurulan dört kazanan, temiz yeni tur. Üç CI iş akışı uygulama kaynağında başarılı:
 
-- [Diş Arena CI](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281416)
-- [Verify Diş Arena](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281524)
-- [6 tarayıcı kabul testi](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43736281393)
+- [Diş Arena CI](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889063)
+- [Verify Diş Arena](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889040)
+- [6 tarayıcı kabul testi](https://github.com/dentalaidestek/dis-arena-live-/actions/runs/43740889022)
 
-Artifact: `14170930160`, SHA256 `2c9214c138acfea3e9dd638589dc9ac4cdbe24e4b31dc968d41d15ea0b84a5de`. Görseller tek tek ve karşılaştırmalı olarak açılıp incelendi.
+Artifact: `14172650178`, SHA256 `ec53755798eef082e24f94445fad8a67de0040e3d326b4beb3b9d0555fb2ad68`. Görseller tek tek ve karşılaştırmalı olarak açılıp incelendi.
 
 ## Ekran görüntüleri
 
@@ -139,3 +141,8 @@ Başlangıç `152578e` ile uygulama kaynağı arasındaki dosyalar; ekran kanıt
 - `termux-preview.sh`
 - `tsconfig.json`
 - `vite.config.ts`
+
+- Yeni görsel bileşen: `src/ClinicActors.tsx`
+- Yeni yayın stili: `src/clinic.css`
+- Dişe dokunma görüntüsü: [tooth-inspector.webp](screenshots/tooth-inspector.webp)
+- Önce/sonra: [comparison.webp](screenshots/comparison.webp)
