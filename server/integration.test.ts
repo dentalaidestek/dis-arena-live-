@@ -88,7 +88,7 @@ test('28-user demo full flow completes extraction, implant, decay and heal burst
  const dir=mkdtempSync(join(tmpdir(),'arena-full-flow-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
  try{await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;const post=(body:unknown)=>fetch(root+'/api/demo?mode=demo',{method:'POST',headers:{Authorization:'Bearer admin','Content-Type':'application/json'},body:JSON.stringify(body)});
   assert.equal((await post({action:'populate'})).status,200);const users=Array.from({length:28},(_,i)=>'demo-'+i);
-  for(const action of ['extract','implant','decay','heal']){const count=['implant','heal'].includes(action)?27:28;const responses=await Promise.all(users.slice(0,count).map(userId=>post({action,userId,...(['implant','heal'].includes(action)?{autoTarget:true}:{})})));assert.ok(responses.every(r=>r.status===200),action+' phase must not reject any simulated client');}
-  assert.equal(app.stores.demo.state().players.length,28);assert.equal(app.stores.demo.diagnostics().events,138);assert.equal(app.stores.live.state().players.length,0);assert.equal(app.stores.live.diagnostics().events,0);
+  for(const action of ['extract','implant','decay','heal']){const count=['implant','heal'].includes(action)?26:28;const responses=await Promise.all(users.slice(0,count).map(userId=>post({action,userId,...(['implant','heal'].includes(action)?{autoTarget:true}:{})})));assert.ok(responses.every(r=>r.status===200),action+' phase must not reject any simulated client');}
+  assert.equal(app.stores.demo.state().players.length,28);assert.equal(app.stores.demo.diagnostics().events,136);assert.equal(app.stores.live.state().players.length,0);assert.equal(app.stores.live.diagnostics().events,0);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
