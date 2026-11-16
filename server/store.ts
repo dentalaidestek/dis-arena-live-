@@ -1,6 +1,6 @@
 import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,createHash} from 'node:crypto';
-import {applyGift,finishRound,newCoinArena,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
+import {applyGift,finishRound,newCoinArena,DOCTOR_CLAIM_COINS,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
 export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;image?:string;region?:string};
 export type Packet={type:'gift';eventId:string;roomId:string;giftId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;streak?:boolean;streakId?:string;repeatEnd?:boolean};
 export type VisualEvent={id:number;action:'extract'|'implant'|'decay'|'heal';targetId:number;targetUserId:string;user:string;before:CoinArena;after:CoinArena};
@@ -39,7 +39,7 @@ export class ArenaStore {
   const gifts=parse<CatalogGift[]>(this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(String(r.version))!.gifts);
   this.giftIndex=new Map(gifts.map(g=>[g.giftId,g]));return this.cachedCatalog={version:String(r.version),verified:Number(r.verified),gifts};
  }
- publicGifts(){this.catalog();const mapped=this.mappings();const defaults:Record<string,string>={extract:'Bouquet',implant:'Parfüm',claimBad:'Tea',claimGood:'Genius'};return Object.fromEntries((['extract','implant','claimBad','claimGood'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,giftId:gift.giftId,verified:true}:{name:defaults[action],coins:PROCEDURE_COINS[action],verified:false}]}))}
+ publicGifts(){this.catalog();const mapped=this.mappings();const defaults:Record<string,string>={extract:'Bouquet',implant:'Parfüm',claimBad:'Tea',claimGood:'İkinci 50 jetonluk hediye'};return Object.fromEntries((['extract','implant','claimBad','claimGood'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,giftId:gift.giftId,verified:true}:{name:defaults[action],coins:PROCEDURE_COINS[action],verified:false}]}))}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
   if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'))throw Error('Geçersiz katalog');
   const old=this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(version);
