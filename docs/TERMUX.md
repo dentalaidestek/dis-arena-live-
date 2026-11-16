@@ -29,7 +29,7 @@ Durdurmak: Termux'ta **Ctrl+C**. Yeniden açmak: `bash termux-preview.sh`. Mevcu
 bash termux-preview.sh --live
 ```
 
-Bu seçenek eksik Python/TikTokLive bağımlılıklarını kurar; gerekirse Termux derleme araçlarını hazırlar. Ardından yayıncı paneline gerçek TikTok kullanıcı adını girip **Bağlan** seçin. Canlı katalogdan iki farklı gerçek ID eşleştirilmelidir: Çay/çekim **20**, Parfüm/implant **20** jeton. Çürütme/iyileştirme canlıya atanamaz; yalnız demodadır. Canlı yayın kapalıysa doğru durum gösterilir; demo yine kullanılabilir.
+Bu seçenek eksik Python/TikTokLive bağımlılıklarını kurar; gerekirse Termux derleme araçlarını hazırlar. Ardından yayıncı paneline gerçek TikTok kullanıcı adını girip **Bağlan** seçin. Canlı katalogdan iki farklı gerçek ID eşleştirilmelidir: Bouquet/çekim **20**, Parfüm/implant **20** jeton. Çürütme/iyileştirme canlıya atanamaz; yalnız demodadır. Canlı yayın kapalıysa doğru durum gösterilir; demo yine kullanılabilir.
 
 ## Motor ve kurulum kontrolü
 
