@@ -9,7 +9,7 @@ export const DOCTOR_CLAIM_COINS = 30;
 export const POSITIONS = [7,8,24,23,6,9,25,22,5,10,26,21,4,11,27,20,3,12,28,19,2,13,29,18,1,14,30,17];
 export type Procedure = 'extract' | 'implant' | 'decay' | 'heal' | 'claimBad' | 'claimGood' | 'score';
 export const PROCEDURE_COINS: Record<Procedure, number> = {extract:20, implant:20, decay:10, heal:10, claimBad:30, claimGood:30, score:0};
-export type Player = {userId:string;username:string;coins:number;joinedAt:number;lockedUntil:number;condition?:'extracted'|'decayed'};
+export type Player = {userId:string;username:string;coins:number;joinedAt:number;lockedUntil:number;toothId?:number;condition?:'extracted'|'decayed'};
 export type DoctorOwner = {userId:string;username:string;claimedAt:number;giftName?:string;giftImage?:string;giftCoins?:number};
 export type DoctorOwners = {bad?:DoctorOwner;good?:DoctorOwner};
 export type CoinArena = {version:2;roundId:string;startedAt:number;players:Player[];doctors:DoctorOwners;processedIds:string[];history:string[];finishedAt?:number;winners?:Player[]};
@@ -20,7 +20,7 @@ const compareId=(a:string,b:string)=>a<b?-1:a>b?1:0;
 export const ranked = (state:CoinArena) => [...state.players].sort((a,b)=>b.coins-a.coins||a.joinedAt-b.joinedAt||compareId(a.userId,b.userId));
 export const isLocked = (p:Player,now:number) => p.lockedUntil>now;
 export const timeLeft = (state:CoinArena,now:number) => Math.max(0,ROUND_MS-(now-state.startedAt));
-export const toothOf = (state:CoinArena,userId:string) => {const rank=ranked(state).findIndex(p=>p.userId===userId);return rank<0||rank>=28?null:POSITIONS[rank]};
+export const toothOf = (state:CoinArena,userId:string) => {const player=state.players.find(p=>p.userId===userId);if(!player)return null;if(Number.isInteger(player.toothId)&&POSITIONS.includes(player.toothId!))return player.toothId!;const rank=ranked(state).findIndex(p=>p.userId===userId);return rank<0||rank>=28?null:POSITIONS[rank]};
 export const loadCoinArena = (storage:Pick<Storage,'getItem'>):CoinArena => {try{const s=JSON.parse(storage.getItem('dis-arena-coin-v2')||'null');if(s?.version===2&&Array.isArray(s.players)&&Array.isArray(s.processedIds)&&Number.isFinite(s.startedAt))return {...s,doctors:s.doctors??{}};}catch{}return newCoinArena();};
 export const saveCoinArena = (storage:Pick<Storage,'setItem'>,s:CoinArena) => {try{storage.setItem('dis-arena-coin-v2',JSON.stringify(s));}catch{}};
 export function finishRound(state:CoinArena,now:number):CoinArena {
@@ -46,18 +46,17 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  if(existing&&(!Number.isSafeInteger(existing.coins)||existing.coins+gift.coins>Number.MAX_SAFE_INTEGER))return fail('Jeton sınırı aşıldı');
  const players=state.players.map(p=>({...p}));const order=ranked(state);
  let sender=players.find(p=>p.userId===gift.userId);
- if(!sender){sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0};players.push(sender);}
+ if(!sender){const used=new Set(players.map(p=>p.toothId).filter((id):id is number=>Number.isInteger(id)));const toothId=POSITIONS.find(id=>!used.has(id));sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0,...(toothId===undefined?{}:{toothId})};players.push(sender);}
  sender.username=gift.username;
  let action:GiftResult['action']='score',targetId:number|null=null,targetUserId:string|undefined;
  let message='';
- if(isLocked(sender,gift.timestamp)){
-  const condition=sender.condition??'extracted';
-  if((condition==='extracted'&&procedure==='implant')||(condition==='decayed'&&procedure==='heal')){
-   sender.lockedUntil=0;delete sender.condition;sender.coins+=gift.coins;action=procedure;targetId=toothOf(state,sender.userId);targetUserId=sender.userId;
-   message=`✚ @${sender.username} ${procedure==='heal'?'iyileşti':'implant yaptı'} · +${gift.coins} jeton`;
-  }else{action='blocked';message=`⛔ @${sender.username} kilitli · hediye puan kazandırmadı`;}
+ if(sender.condition){
+  const treatment=(sender.condition==='extracted'&&procedure==='implant')||(sender.condition==='decayed'&&procedure==='heal');
+  if(isLocked(sender,gift.timestamp)){action='blocked';message=`⏳ @${sender.username} tedavi için ${Math.ceil((sender.lockedUntil-gift.timestamp)/1000)} sn beklemeli`;}
+  else if(treatment){sender.lockedUntil=0;delete sender.condition;sender.coins+=gift.coins;action=procedure;targetId=toothOf(state,sender.userId);targetUserId=sender.userId;message=`✚ @${sender.username} ${procedure==='heal'?'iyileşti':'implant yaptı'} · +${gift.coins} jeton`;}
+  else{sender.coins+=gift.coins;action='score';message=`🪙 @${sender.username} +${gift.coins} jeton · diş tedavi bekliyor`;}
  }else{
-  sender.lockedUntil=0;delete sender.condition;sender.coins+=gift.coins;
+  sender.lockedUntil=0;sender.coins+=gift.coins;
   if(procedure==='extract'||procedure==='decay'){
    const index=order.findIndex(p=>p.userId===sender!.userId);
    const target=players.find(p=>p.userId===(index===0?order[1]?.userId:index>0?order[index-1]?.userId:undefined));
