@@ -39,6 +39,25 @@ def normalize_event(event,room_id,received_at,catalog_by_id=None):
             'repeatCount':count if streak else 1,'streak':streak,'streakId':str(group) if streak else '',
             'repeatEnd':bool(getattr(event,'repeat_end',False)),'timestamp':timestamp,'receivedAt':received_at}
 
+def normalize_engagement(event,room_id,received_at,kind):
+    """Normalize FollowEvent / LikeEvent into an idempotent tooth-claim packet."""
+    common=getattr(event,'common',None)
+    user=getattr(event,'user',None)
+    msg_id=getattr(common,'msg_id',0) or getattr(event,'msg_id',0)
+    user_id=getattr(user,'user_id',0) or getattr(user,'id',0)
+    if kind not in ('follow','like') or not msg_id or not user_id or not room_id:
+        raise ValueError('Takip/beğeni olayında oda, olay veya kullanıcı kimliği eksik')
+    count=1
+    if kind=='like':
+        count=getattr(event,'like_count',0)
+        if type(count) is not int or not 1<=count<=10000:
+            raise ValueError('Beğeni adedi geçersiz')
+    provider_time=getattr(common,'create_time',0)
+    timestamp=int(provider_time)*1000 if provider_time else received_at
+    return {'type':kind,'eventId':str(msg_id),'roomId':str(room_id),'userId':str(user_id),
+            'username':str(getattr(user,'unique_id','') or getattr(user,'display_id','') or user_id),
+            'count':count,'timestamp':timestamp}
+
 class Outbox:
     def __init__(self,path):
         self.db=sqlite3.connect(str(path))
@@ -46,7 +65,10 @@ class Outbox:
         self.db.execute('PRAGMA synchronous=FULL')
         self.db.executescript('CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS rejected(id INTEGER PRIMARY KEY,created INTEGER,reason TEXT,payload TEXT);')
     def put(self,payload):
-        key=json.dumps([payload['roomId'],payload['eventId'],[payload['userId'],payload['giftId'],payload.get('streakId'),payload.get('repeatCount',1)] if payload.get('streak') else None])
+        if payload.get('type') in ('follow','like'):
+            key=json.dumps([payload['roomId'],payload['type'],payload['eventId']])
+        else:
+            key=json.dumps([payload['roomId'],payload['eventId'],[payload['userId'],payload['giftId'],payload.get('streakId'),payload.get('repeatCount',1)] if payload.get('streak') else None])
         if self.db.execute('SELECT count(*) FROM outbox').fetchone()[0]>=50000:
             raise RuntimeError('Kalıcı köprü kuyruğu 50000 olay sınırında; alıcıyı kontrol edin')
         with self.db:self.db.execute('INSERT OR IGNORE INTO outbox VALUES(?,?)',(key,json.dumps(payload)))
