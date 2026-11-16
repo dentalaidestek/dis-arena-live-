@@ -11,7 +11,7 @@ import random
 import sys
 import time
 import urllib.request
-from tiktok_adapter import normalize_event,normalize_catalog,Outbox,validate_username
+from tiktok_adapter import normalize_event,normalize_catalog,merge_catalogs,Outbox,validate_username
 
 async def main():
     if len(sys.argv)!=2:raise SystemExit('TikTok kullanıcı adı gerekli; bağlantı başlatılmadı')
@@ -26,6 +26,16 @@ async def main():
     print('TikTokLive version:',version('TikTokLive'),flush=True)
     directory=Path(os.environ.get('ARENA_DATA_DIR','data'));directory.mkdir(parents=True,exist_ok=True)
     outbox=Outbox(directory/'bridge-outbox.sqlite')
+    catalog_path=Path(__file__).with_name('live_gift_catalog.json')
+    try:
+        with catalog_path.open('r',encoding='utf-8') as handle:
+            user_catalog=json.load(handle)
+        user_gifts=user_catalog.get('gifts') if isinstance(user_catalog,dict) else None
+        if not isinstance(user_gifts,list) or not user_gifts:
+            raise ValueError('Kayıtlı hediye kataloğu boş veya geçersiz')
+        print(f'USER GIFT CATALOG: {len(user_gifts)} exact provider IDs loaded',flush=True)
+    except Exception as exc:
+        raise SystemExit('Kayıtlı hediye kataloğu okunamadı: '+str(exc))
     base=os.environ.get('ARENA_SERVER_URL','http://127.0.0.1:8787').rstrip('/')
     def post_sync(path,body):
         request=urllib.request.Request(base+'/api/bridge/'+path,data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST')
@@ -63,19 +73,26 @@ async def main():
             async def on_connect(event):
                 await status('live-connected')
                 try:
-                    # Official library route; regional room catalogue, no hardcoded IDs.
-                    info=client.gift_info or await client.web.fetch_gift_list()
-                    entries=normalize_catalog(info)
-                    # The entire room catalogue is indexed by provider ID, not by gift name.
-                    catalog_by_id.clear()
-                    catalog_by_id.update({gift['giftId']:gift for gift in entries})
-                    print(f'LIVE GIFT CATALOG: {len(entries)} unique IDs; sorted by coin value ascending',flush=True)
+                    # Combine current-room streak/image metadata with the user's exact ID/coin list.
+                    # The saved catalogue remains usable even if TikTok's regional gift-list endpoint fails.
+                    provider_entries=[]
+                    try:
+                        info=client.gift_info or await client.web.fetch_gift_list()
+                        provider_entries=normalize_catalog(info)
+                    except Exception as provider_exc:
+                        print('ROOM CATALOG UNAVAILABLE; using saved provider-ID list:',str(provider_exc)[:150],flush=True)
+                    entries=merge_catalogs(provider_entries,user_gifts)
+                    next_catalog_by_id={gift['giftId']:gift for gift in entries}
+                    print(f'LIVE GIFT CATALOG: {len(entries)} unique IDs (saved list + room metadata)',flush=True)
                     for gift in entries:
                         print(f"GIFT: {gift['name']} | {gift['coins']} jeton | ID {gift['giftId']}",flush=True)
                     ver=hashlib.sha256(json.dumps(entries,sort_keys=True).encode()).hexdigest()[:24]
+                    # Do not accept events against a catalogue the server has not committed yet.
                     await post('catalog',{'version':ver,'gifts':entries})
-                    print('CATALOG SYNCED: every gift ID and unit coin value verified by arena server',flush=True)
-                except Exception as exc:await status('live-connected','Katalog alınamadı; son doğrulanmış sürüm: '+str(exc)[:150])
+                    catalog_by_id.clear()
+                    catalog_by_id.update(next_catalog_by_id)
+                    print('CATALOG SYNCED: saved gift IDs and coin values are active for LIVE scoring',flush=True)
+                except Exception as exc:await status('live-connected','Katalog sunucuya aktarılamadı; hediyeler puanlanmayacak: '+str(exc)[:150])
                 finally:catalog_ready.set()
             @client.on(DisconnectEvent)
             async def on_disconnect(event):await status('disconnected')
