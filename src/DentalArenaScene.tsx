@@ -22,11 +22,11 @@ function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,
   if(affected&&cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=affected&&cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,work=procedurePhase(t).work;
   const extracting=affected&&cue?.action==='extract',implanting=affected&&cue?.action==='implant';
-  const disease=affected&&cue?.action==='decay'?work:affected&&cue?.action==='heal'?1-work:locked&&condition==='decayed'?1:0;
+  const disease=affected&&cue?.action==='decay'?work:affected&&cue?.action==='heal'?1-work:condition==='decayed'?1:0;
   if(enamel.current)enamel.current.color.set('#e9e4d7').lerp(cariesColor,disease*.82);
   if(lesion.current){lesion.current.visible=disease>.04;lesion.current.scale.set(width*.62*disease,.13*disease,.025);}
   if(healing.current){healing.current.visible=affected&&cue?.action==='heal'&&t>.2&&t<.9;healing.current.rotation.z+=delta*1.7;}
-  if(tooth.current){tooth.current.position.y=extracting?(upper?1:-1)*work*.72:0;tooth.current.position.z=extracting?work*.62:0;tooth.current.rotation.z=extracting?Math.sin(t*15)*.06:0;tooth.current.scale.setScalar(implanting?Math.max(.001,work):1);tooth.current.visible=implanting?work>.18:(!locked||condition==='decayed'||extracting)&&!(extracting&&t>.86);}
+  if(tooth.current){tooth.current.position.y=extracting?(upper?1:-1)*work*.72:0;tooth.current.position.z=extracting?work*.62:0;tooth.current.rotation.z=extracting?Math.sin(t*15)*.06:0;tooth.current.scale.setScalar(implanting?Math.max(.001,work):1);tooth.current.visible=implanting?work>.18:condition!=='extracted'&&!(extracting&&t>.86);}
   if(root.current)root.current.visible=!!extracting&&work>.18;
   if(screw.current){screw.current.visible=!!implanting&&t>.12&&t<.8;screw.current.position.y=(upper?-1:1)*(.75-work*.75);screw.current.rotation.y+=delta*12;}
  });
@@ -44,7 +44,7 @@ function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
-   {username&&<Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.02]} fontSize={.095} maxWidth={.94} color="#f2f7f8" anchorX="center" outlineWidth={.012} outlineColor="#142a38">@{username.replace(/^@+/,"").slice(0,10)}</Text>}
+   {username&&<Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.02]} fontSize={.14} maxWidth={1.25} color="#f2f7f8" anchorX="center" outlineWidth={.012} outlineColor="#142a38">@{username.replace(/^@+/,"").slice(0,10)}</Text>}
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
