@@ -55,7 +55,6 @@ class InstalledProviderTests(unittest.TestCase):
         self.assertEqual(p['userId'],'123');self.assertEqual(p['eventId'],'100')
         self.assertEqual(p['repeatCount'],10);self.assertTrue(p['streak']);self.assertEqual(p['streakId'],'42')
 
-if __name__=='__main__':unittest.main()
 
 class ReusedMessageTests(unittest.TestCase):
     def test_outbox_preserves_cumulative_updates_with_a_reused_provider_message_id(self):
@@ -127,3 +126,5 @@ class InstalledEngagementProviderTests(unittest.TestCase):
             self.skipTest('Installed TikTokLive version has no engagement events')
         self.assertIsNotNone(FollowEvent)
         self.assertIsNotNone(LikeEvent)
+
+if __name__=='__main__':unittest.main()
