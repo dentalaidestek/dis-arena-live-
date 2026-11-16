@@ -1,6 +1,6 @@
 import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,createHash} from 'node:crypto';
-import {applyGift,finishRound,newCoinArena,DOCTOR_CLAIM_COINS,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
+import {applyGift,finishRound,newCoinArena,ranked,POSITIONS,DOCTOR_CLAIM_COINS,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
 export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;streakKnown?:boolean;image?:string;region?:string};
 export type Packet={type:'gift';eventId:string;roomId:string;giftId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;streak?:boolean;streakId?:string;repeatEnd?:boolean};
 export type EngagementPacket={type:'follow'|'like';eventId:string;roomId:string;userId:string;username:string;timestamp:number;count?:number};
@@ -24,7 +24,7 @@ export class ArenaStore {
   this.db.exec("DELETE FROM mappings WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key='mapping-name:'||mappings.procedure)");
   if(!this.db.prepare('SELECT id FROM rounds LIMIT 1').get())this.newRound(now);
  }
- state():CoinArena{return parse(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state)}
+ state():CoinArena{const s=parse<CoinArena>(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state);let changed=false;const used=new Set<number>();for(const p of ranked(s)){if(Number.isInteger(p.toothId)&&POSITIONS.includes(p.toothId!)){used.add(p.toothId!);continue;}const id=POSITIONS.find(x=>!used.has(x));if(id!==undefined){p.toothId=id;used.add(id);changed=true;}}if(changed)this.save(s);return s}
  private save(s:CoinArena){this.db.prepare('UPDATE rounds SET state=? WHERE id=?').run(JSON.stringify(s),s.roundId)}
  tick(now=Date.now()){const s=this.state(),next=finishRound(s,now);if(next!==s)this.save(next);return next}
  newRound(now=Date.now()){
