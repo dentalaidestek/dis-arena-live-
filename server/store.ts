@@ -48,7 +48,7 @@ export class ArenaStore {
   this.db.prepare("INSERT INTO settings VALUES('catalog-version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(version);
   const auto=[
    {procedure:'claimBad',matches:gifts.filter(g=>['tea','çay'].includes(g.name.trim().toLocaleLowerCase('tr-TR'))&&g.coins===DOCTOR_CLAIM_COINS)},
-   {procedure:'claimGood',matches:gifts.filter(g=>g.coins===DOCTOR_CLAIM_COINS&&!['tea','çay'].includes(g.name.trim().toLocaleLowerCase('tr-TR')))}
+   {procedure:'claimGood',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='genius'&&g.coins===DOCTOR_CLAIM_COINS)}
   ];
   for(const rule of auto){if(rule.matches.length===1)this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(rule.matches[0].giftId,rule.procedure);}
  }
