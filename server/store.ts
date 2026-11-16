@@ -50,7 +50,7 @@ export class ArenaStore {
    {procedure:'claimBad',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='ghostfire'&&g.coins===DOCTOR_CLAIM_COINS )},
    {procedure:'claimGood',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='warm cocoa'&&g.coins===DOCTOR_CLAIM_COINS)}
   ];
-  for(const rule of auto){if(rule.matches.length===1)this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(rule.matches[0].giftId,rule.procedure);}
+  for(const rule of auto){if(rule.matches.length===1)this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(rule.matches[0].giftId,rule.procedure);else this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(rule.procedure);}
  }
  mappings(){return this.db.prepare('SELECT gift_id,procedure FROM mappings').all()}
  mapGift(id:string,procedure:Procedure){
