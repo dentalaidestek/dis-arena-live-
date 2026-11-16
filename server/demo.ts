@@ -5,7 +5,7 @@ const names=['Ahmet','Zeynep','Mehmet','Elif','Veli','Ali','Hasan','Cem','Deniz'
 const gifts=[{giftId:'demo-rose',name:'Demo Gül',coins:1,streak:true},{giftId:'demo-extract',name:'Demo Bouquet',coins:20,streak:false},{giftId:'demo-implant',name:'Demo İmplant',coins:20,streak:false},{giftId:'demo-decay',name:'Demo Çürütme',coins:10,streak:false},{giftId:'demo-heal',name:'Demo İyileştirme',coins:10,streak:false}];
 export function runDemo(store:ArenaStore,body:{action:string;userId?:string;autoTarget?:boolean},now=Date.now()):Receipt|undefined {
  if(!['populate','extract','implant','decay','heal','rose1000','burst','finish'].includes(body.action))throw Error('Geçersiz demo işlemi');
- store.setCatalog(gifts,'demo-only',now);for(const proc of ['extract','implant','decay','heal'] as Procedure[])store.mapGift('demo-'+proc,proc);
+ store.setCatalog(gifts,'demo-only',now);for(const proc of ['extract','implant','decay','heal'] as Procedure[])store.mapGift('demo-'+proc,proc,({extract:'Demo Çekim Hediyesi',implant:'Demo İmplant Hediyesi',decay:'Demo Çürütme Hediyesi',heal:'Demo İyileştirme Hediyesi'} as Record<string,string>)[proc]);
  if(body.action==='finish'){const s=store.state();if(s.startedAt)store.tick(s.startedAt+600000);return;}
  if(body.action==='populate')store.newRound(now);
  let userId=body.userId??'demo-1';
