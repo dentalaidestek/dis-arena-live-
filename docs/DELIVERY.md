@@ -16,7 +16,7 @@
 
 ## Kural ve 3D değişiklikleri
 
-Canlı oyun: **Çay 20 → 30 saniye çekim kilidi**, **Parfüm 20 → implant ve kilidi kaldırma**. Çürütme/iyileştirme yalnız ayrı demodadır. Gerçek katalog ID'si uydurulmadı; eşleme panelden doğrulanmalıdır. Kümülatif seri farkı kalıcı SQLite kaydıyla hesaplanır.
+Canlı oyun: **Bouquet 20 → 30 saniye çekim kilidi**, **Parfüm 20 → implant ve kilidi kaldırma**. Çürütme/iyileştirme yalnız ayrı demodadır. Gerçek katalog ID'si uydurulmadı; eşleme panelden doğrulanmalıdır. Kümülatif seri farkı kalıcı SQLite kaydıyla hesaplanır.
 
 Son görsel geri bildirim üzerine klinik dioraması yeniden kuruldu. Hasta normal oranlarla koltukta oturur; iki hekim önlük/pantolon/ayakkabı ve eklemli kollarla ayakta durur. Muayene lambası, dolap, ekran ve alet sehpası vardır. Büyük ağız yakın planı hastanın gerçek küçük ağız modeliyle aynı 28 dişi ve aynı işlem hedefini gösterir. FDI numarasına dokununca oyuncu ve jetonu okunabilir kartta açılır. Lacivert, porselen beyazı, muted pembe ve turkuaz kullanılır. İşlem kuyruğu ve hedef sabitleme korunur. [Yeni görsel tasarım ve önce/sonra](VISUAL_REDESIGN.md).
 
