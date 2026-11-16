@@ -34,14 +34,15 @@ test('one-time local setup authenticates the launcher without putting admin secr
  assert.equal((await fetch(root+'/api/health')).status,200);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
-test('room password does not grant admin access; cookie logout revokes admin commands',async()=>{
+test('viewer stays public while room credentials cannot grant admin access; logout revokes admin commands',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'arena-room-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
  try{await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;
  const post=(p:string,d:unknown,headers:Record<string,string>={})=>fetch(root+p,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(d)});
  assert.equal((await post('/api/password',{role:'admin',password:'owner-password'})).status,401);
  await post('/api/password',{role:'admin',password:'owner-password'},{Authorization:'Bearer admin'});
  await post('/api/password',{role:'viewer',password:'room-password'},{Authorization:'Bearer admin'});
- assert.equal((await (await fetch(root+'/api/access')).json()).viewer,false);
+ assert.equal((await (await fetch(root+'/api/access')).json()).viewer,true);
+ const publicWs=new WebSocket(root.replace('http:','ws:')+'/arena?mode=live');const publicSnapshot=await new Promise<any>((resolve,reject)=>{publicWs.once('message',data=>resolve(JSON.parse(String(data))));publicWs.once('error',reject)});assert.equal(publicSnapshot.mode,'live');publicWs.close();
  assert.equal((await post('/api/login',{role:'admin',password:'room-password'})).status,401);
  const viewer=await post('/api/login',{role:'viewer',password:'room-password'});const roomCookie=viewer.headers.get('set-cookie')!.split(';')[0];
  assert.equal((await fetch(root+'/api/admin',{headers:{Cookie:roomCookie}})).status,401);
