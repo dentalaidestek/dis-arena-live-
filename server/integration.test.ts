@@ -58,3 +58,17 @@ test('one hundred concurrent HTTP gifts are all journalled exactly once',async()
  assert.ok(responses.every(r=>r.status===200));assert.equal(app.stores.live.state().players[0].coins,100);assert.equal(app.stores.live.diagnostics().events,100);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
+
+test('authenticated TikTok engagement endpoint claims a tooth on follow and every 100 likes',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'arena-engagement-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
+ try{
+  await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;
+  const send=(body:unknown,token='bridge')=>fetch(root+'/api/bridge/engagement',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const follow={type:'follow',eventId:'follow-1',roomId:'live-room',userId:'follower',username:'Follower',timestamp:Date.now()};
+  assert.equal((await send(follow,'wrong')).status,401);
+  const f=await (await send(follow)).json();assert.equal(f.delta,1);assert.equal(app.stores.live.state().players[0].coins,0);
+  const likes={type:'like',eventId:'likes-1',roomId:'live-room',userId:'liker',username:'Liker',count:100,timestamp:Date.now()};
+  const l=await (await send(likes)).json();assert.equal(l.delta,1);assert.equal(app.stores.live.state().players.length,2);
+  assert.equal((await (await send(likes)).json()).duplicate,true);
+ }finally{app.close();rmSync(dir,{recursive:true,force:true})}
+});
