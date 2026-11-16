@@ -41,7 +41,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
   const side=procedure==='claimBad'?'bad':'good',doctors=state.doctors??{};
   const owner={userId:gift.userId,username:gift.username.replace(/^@+/,'').slice(0,40),claimedAt:gift.timestamp,giftName:gift.giftName,giftImage:gift.giftImage??'',giftCoins:gift.coins};
   const message='@'+owner.username+' '+(side==='bad'?'kötü':'iyi')+' hekim koltuğuna oturdu';
-  return {state:{...state,startedAt:state.startedAt||gift.timestamp,doctors:{...doctors,[side]:owner},processedIds:[...state.processedIds,gift.eventId],history:[message,...state.history].slice(0,12)},accepted:true,message,action:procedure,targetId:null};
+  return {state:{...state,doctors:{...doctors,[side]:owner},processedIds:[...state.processedIds,gift.eventId],history:[message,...state.history].slice(0,12)},accepted:true,message,action:procedure,targetId:null};
  }
  if(existing&&(!Number.isSafeInteger(existing.coins)||existing.coins+gift.coins>Number.MAX_SAFE_INTEGER))return fail('Jeton sınırı aşıldı');
  const players=state.players.map(p=>({...p}));const order=ranked(state);
