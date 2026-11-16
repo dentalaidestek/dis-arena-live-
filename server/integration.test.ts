@@ -73,3 +73,13 @@ test('authenticated TikTok engagement endpoint claims a tooth on follow and ever
   assert.equal((await (await send(likes)).json()).duplicate,true);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
+
+test('28 concurrent demo users can submit one treatment burst without touching live state',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'arena-28-users-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
+ try{await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;const post=(body:unknown)=>fetch(root+'/api/demo?mode=demo',{method:'POST',headers:{Authorization:'Bearer admin','Content-Type':'application/json'},body:JSON.stringify(body)});
+  assert.equal((await post({action:'populate'})).status,200);
+  const responses=await Promise.all(Array.from({length:28},(_,i)=>post({action:'extract',userId:'demo-'+i})));
+  assert.ok(responses.every(r=>r.status===200));const results=await Promise.all(responses.map(r=>r.json()));assert.ok(results.every(r=>r.accepted));
+  assert.equal(app.stores.demo.state().players.length,28);assert.equal(app.stores.demo.diagnostics().events,56);assert.equal(app.stores.live.state().players.length,0);assert.equal(app.stores.live.diagnostics().events,0);
+ }finally{app.close();rmSync(dir,{recursive:true,force:true})}
+});
