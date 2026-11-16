@@ -1,6 +1,6 @@
 import {useMemo,useRef} from 'react';
 import {useFrame} from '@react-three/fiber';
-import {RoundedBox,Text} from '@react-three/drei';
+import {Image,RoundedBox,Text} from '@react-three/drei';
 import * as THREE from 'three';
 import type {AnimationCue} from './ActionAnimation';
 import {MOUTH_VIEWS,procedurePhase,toothWorldPosition} from './procedureMotion';
@@ -86,7 +86,7 @@ function TreatmentArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
   <group ref={hand}><Orb position={[0,0,0]} scale={[.15,.18,.10]} color="#b7d9d8"/><mesh position={[0,.05,-.18]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.025,.035,.30,12]}/><meshStandardMaterial color="#a1b8c3" metalness={.8} roughness={.25}/></mesh></group>
  </group>;
 }
-export function Clinician({bad,cue,ownerName}:{bad:boolean;cue?:AnimationCue;ownerName?:string}){
+export function Clinician({bad,cue,ownerName,giftImage,giftName,giftCoins}:{bad:boolean;cue?:AnimationCue;ownerName?:string;giftImage?:string;giftName?:string;giftCoins?:number}){
  const root=useRef<THREE.Group>(null),head=useRef<THREE.Group>(null),forceps=useRef<THREE.Group>(null),jawLeft=useRef<THREE.Group>(null),jawRight=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0);const active=!!cue&&(bad?['extract','decay']:['implant','heal']).includes(cue.action),side=bad?-1:1;
  useFrame(({clock},delta)=>{
   if(cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
@@ -108,7 +108,7 @@ export function Clinician({bad,cue,ownerName}:{bad:boolean;cue?:AnimationCue;own
   <group ref={head} position={[0,3.02,0]}><Face bad={bad}/></group>
   <Limb from={[side*.62,2.01,.03]} to={[side*.88,1.37,.09]}/><Limb from={[side*.88,1.37,.09]} to={[side*.72,.94,.35]} radius={.11}/>
   {bad?<group ref={forceps} position={[side*.72,.88,.37]}><Orb position={[0,0,0]} scale={[.14,.18,.09]} color="#b7d9d8"/><mesh position={[0,.16,0]}><cylinderGeometry args={[.018,.026,.30,10]}/><meshStandardMaterial color="#c5d4d8" metalness={.9} roughness={.22}/></mesh><group ref={jawLeft} position={[-.045,.29,0]}><mesh position={[-.025,.105,0]} rotation={[0,0,-.20]}><cylinderGeometry args={[.012,.018,.23,8]}/><meshStandardMaterial color="#d9e2e4" metalness={.92} roughness={.2}/></mesh></group><group ref={jawRight} position={[.045,.29,0]}><mesh position={[.025,.105,0]} rotation={[0,0,.20]}><cylinderGeometry args={[.012,.018,.23,8]}/><meshStandardMaterial color="#d9e2e4" metalness={.92} roughness={.2}/></mesh></group></group>:<Orb position={[side*.72,.88,.37]} scale={[.14,.19,.09]} color="#b7d9d8"/>}
-  {ownerName&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.82,.28]} fontSize={.23} maxWidth={3.1} anchorX="center" color={bad?'#ffcfb5':'#b9fff0'} outlineWidth={.018} outlineColor="#101f2d">@{ownerName.replace(/^@+/,'')}</Text>}
+  {giftImage&&/^https:\/\//i.test(giftImage)&&<Image url={giftImage} position={[0,4.18,.38]} scale={[.58,.58,1]} transparent/>}\n  {ownerName&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.76,.38]} fontSize={.19} maxWidth={3.1} anchorX="center" color={bad?'#ffcfb5':'#b9fff0'} outlineWidth={.018} outlineColor="#101f2d">@{ownerName.replace(/^@+/,'')}</Text>}\n  {giftName&&giftCoins!==undefined&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.48,.38]} fontSize={.12} maxWidth={3.2} anchorX="center" color="#e6d9aa" outlineWidth={.012} outlineColor="#101f2d">{giftName} · {giftCoins} ÇİP</Text>}
   <TreatmentArm bad={bad} active={active} cue={cue}/>
  </group>;
 }
