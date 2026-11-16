@@ -4,10 +4,10 @@ Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davr
 
 | Canlı işlem | Doğrulanmış birim değer | Etki |
 |---|---:|---|
-| Çay / çekim | 50 jeton | Hediye öncesindeki rakibi 30 saniye kilitler |
+| Çay / çekim | 20 jeton | Hediye öncesindeki rakibi 30 saniye kilitler |
 | Parfüm / implant | 20 jeton | Gönderenin çekim kilidini kaldırır |
 
-Son kullanıcı talimatıyla ana oyun Çay 50 / Parfüm 20 kurallarına döndü. Çürütme 10 / iyileştirme 10 kodları yalnız ayrı demoda korunur. Gerçek hediye ID'si uydurulmaz: yayın kataloğundan farklı ve doğru fiyatlı ID'ler yayıncı tarafından seçilir. Katalogdaki gerçek ad izleyici kartına aktarılır; yanlış fiyatlı eski atamalar saldırı oluşturmaz, normal doğrulanmış puan olarak işlenir.
+Son kullanıcı talimatıyla ana oyunda Çay / çekim ve Parfüm / implant hediyelerinin ikisi de 20 jetondur. Çürütme 10 / iyileştirme 10 kodları yalnız ayrı demoda korunur. Gerçek hediye ID'si uydurulmaz: yayın kataloğundan farklı ve doğru fiyatlı ID'ler yayıncı tarafından seçilir. Katalogdaki gerçek ad izleyici kartına aktarılır; yanlış fiyatlı eski atamalar saldırı oluşturmaz, normal doğrulanmış puan olarak işlenir.
 
 ## Termux
 
