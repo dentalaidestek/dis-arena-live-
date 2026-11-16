@@ -2,7 +2,7 @@ import React,{useMemo,useRef,useState} from 'react';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {RoundedBox,Text} from '@react-three/drei';
 import * as THREE from 'three';
-import {POSITIONS,ranked,isLocked,type CoinArena} from './coinArena';
+import {POSITIONS,ranked,type CoinArena} from './coinArena';
 import type {AnimationCue} from './ActionAnimation';
 import {MOUTH_VIEWS,sceneToothPosition,procedurePhase} from './procedureMotion';
 import {createCrownGeometry} from './toothGeometry';
@@ -11,7 +11,7 @@ import {ClinicRoom,PatientActor,Clinician} from './ClinicActors';
 const gold='#d7b773',teal='#80d8cd';
 const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
 const sphere=new THREE.SphereGeometry(1,24,16),rootGeometry=new THREE.ConeGeometry(1,1,16),cariesColor=new THREE.Color('#8c783e');
-type ToothProps={id:number;rank?:number;username?:string;locked:boolean;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
+type ToothProps={id:number;rank?:number;username?:string;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
 function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,onPick}:ToothProps){
  const upper=id<16,slot=upper?id-1:id-17,centered=Math.abs(slot-6.5),angle=(slot-6.5)/6.5*1.12;
  const kind=centered>4.5?'molar':centered>2.5?'premolar':centered>1.5?'canine':'incisor';
@@ -56,7 +56,7 @@ function DentalModel({state,now,cue,mini=false,selected,onPick}:{state:CoinArena
   <mesh geometry={sphere} dispose={null} scale={[3.70,1.44,.22]} position={[0,0,.20]}><meshStandardMaterial color="#a9747e" roughness={.58}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[3.45,1.09,.16]} position={[0,0,.38]}><meshStandardMaterial color="#4a2c35" roughness={.82}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[1.55,.20,.10]} position={[0,-.28,.59]}><meshStandardMaterial color="#8a535e" roughness={.68}/></mesh>
- </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} username={p?.username} locked={!!p&&isLocked(p,now)} condition={p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
+ </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} username={p?.username} condition={p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
 }
 function OpticalInstrument({cue}:{cue?:AnimationCue}){
  const root=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0),pos=useMemo(()=>new THREE.Vector3(),[]);
