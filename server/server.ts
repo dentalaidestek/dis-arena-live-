@@ -30,7 +30,7 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
  function mayView(req:IncomingMessage){return !access.configured('viewer')||isAdmin(req)||access.valid(cookieToken(req.headers.cookie,'viewer'),'viewer')}
  function publish(mode:'live'|'demo',result:Receipt|undefined,packet?:any){
   if(!result)return;if(result.visuals.length){if(visuals.length<500)visuals.push({mode,receipt:result});else skippedVisuals+=result.visuals.length;}
-  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:packet?.type==='follow'||packet?.type==='like'?'claimTooth':result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins,source:packet.type}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((packet?.type==='follow'?'FOLLOW':packet?.type==='like'?'LIKE':result.action??'GIFT').toUpperCase(),result.message+(result.visuals[0]?' · Diş '+toothLabel(result.visuals[0].targetId):''));if(packet?.type==='gift')monitor.write('GIFT',`@${packet.username} — ${packet.giftName} ×${result.delta}`);}
+  if(result.accepted&&result.delta>0){const mapped=packet?.type==='gift'?stores[mode].mappedGift(String(packet.giftId)):undefined;feeds[mode]=[{id:String(result.sequence),action:packet?.type==='follow'||packet?.type==='like'?'claimTooth':result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:mapped?.name??(packet.type==='gift'?'Hediye':'') ,giftImage:mapped?.image??'',coins:packet.coins,source:packet.type}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((packet?.type==='follow'?'FOLLOW':packet?.type==='like'?'LIKE':result.action??'GIFT').toUpperCase(),result.message+(result.visuals[0]?' · Diş '+toothLabel(result.visuals[0].targetId):''));if(packet?.type==='gift')monitor.write('GIFT',`@${packet.username} — ${mapped?.name??'Hediye'} ×${result.delta}`);}
   else if(!result.accepted&&!result.duplicate)monitor.write('ERROR',result.message);
  }
 
@@ -95,7 +95,7 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    }
    if(url.pathname==='/api/round'){store.newRound();feeds[mode]=[];monitor.write('ROUND','Yeni tur: '+store.roundNumber());reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/import'){store.importLegacy(body);reply(res,200,{ok:true});return;}
-   if(url.pathname==='/api/mapping'){store.mapGift(String(body.giftId),body.procedure as Procedure);last='';reply(res,200,{ok:true});return;}
+   if(url.pathname==='/api/mapping'){store.mapGift(String(body.giftId),body.procedure as Procedure,String(body.displayName??''));last='';reply(res,200,{ok:true});return;}
    if(url.pathname==='/api/connect'){
     if(!validUsername(body.username)){reply(res,400,{error:'Geçerli TikTok kullanıcı adı gerekli'});return;}
     if(child){reply(res,409,{error:'Önce mevcut köprüyü durdurun'});return;}
