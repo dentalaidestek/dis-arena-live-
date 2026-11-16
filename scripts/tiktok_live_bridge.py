@@ -56,6 +56,7 @@ async def main():
     catalog_by_id={}
     try:
         while True:
+            catalog_by_id.clear()  # Never reuse a previous room/session's catalogue.
             client=TikTokLiveClient(unique_id='@'+username)
             catalog_ready=asyncio.Event()
             @client.on(ConnectEvent)
