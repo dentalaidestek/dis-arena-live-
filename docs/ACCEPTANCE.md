@@ -6,7 +6,7 @@
 
 - `/arena` canlı izleyici, `/demo` ayrı demo izleyici, `/obs` temiz 9:16, `/admin` ayrı yayıncı yönetimi. Eski query adresleri yönlenir. İzleyici DOM'unda yönetici formu/düğmesi yoktur.
 - Yayıncı ve isteğe bağlı oda şifreleri ayrı yetkilerdir. scrypt + rastgele tuz, SQLite şifre özetleri, HttpOnly/SameSite oturum, oturum iptali, yanlış giriş sınırı ve ayrı API kontrolü vardır. HTTPS'te Secure cookie ortam değişkeniyle açılır. Tek kullanımlık yerel kurulum kodu 2 dakika geçerlidir.
-- Son talimata göre canlı Çay/çekim **20**, Parfüm/implant **20** jetondur. Çürütme/iyileştirme yalnız ayrı demo içinde tutulur. Hedef hediye öncesindeki sıralama/dişe sabittir; kilit uzatılmaz. Eski yanlış fiyatlı atama normal puanı kaybetmeden saldırısız işlenir.
+- Son talimata göre canlı Bouquet/çekim **20**, Parfüm/implant **20** jetondur. Çürütme/iyileştirme yalnız ayrı demo içinde tutulur. Hedef hediye öncesindeki sıralama/dişe sabittir; kilit uzatılmaz. Eski yanlış fiyatlı atama normal puanı kaybetmeden saldırısız işlenir.
 - Node tek otoritedir. SQLite transaction olay, seri ilerlemesi ve tur durumunu birlikte saklar; tarayıcı render'ı puan yazamaz. Kalıcı idempotency 10.000 sınırıyla kırpılmaz. Canlı/demo veritabanları ayrıdır.
 - Python kalıcı outbox ve ACK/retry, kullanıcı adı kontrolü, sağlayıcı kimliklerinin korunması, katalog aktarımı ve backoff/jitter korunmuştur. Eksik katalog/seri kimliğinde puan uydurulmaz. Gerçek katalogdaki eşleştirilmiş ad izleyicide gösterilir; doğrulanmayan eşleme açıkça bekleniyor görünür.
 - Üst dört lider, gerçek FDI diş numaraları, sayaç/tur, lider değişimi, rekabet ve üç satırlık canlı olay akışı vardır. Sağdaki boş sıralama paneli kaldırıldı. OBS üst/alt TikTok güvenli alanları CSS değişkenleriyle ayarlanır.
