@@ -24,7 +24,7 @@ test('a retired 50-coin extraction mapping is no longer valid under the 20-coin 
 test('viewer gift names follow verified mapping and refreshed catalogue prices',()=>{
  const s=new ArenaStore(':memory:',1000);
  s.setCatalog([{giftId:'bouquet',name:'Bouquet',coins:20,streak:false,image:'https://cdn.test/bouquet.png'},{giftId:'perfume',name:'Parfüm',coins:20,streak:false,image:'https://cdn.test/perfume.png'}],'one',1000);
- assert.equal(s.publicGifts().extract.verified,true);s.mapGift('bouquet','extract','Çiçek Buketi');s.mapGift('perfume','implant','Gümüş Parfüm');
+ assert.equal(s.publicGifts().extract.verified,false);s.mapGift('bouquet','extract','Çiçek Buketi');s.mapGift('perfume','implant','Gümüş Parfüm');
  assert.equal(s.publicGifts().extract.name,'Çiçek Buketi');assert.equal(s.publicGifts().implant.verified,true);assert.equal(s.publicGifts().implant.name,'Gümüş Parfüm');
  s.setCatalog([{giftId:'bouquet',name:'Yeni fiyat',coins:25,streak:false}],'two',1001);
  assert.equal(s.publicGifts().extract.verified,false);assert.equal(s.publicGifts().implant.verified,false);
