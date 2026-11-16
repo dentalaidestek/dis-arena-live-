@@ -53,6 +53,7 @@ async def main():
                 await asyncio.sleep(min(30,2**min(retry,5))+random.random())
     delivery=asyncio.create_task(deliver())
     retry=0
+    catalog_by_id={}
     try:
         while True:
             client=TikTokLiveClient(unique_id='@'+username)
@@ -64,12 +65,15 @@ async def main():
                     # Official library route; regional room catalogue, no hardcoded IDs.
                     info=client.gift_info or await client.web.fetch_gift_list()
                     entries=normalize_catalog(info)
+                    # The entire room catalogue is indexed by provider ID, not by gift name.
+                    catalog_by_id.clear()
+                    catalog_by_id.update({gift['giftId']:gift for gift in entries})
+                    print(f'LIVE GIFT CATALOG: {len(entries)} unique IDs; sorted by coin value ascending',flush=True)
                     for gift in entries:
-                        name=gift['name'].strip().casefold()
-                        if gift['coins']==50 or (gift['coins']==20 and name in ('bouquet','parfüm','parfum','perfume')):
-                            print(f"GIFT CATALOG: {gift['name']} | {gift['coins']} jeton | ID {gift['giftId']}",flush=True)
+                        print(f"GIFT: {gift['name']} | {gift['coins']} jeton | ID {gift['giftId']}",flush=True)
                     ver=hashlib.sha256(json.dumps(entries,sort_keys=True).encode()).hexdigest()[:24]
                     await post('catalog',{'version':ver,'gifts':entries})
+                    print('CATALOG SYNCED: every gift ID and unit coin value verified by arena server',flush=True)
                 except Exception as exc:await status('live-connected','Katalog alınamadı; son doğrulanmış sürüm: '+str(exc)[:150])
                 finally:catalog_ready.set()
             @client.on(DisconnectEvent)
@@ -81,7 +85,7 @@ async def main():
                 now=int(time.time()*1000)
                 await catalog_ready.wait()
                 try:
-                    payload=normalize_event(event,client.room_id,now)
+                    payload=normalize_event(event,client.room_id,now,catalog_by_id)
                     outbox.put(payload)
                 except ValueError as exc:
                     outbox.reject(exc,str(event),now);await status('live-connected',str(exc))
