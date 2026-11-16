@@ -26,7 +26,7 @@ function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,
   if(enamel.current)enamel.current.color.set('#e9e4d7').lerp(cariesColor,disease*.82);
   if(lesion.current){lesion.current.visible=disease>.04;lesion.current.scale.set(width*.62*disease,.13*disease,.025);}
   if(healing.current){healing.current.visible=affected&&cue?.action==='heal'&&t>.2&&t<.9;healing.current.rotation.z+=delta*1.7;}
-  if(tooth.current){tooth.current.position.y=extracting?(upper?1:-1)*work*.72:0;tooth.current.position.z=extracting?work*.62:0;tooth.current.rotation.z=extracting?Math.sin(t*15)*.06:0;tooth.current.scale.setScalar(implanting?Math.max(.001,work):1);tooth.current.visible=implanting?work>.18:condition!=='extracted'&&!(extracting&&t>.86);}
+  if(tooth.current){tooth.current.position.y=extracting?(upper?1:-1)*work*.72:0;tooth.current.position.z=extracting?work*.62:0;tooth.current.rotation.z=extracting?Math.sin(t*15)*.06:0;tooth.current.scale.setScalar(implanting?Math.max(.001,work):1);tooth.current.visible=implanting?work>.18:extracting?t<.86:condition!=='extracted';}
   if(root.current)root.current.visible=!!extracting&&work>.18;
   if(screw.current){screw.current.visible=!!implanting&&t>.12&&t<.8;screw.current.position.y=(upper?-1:1)*(.75-work*.75);screw.current.rotation.y+=delta*12;}
  });
