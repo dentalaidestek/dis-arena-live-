@@ -1,6 +1,6 @@
 export const ROUND_MS = 600_000;
-export const EXTRACTION_MS = 30_000;
-export const DECAY_MS = 15_000;
+export const EXTRACTION_MS = 60_000;
+export const DECAY_MS = 30_000;
 export const BOUQUET_COINS = 20;
 export const IMPLANT_COINS = 20;
 export const DECAY_COINS = 10;
@@ -37,10 +37,9 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  if(state.processedIds.includes(gift.eventId))return fail('Tekrarlanan hediye');
  if(state.finishedAt||(state.startedAt>0&&(gift.timestamp<state.startedAt||timeLeft(state,gift.timestamp)===0)))return fail('Tur sona erdi');
  const existing=state.players.find(p=>p.userId===gift.userId);
- // Name fallback exists for old local demos only. The authoritative server ALWAYS
- // supplies an explicit procedure based on a verified gift ID, never on its name.
- const name=gift.giftName.trim().toLocaleLowerCase('tr-TR');
- const procedure=gift.procedure??(BAD_DOCTOR_GIFT_NAMES.includes(name)&&gift.coins===DOCTOR_CLAIM_COINS?'claimBad':GOOD_DOCTOR_GIFT_NAMES.includes(name)&&gift.coins===DOCTOR_CLAIM_COINS?'claimGood':BOUQUET_NAMES.includes(name)&&gift.coins===BOUQUET_COINS?'extract':IMPLANT_NAMES.includes(name)&&gift.coins===20?'implant':'score');
+ // Live gift procedures are supplied only by the server's verified gift-ID mapping.
+ // Unmapped gifts are ordinary score events; names are never used as routing keys.
+ const procedure=gift.procedure??'score';
  if(!(procedure in PROCEDURE_COINS)||(procedure!=='score'&&gift.coins!==PROCEDURE_COINS[procedure]))return fail('İşlem jeton değeri uyuşmuyor');
  if(procedure==='claimBad'||procedure==='claimGood'){
   const side=procedure==='claimBad'?'bad':'good',doctors=state.doctors??{};
@@ -70,7 +69,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
    if(target&&!isLocked(target,gift.timestamp)){
     target.lockedUntil=gift.timestamp+(procedure==='extract'?EXTRACTION_MS:DECAY_MS);target.condition=procedure==='extract'?'extracted':'decayed';
     action=procedure;targetId=toothOf(state,target.userId);targetUserId=target.userId;
-    message=`🦷 @${sender.username} → @${target.username} · ${procedure==='extract'?'çekim 30':'çürütme 15'} sn · +${gift.coins}`;
+    message=`🦷 @${sender.username} → @${target.username} · ${procedure==='extract'?'çekim 60':'çürütme 30'} sn · +${gift.coins}`;
    }
   }
   message ||= `🪙 @${sender.username} +${gift.coins} jeton`;
