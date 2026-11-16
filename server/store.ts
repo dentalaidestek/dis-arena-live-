@@ -47,7 +47,9 @@ export class ArenaStore {
   this.db.prepare('INSERT INTO catalogs VALUES(?,?,?) ON CONFLICT(version) DO UPDATE SET verified=excluded.verified,gifts=excluded.gifts').run(version,now,JSON.stringify(gifts));
   this.db.prepare("INSERT INTO settings VALUES('catalog-version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(version);
   const auto=[
-   {procedure:'claimBad',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='ghostfire'&&g.coins===DOCTOR_CLAIM_COINS )},
+   {procedure:'extract',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='bouquet'&&g.coins===20)},
+   {procedure:'implant',matches:gifts.filter(g=>['parfüm','parfum','perfume'].includes(g.name.trim().toLocaleLowerCase('tr-TR'))&&g.coins===20)},
+   {procedure:'claimBad',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='ghostfire'&&g.coins===DOCTOR_CLAIM_COINS)},
    {procedure:'claimGood',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='warm cocoa'&&g.coins===DOCTOR_CLAIM_COINS)}
   ];
   for(const rule of auto){if(rule.matches.length===1)this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(rule.matches[0].giftId,rule.procedure);else this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(rule.procedure);}
