@@ -118,3 +118,12 @@ class EngagementAdapterTests(unittest.TestCase):
             self.assertEqual(len(q.pending()),1)
             self.assertEqual(q.pending()[0][1],p)
             q.close()
+
+class InstalledEngagementProviderTests(unittest.TestCase):
+    def test_installed_tiktoklive_exposes_follow_and_like_events(self):
+        try:
+            from TikTokLive.events import FollowEvent, LikeEvent
+        except ImportError:
+            self.skipTest('Installed TikTokLive version has no engagement events')
+        self.assertIsNotNone(FollowEvent)
+        self.assertIsNotNone(LikeEvent)
