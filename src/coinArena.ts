@@ -10,10 +10,10 @@ export const POSITIONS = [7,8,24,23,6,9,25,22,5,10,26,21,4,11,27,20,3,12,28,19,2
 export type Procedure = 'extract' | 'implant' | 'decay' | 'heal' | 'claimBad' | 'claimGood' | 'score';
 export const PROCEDURE_COINS: Record<Procedure, number> = {extract:20, implant:20, decay:10, heal:10, claimBad:30, claimGood:30, score:0};
 export type Player = {userId:string;username:string;coins:number;joinedAt:number;lockedUntil:number;condition?:'extracted'|'decayed'};
-export type DoctorOwner = {userId:string;username:string;claimedAt:number};
+export type DoctorOwner = {userId:string;username:string;claimedAt:number;giftName?:string;giftImage?:string;giftCoins?:number};
 export type DoctorOwners = {bad?:DoctorOwner;good?:DoctorOwner};
 export type CoinArena = {version:2;roundId:string;startedAt:number;players:Player[];doctors:DoctorOwners;processedIds:string[];history:string[];finishedAt?:number;winners?:Player[]};
-export type Gift = {eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;procedure?:Procedure};
+export type Gift = {eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;procedure?:Procedure;giftImage?:string};
 export type GiftResult = {state:CoinArena;accepted:boolean;message:string;action:Procedure|'blocked'|'none';targetId:number|null;targetUserId?:string};
 export const newCoinArena = (now:number=0):CoinArena => ({version:2,roundId:'round-'+now,startedAt:now,players:[],doctors:{},processedIds:[],history:[]});
 const compareId=(a:string,b:string)=>a<b?-1:a>b?1:0;
@@ -39,9 +39,8 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  if(!(procedure in PROCEDURE_COINS)||(procedure!=='score'&&gift.coins!==PROCEDURE_COINS[procedure]))return fail('İşlem jeton değeri uyuşmuyor');
  if(procedure==='claimBad'||procedure==='claimGood'){
   const side=procedure==='claimBad'?'bad':'good',doctors=state.doctors??{};
-  if(doctors[side])return fail((side==='bad'?'Kötü':'İyi')+' hekim zaten @'+doctors[side]!.username+' tarafından sahiplenildi');
-  const owner={userId:gift.userId,username:gift.username.replace(/^@+/,'').slice(0,40),claimedAt:gift.timestamp};
-  const message='@'+owner.username+' '+(side==='bad'?'kötü':'iyi')+' hekimi sahiplendi';
+  const owner={userId:gift.userId,username:gift.username.replace(/^@+/,'').slice(0,40),claimedAt:gift.timestamp,giftName:gift.giftName,giftImage:gift.giftImage??'',giftCoins:gift.coins};
+  const message='@'+owner.username+' '+(side==='bad'?'kötü':'iyi')+' hekim koltuğuna oturdu';
   return {state:{...state,startedAt:state.startedAt||gift.timestamp,doctors:{...doctors,[side]:owner},processedIds:[...state.processedIds,gift.eventId],history:[message,...state.history].slice(0,12)},accepted:true,message,action:procedure,targetId:null};
  }
  if(existing&&(!Number.isSafeInteger(existing.coins)||existing.coins+gift.coins>Number.MAX_SAFE_INTEGER))return fail('Jeton sınırı aşıldı');
