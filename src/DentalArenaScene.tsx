@@ -86,7 +86,7 @@ function Scene({state,now,cue,quality,onFps,selected,onPick}:{state:CoinArena;no
   <ambientLight intensity={.45}/><hemisphereLight args={['#e3f1f3','#304451',1.1]}/><directionalLight position={[-4,8,8]} intensity={2.4} color="#fff1d9"/><directionalLight position={[5,4,5]} intensity={1.6} color="#a4e4e5"/>
   <ClinicRoom/>
   <PatientActor cue={cue}><DentalModel state={state} now={now} cue={cue} mini/></PatientActor>
-  <Clinician bad cue={cue} ownerName={state.doctors?.bad?.username}/><Clinician bad={false} cue={cue} ownerName={state.doctors?.good?.username}/>
+  <Clinician bad cue={cue} ownerName={state.doctors?.bad?.username} giftImage={state.doctors?.bad?.giftImage} giftName={state.doctors?.bad?.giftName} giftCoins={state.doctors?.bad?.giftCoins}/><Clinician bad={false} cue={cue} ownerName={state.doctors?.good?.username} giftImage={state.doctors?.good?.giftImage} giftName={state.doctors?.good?.giftName} giftCoins={state.doctors?.good?.giftCoins}/>
   <group position={[0,-3.65,1.7]}><RoundedBox args={[10.55,4.42,.22]} radius={.26} smoothness={4}><meshStandardMaterial color="#101f2d" roughness={.48} metalness={.1}/></RoundedBox><RoundedBox position={[0,0,.13]} args={[10.27,4.14,.04]} radius={.20} smoothness={4}><meshStandardMaterial color="#263e4c" roughness={.75}/></RoundedBox></group>
   <group position={MOUTH_VIEWS.closeup.position} scale={MOUTH_VIEWS.closeup.scale}><DentalModel state={state} now={now} cue={cue} selected={selected} onPick={onPick}/><OpticalInstrument cue={cue}/></group>
  </Canvas>;
