@@ -30,7 +30,7 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
  function mayView(req:IncomingMessage){return !access.configured('viewer')||isAdmin(req)||access.valid(cookieToken(req.headers.cookie,'viewer'),'viewer')}
  function publish(mode:'live'|'demo',result:Receipt|undefined,packet?:any){
   if(!result)return;if(result.visuals.length){if(visuals.length<500)visuals.push({mode,receipt:result});else skippedVisuals+=result.visuals.length;}
-  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((result.action??'GIFT').toUpperCase(),result.message+(result.visuals[0]?' · Diş '+toothLabel(result.visuals[0].targetId):''));if(packet)monitor.write('GIFT',`@${packet.username} — ${packet.giftName} ×${result.delta}`);}
+  if(result.accepted&&result.delta>0){feeds[mode]=[{id:String(result.sequence),action:packet?.type==='follow'||packet?.type==='like'?'claimTooth':result.action,message:result.message,delta:result.delta,...(packet?{user:packet.username,gift:packet.giftName,coins:packet.coins,source:packet.type}:{}),targetId:result.visuals[0]?.targetId},...feeds[mode]].slice(0,6);monitor.write((packet?.type==='follow'?'FOLLOW':packet?.type==='like'?'LIKE':result.action??'GIFT').toUpperCase(),result.message+(result.visuals[0]?' · Diş '+toothLabel(result.visuals[0].targetId):''));if(packet?.type==='gift')monitor.write('GIFT',`@${packet.username} — ${packet.giftName} ×${result.delta}`);}
   else if(!result.accepted&&!result.duplicate)monitor.write('ERROR',result.message);
  }
 
@@ -83,6 +83,10 @@ export function createArenaServer(options:{directory:string;adminToken:string;br
    if(bridgeRoute){
     if(url.pathname==='/api/bridge/gift'){
      const result=stores.live.ingest(body);publish('live',result,body);
+     reply(res,200,result);return;
+    }
+    if(url.pathname==='/api/bridge/engagement'){
+     const result=stores.live.engage(body);publish('live',result,body);
      reply(res,200,result);return;
     }
     if(url.pathname==='/api/bridge/catalog'){stores.live.setCatalog(body.gifts,body.version);last='';reply(res,200,{ok:true});return;}
