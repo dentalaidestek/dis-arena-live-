@@ -24,7 +24,7 @@ Geliş sırası sunucu transaction sırasıdır; sağlayıcı zamanıyla geçmi�
 
 Katalog, bağlantıda `client.web.fetch_gift_list()` üzerinden alınır; 7.0.1'in `data.gifts` dizisi normalize edilir. ID/ad/birim jeton/tür/seri davranışı/görsel, sağlayıcı oda kapsamı, doğrulama zamanı ve içerik hash sürümü kaydedilir. Ülke bilgisi sağlayıcıda yoksa tahmin edilmez. Katalog alınamazsa son doğrulanmış sürüm saklanır; panel 24 saati aşanı eski işaretler. Bilinmeyen ID, farklı fiyat veya seri türü puanlanmaz.
 
-Gül/Bouquet/Parfüm için evrensel ve güncel ID doğrulanmadı. Gerçek yayın kataloğu olmadan işlem ID'leri seçilmedi. Yönetici paneli ana oyunda doğrulanmış katalogdaki ayrı iki 20 jetonluk çekim ve implant hediyelerini eşler. Çürütme ve iyileştirme yalnız demo ortamındadır. Adı Bouquet'a veya Parfüm'e benziyor diye işlem seçilmez.
+Hediye ID'leri kaynak koduna sabit yazılmaz; aynı ad farklı ülke/oda kataloglarında farklı ID veya fiyatla gelebilir. Termux köprüsü her bağlantıda gerçek oda kataloğunu alır. Sunucu katalogdaki tekil `Tea`/`Çay` + 50 jeton kaydını kötü hekim, tekil `Genius` + 50 jeton kaydını iyi hekim sahiplenme olarak otomatik eşler. Genius o odanın kataloğunda yoksa otomatik eşleme yapılmaz; yönetici panelinden katalogdaki başka bir 50 jetonluk hediye seçilebilir. Bouquet 20 jeton çekim ve Parfüm 20 jeton implant için de gerçek ID, katalogdan doğrulanır. İsim/fiyat eşleşmesi tekil değilse sistem tahmin yürütmez. Çürütme ve iyileştirme yalnız demo ortamındadır.
 
 Kaynaklar (15 Kasım 2026'da incelendi):
 - https://ttl.docs.isaackogan.com/guides/gifts/
