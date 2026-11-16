@@ -53,7 +53,7 @@ export class ArenaStore {
  mappings(){return this.db.prepare("SELECT m.gift_id,m.procedure,(SELECT value FROM settings WHERE key='mapping-name:'||m.procedure) AS display_name FROM mappings m").all()}
  mapGift(id:string,procedure:Procedure,displayName:string){
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
-  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||!/^https:\/\//i.test(gift.image??''))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
+  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||(!this.experimental&&!/^https:\/\//i.test(gift.image??'')))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
   if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
   this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(procedure);
   this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(id,procedure);
