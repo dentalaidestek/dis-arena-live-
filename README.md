@@ -6,8 +6,11 @@ Mevcut `feature/coin-arena-20261112` çalışmasının devamıdır. Güncel davr
 |---|---:|---|
 | Bouquet / çekim | 20 jeton | Hediye öncesindeki rakibi 30 saniye kilitler |
 | Parfüm / implant | 20 jeton | Gönderenin çekim kilidini kaldırır |
+| Ghostfire / kötü hekimi sahiplen | 30 jeton | Hekimin üstünde sahiplenen kullanıcı adı görünür |
+| Warm Cocoa / iyi hekimi sahiplen | 30 jeton | Hekimin üstünde sahiplenen kullanıcı adı görünür |
+| Diğer tüm doğrulanmış hediyeler | Katalogdaki gerçek değer | Birim jeton değeri kadar puan ekler; sıralama toplam puana göre güncellenir |
 
-Son kullanıcı talimatıyla ana oyunda Bouquet / çekim ve Parfüm / implant hediyelerinin ikisi de 20 jetondur. Çürütme 10 / iyileştirme 10 kodları yalnız ayrı demoda korunur. Gerçek hediye ID'si uydurulmaz: yayın kataloğundan farklı ve doğru fiyatlı ID'ler yayıncı tarafından seçilir. Katalogdaki gerçek ad izleyici kartına aktarılır; yanlış fiyatlı eski atamalar saldırı oluşturmaz, normal doğrulanmış puan olarak işlenir.
+Canlı köprü bağlı odanın bütün hediye kataloğunu ID, ad ve jeton değeriyle sunucuya aktarır; tekrar eden katalog satırları tekilleştirilir ve liste jeton değerine göre artan sıralanır. Her gelen hediye ID'si bu katalogla eşleştirilir; olay paketindeki fiyat/ad yerine doğrulanmış katalog kaydı kullanılır. Katalogda bulunmayan ID puan alamaz. Gerçek hediye ID'si uydurulmaz; yanlış fiyatlı özel işlem eşleşmeleri özel işlem tetiklemez. Çürütme 10 / iyileştirme 10 yalnız ayrı demoda korunur.
 
 ## Termux
 
