@@ -71,7 +71,7 @@ def normalize_catalog(info):
         if type(price) is not int or price<1 or not gid:continue
         image=raw.get('image') or {};urls=image.get('url_list',[]) if isinstance(image,dict) else []
         entry={'giftId':str(gid),'name':str(raw.get('name',gid)),'coins':price,
-               'streak':raw.get('type')==1,'image':urls[0] if urls else '', 'region':'provider-room'}
+               'streak':raw.get('type')==1,'streakKnown':True,'image':urls[0] if urls else '', 'region':'provider-room'}
         previous=by_id.get(entry['giftId'])
         if previous is not None:
             if previous['coins']!=entry['coins']:
@@ -79,6 +79,39 @@ def normalize_catalog(info):
             continue
         by_id[entry['giftId']]=entry
     if not by_id:raise ValueError('Doğrulanabilir katalog kaydı yok')
+    def sort_key(g):
+        gid=g['giftId']
+        return (g['coins'],0,int(gid)) if gid.isdigit() else (g['coins'],1,gid)
+    return sorted(by_id.values(),key=sort_key)
+
+
+def merge_catalogs(provider_entries,user_entries):
+    """Merge the user's exact provider-ID price list with live-room metadata.
+
+    User-supplied IDs and coin prices are canonical. When the room catalogue
+    contains the same ID, retain its streak/image metadata; otherwise mark
+    streak metadata unknown so the server can validate the event's streak flag.
+    """
+    by_id={str(g['giftId']):dict(g) for g in provider_entries}
+    for raw in user_entries:
+        if not isinstance(raw,dict):continue
+        gid=raw.get('id',raw.get('giftId'))
+        name=raw.get('name')
+        coins=raw.get('coins')
+        if not gid or not isinstance(name,str) or not name.strip() or type(coins) is not int or coins<1:
+            raise ValueError('Kullanıcı hediye kataloğunda geçersiz ID, ad veya jeton değeri')
+        gid=str(gid)
+        previous=by_id.get(gid)
+        by_id[gid]={
+            'giftId':gid,
+            'name':name,
+            'coins':coins,
+            'streak':bool(previous.get('streak')) if previous else False,
+            'streakKnown':bool(previous is not None and previous.get('streakKnown',True)),
+            'image':previous.get('image','') if previous else '',
+            'region':'user-catalog'
+        }
+    if not by_id:raise ValueError('Birleştirilecek doğrulanmış hediye kataloğu yok')
     def sort_key(g):
         gid=g['giftId']
         return (g['coins'],0,int(gid)) if gid.isdigit() else (g['coins'],1,gid)
