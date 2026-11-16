@@ -2,7 +2,7 @@ import unittest
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace as N
-from tiktok_adapter import normalize_event, normalize_catalog, merge_catalogs, Outbox, validate_username
+from tiktok_adapter import normalize_event, normalize_engagement, normalize_catalog, merge_catalogs, Outbox, validate_username
 
 def event(count=1,group=900,msg=100):
     return N(gift=N(id=1,name='Rose',diamond_count=1,streakable=True),gift_id=1,user=N(user_id=123,unique_id='alice'),repeat_count=count,repeat_end=False,group_id=group,common=N(msg_id=msg,create_time=1))
@@ -92,3 +92,29 @@ class SavedGiftCatalogueTests(unittest.TestCase):
         self.assertEqual(payload['coins'],20)
         self.assertEqual(payload['giftName'],'Bouquet')
         self.assertFalse(known['17473']['streakKnown'])
+
+class EngagementAdapterTests(unittest.TestCase):
+    def test_follow_and_like_events_have_stable_identity_and_count(self):
+        follow=N(common=N(msg_id=800,create_time=10),user=N(user_id=77,unique_id='follow_user'))
+        like=N(common=N(msg_id=801,create_time=11),user=N(user_id=88,unique_id='like_user'),like_count=125)
+        self.assertEqual(normalize_engagement(follow,'room',20000,'follow'),{
+            'type':'follow','eventId':'800','roomId':'room','userId':'77','username':'follow_user','count':1,'timestamp':10000})
+        packet=normalize_engagement(like,'room',20000,'like')
+        self.assertEqual(packet['eventId'],'801')
+        self.assertEqual(packet['count'],125)
+        self.assertEqual(packet['timestamp'],11000)
+
+    def test_like_count_and_event_identity_are_required(self):
+        with self.assertRaises(ValueError):
+            normalize_engagement(N(common=N(msg_id=0),user=N(user_id=1,unique_id='a'),like_count=1),'room',20000,'like')
+        with self.assertRaises(ValueError):
+            normalize_engagement(N(common=N(msg_id=1),user=N(user_id=1,unique_id='a'),like_count=0),'room',20000,'like')
+
+    def test_outbox_deduplicates_engagement_by_provider_event_id(self):
+        with tempfile.TemporaryDirectory() as d:
+            q=Outbox(Path(d)/'engagement.db')
+            p={'type':'like','eventId':'like-1','roomId':'room','userId':'7','username':'alice','count':100,'timestamp':1000}
+            q.put(p);q.put(p)
+            self.assertEqual(len(q.pending()),1)
+            self.assertEqual(q.pending()[0][1],p)
+            q.close()
