@@ -131,7 +131,7 @@ export class ArenaStore {
      const loops=procedure==='score'||procedure==='claimBad'||procedure==='claimGood'?(delta?1:0):delta;
      for(let i=0;i<loops;i++){
       const pre=state;
-      const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:gift.name,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure});
+      const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:mapped!=='score'&&mappingDisplayName(this.db,mapped)?mappingDisplayName(this.db,mapped)!:gift.name,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure,giftImage:gift.image??''});
       if(!r.accepted){result=empty(r.message);break;}
       state={...r.state,processedIds:[]};result.message=r.message;result.action=r.action;
       if(['extract','implant','decay','heal'].includes(r.action)&&r.targetId!==null)result.visuals.push({id:0,action:r.action as VisualEvent['action'],targetId:r.targetId,targetUserId:r.targetUserId!,user:p.username,before:pre,after:state});
