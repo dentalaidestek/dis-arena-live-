@@ -1,5 +1,5 @@
 /* Clinic edition: one restrained broadcast palette and a legible optical closeup. */
-.broadcast-shell{background:radial-gradient(ellipse at 50% 30%,#18313d,#091321 70%);grid-template-rows:16fr 58fr 12fr 14fr;gap:.65dvh}
+.broadcast-shell{background:radial-gradient(ellipse at 50% 30%,#18313d,#091321 70%);grid-template-rows:16fr 52fr 12fr 20fr;gap:.65dvh}
 .broadcast-brand>span{color:#8ecfc6;text-shadow:none}
 .broadcast-brand h1{color:#e9f1f2;text-shadow:none;font-size:6.8cqw;letter-spacing:-.02em;font-weight:850}
 .broadcast-brand p{letter-spacing:.16em;color:#8bb5be;font-size:1.9cqw}
@@ -63,3 +63,6 @@
 .guide-rules p b{color:#e1e9e4;font-weight:800}
 .guide-rules>small{grid-column:1/-1;color:#78939d;font-size:1.65cqw;line-height:1.3;text-align:center}
 @media(max-width:520px){.guide-rules{gap:.45cqh 1.4cqw}.guide-rules p{font-size:2.05cqw}}
+
+/* Visible guide and verified gift map */
+.broadcast-guide{display:flex;flex-direction:column;gap:.45cqh;overflow:hidden}.broadcast-guide h2{flex:0 0 auto}.guide-score{flex:0 0 auto;margin:0}.guide-rules{display:grid;grid-template-columns:1fr 1fr;gap:.35cqh 1.3cqw;flex:0 0 auto}.guide-rules p{font-size:1.75cqw;line-height:1.22;margin:0}.guide-gifts{display:grid;grid-template-columns:1fr 1fr;gap:.45cqh 1.2cqw;min-height:0;flex:1}.guide-gift{display:flex;align-items:center;gap:1cqw;min-width:0;padding:.3cqh .8cqw;border-radius:.8cqw;background:#ffffff09}.guide-gift img{width:4.5cqw;height:4.5cqw;object-fit:contain;flex-shrink:0}.guide-gift span{display:flex;flex-direction:column;min-width:0}.guide-gift b{font-size:1.75cqw;line-height:1.15;color:#e3ecec}.guide-gift small{font-size:1.45cqw;line-height:1.15;color:#93b4b9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
