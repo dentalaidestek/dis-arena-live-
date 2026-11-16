@@ -21,6 +21,7 @@ export class ArenaStore {
    CREATE TABLE IF NOT EXISTS catalogs(version TEXT PRIMARY KEY,verified INTEGER NOT NULL,gifts TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS mappings(gift_id TEXT PRIMARY KEY,procedure TEXT UNIQUE NOT NULL);
   `);
+  this.db.exec("DELETE FROM mappings WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key='mapping-name:'||mappings.procedure)");
   if(!this.db.prepare('SELECT id FROM rounds LIMIT 1').get())this.newRound(now);
  }
  state():CoinArena{return parse(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state)}
@@ -53,7 +54,8 @@ export class ArenaStore {
  mapGift(id:string,procedure:Procedure,displayName:string){
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
   if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||!/^https:\/\//i.test(gift.image??''))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
-  this.db.prepare('DELETE FROM mappings WHERE gift_id=? OR procedure=?').run(id,procedure);
+  if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
+  this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(procedure);
   this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(id,procedure);
   this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+procedure,displayName.trim());
  }
