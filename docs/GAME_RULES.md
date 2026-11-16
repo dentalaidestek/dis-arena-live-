@@ -2,7 +2,7 @@
 
 Eski 32 diş/HP/eleme kuralları ana uygulama için geçerli değildir.
 
-- 28 diş, üstte ve altta 14'er; iki hekim; ilk geçerli hediye ile 600 saniye.
+- 28 diş, üstte ve altta 14'er; iki hekim; ilk geçerli hediye, takip veya 100 beğeni ile 600 saniyelik tur başlar.
 - Puanlar benzersiz TikTok kullanıcı ID'sinde tutulur. Kullanıcı adı değişebilir.
 - Sıralama: toplam jeton azalan, katılım zamanı artan, kullanıcı ID'si deterministik sözlü sırası. İlk 28 dişlere, ilk dört iki üst/iki alt merkezi kesiciye yerleşir.
 - Canlı köprü, bağlı odanın tüm hediye kataloğunu her ID + ad + birim jeton değeriyle alır; ID bazlı indeksler ve kataloğu artan jeton değerine göre sıralar. Her hediye olayı bu doğrulanmış ID kaydından fiyat/ad alır; katalogda olmayan ID reddedilir. Normal hediyeler puan tablosuna katalogdaki birim jeton değeri kadar ekler (ör. 1 jeton = +1, 500 jeton = +500); seri hediyelerde yalnız yeni adet farkı eklenir. Sıralama toplam puana göre yapılır.
