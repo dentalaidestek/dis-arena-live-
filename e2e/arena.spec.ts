@@ -54,9 +54,9 @@ test('fullscreen returns to admin without resetting the server round',async({pag
  await page.screenshot({path:info.outputPath('fullscreen.png')});await page.getByRole('button',{name:'Yayıncıya dön',exact:false}).click();await expect(page.locator('.admin-page')).toBeVisible();
  const after=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;expect(after.roundId).toBe(before.roundId);expect(after.startedAt).toBe(before.startedAt);expect(after.players).toEqual(before.players);
 });
-test('room password grants viewing but no publisher commands',async({page,request})=>{
+test('viewer remains public even if legacy room credentials exist; publisher stays protected',async({page,request})=>{
  await request.post('/api/password',{headers:auth,data:{role:'viewer',password:'fixture-room-password'}});
- await page.goto('/demo');await expect(page.getByLabel('Oda şifresi',{exact:true})).toBeVisible();await page.getByLabel('Oda şifresi',{exact:true}).fill('fixture-room-password');await page.getByRole('button',{name:'Oyuna gir',exact:true}).click();await expect(page.locator('.leader-card')).toHaveCount(4);
+ await page.goto('/demo');await expect(page.locator('.leader-card')).toHaveCount(4);await expect(page.locator('input,button,select')).toHaveCount(0);
  await page.goto('/admin');await expect(page.locator('.admin-page')).toHaveCount(0);await expect(page.getByLabel('Yayıncı şifresi',{exact:true})).toBeVisible();
  await request.post('/api/room',{headers:auth,data:{enabled:false}});
 });
