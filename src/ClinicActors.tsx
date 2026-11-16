@@ -87,12 +87,16 @@ function TreatmentArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
  </group>;
 }
 export function Clinician({bad,cue,ownerName}:{bad:boolean;cue?:AnimationCue;ownerName?:string}){
- const root=useRef<THREE.Group>(null),head=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0);const active=!!cue&&(bad?['extract','decay']:['implant','heal']).includes(cue.action),side=bad?-1:1;
+ const root=useRef<THREE.Group>(null),head=useRef<THREE.Group>(null),forceps=useRef<THREE.Group>(null),jawLeft=useRef<THREE.Group>(null),jawRight=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0);const active=!!cue&&(bad?['extract','decay']:['implant','heal']).includes(cue.action),side=bad?-1:1;
  useFrame(({clock},delta)=>{
   if(cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,reach=active?procedurePhase(t).reach:0;
-  if(root.current){root.current.position.x=side*(3.40-reach*1.75);root.current.position.y=.15;}
+  if(root.current){root.current.position.x=side*(3.40-reach*1.75);root.current.position.y=.15+(!bad?Math.sin(clock.elapsedTime*3.4)*.10:0);root.current.rotation.z=!bad?Math.sin(clock.elapsedTime*2.5)*.035:0;}
   if(head.current){head.current.rotation.z=THREE.MathUtils.damp(head.current.rotation.z,side*.10*reach,5,delta);head.current.rotation.y=side*-.1;}
+  if(forceps.current){forceps.current.position.y=bad?1.06+Math.sin(clock.elapsedTime*5.2)*.16:.88;forceps.current.rotation.z=bad?Math.sin(clock.elapsedTime*2.6)*.11:0;}
+  const jaw=Math.sin(clock.elapsedTime*10)*.24;
+  if(jawLeft.current)jawLeft.current.rotation.z=bad?jaw:0;
+  if(jawRight.current)jawRight.current.rotation.z=bad?-jaw:0;
  });
  return <group ref={root} position={[side*3.4,.15,-.08]}>
   <Block position={[0,1.32,0]} size={[1.34,1.88,.65]} color={coat} radius={.20}/>
@@ -102,7 +106,8 @@ export function Clinician({bad,cue,ownerName}:{bad:boolean;cue?:AnimationCue;own
   <Block position={[side*.38,1.8,.38]} size={[.16,.035,.015]} color="#e4eded" radius={.01}/>
   <Orb position={[0,2.39,0]} scale={[.18,.28,.19]} color={skin}/>
   <group ref={head} position={[0,3.02,0]}><Face bad={bad}/></group>
-  <Limb from={[side*.62,2.01,.03]} to={[side*.88,1.37,.09]}/><Limb from={[side*.88,1.37,.09]} to={[side*.72,.94,.35]} radius={.11}/><Orb position={[side*.72,.88,.37]} scale={[.14,.19,.09]} color="#b7d9d8"/>
+  <Limb from={[side*.62,2.01,.03]} to={[side*.88,1.37,.09]}/><Limb from={[side*.88,1.37,.09]} to={[side*.72,.94,.35]} radius={.11}/>
+  {bad?<group ref={forceps} position={[side*.72,.88,.37]}><Orb position={[0,0,0]} scale={[.14,.18,.09]} color="#b7d9d8"/><mesh position={[0,.16,0]}><cylinderGeometry args={[.018,.026,.30,10]}/><meshStandardMaterial color="#c5d4d8" metalness={.9} roughness={.22}/></mesh><group ref={jawLeft} position={[-.045,.29,0]}><mesh position={[-.025,.105,0]} rotation={[0,0,-.20]}><cylinderGeometry args={[.012,.018,.23,8]}/><meshStandardMaterial color="#d9e2e4" metalness={.92} roughness={.2}/></mesh></group><group ref={jawRight} position={[.045,.29,0]}><mesh position={[.025,.105,0]} rotation={[0,0,.20]}><cylinderGeometry args={[.012,.018,.23,8]}/><meshStandardMaterial color="#d9e2e4" metalness={.92} roughness={.2}/></mesh></group></group>:<Orb position={[side*.72,.88,.37]} scale={[.14,.19,.09]} color="#b7d9d8"/>}
   {ownerName&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.82,.28]} fontSize={.23} maxWidth={3.1} anchorX="center" color={bad?'#ffcfb5':'#b9fff0'} outlineWidth={.018} outlineColor="#101f2d">@{ownerName.replace(/^@+/,'')}</Text>}
   <TreatmentArm bad={bad} active={active} cue={cue}/>
  </group>;
