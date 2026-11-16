@@ -64,6 +64,10 @@ async def main():
                     # Official library route; regional room catalogue, no hardcoded IDs.
                     info=client.gift_info or await client.web.fetch_gift_list()
                     entries=normalize_catalog(info)
+                    for gift in entries:
+                        name=gift['name'].strip().casefold()
+                        if gift['coins']==50 or (gift['coins']==20 and name in ('bouquet','parfüm','parfum','perfume')):
+                            print(f"GIFT CATALOG: {gift['name']} | {gift['coins']} jeton | ID {gift['giftId']}",flush=True)
                     ver=hashlib.sha256(json.dumps(entries,sort_keys=True).encode()).hexdigest()[:24]
                     await post('catalog',{'version':ver,'gifts':entries})
                 except Exception as exc:await status('live-connected','Katalog alınamadı; son doğrulanmış sürüm: '+str(exc)[:150])
