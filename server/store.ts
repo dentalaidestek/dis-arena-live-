@@ -39,7 +39,7 @@ export class ArenaStore {
   const gifts=parse<CatalogGift[]>(this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(String(r.version))!.gifts);
   this.giftIndex=new Map(gifts.map(g=>[g.giftId,g]));return this.cachedCatalog={version:String(r.version),verified:Number(r.verified),gifts};
  }
- publicGifts(){this.catalog();const mapped=this.mappings();return Object.fromEntries((['extract','implant'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,verified:true}:{name:action==='extract'?'Bouquet':'Parfüm',coins:PROCEDURE_COINS[action],verified:false}]}))}
+ publicGifts(){this.catalog();const mapped=this.mappings();const defaults:Record<string,string>={extract:'Bouquet',implant:'Parfüm',claimBad:'Tea',claimGood:'Genius'};return Object.fromEntries((['extract','implant','claimBad','claimGood'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,giftId:gift.giftId,verified:true}:{name:defaults[action],coins:PROCEDURE_COINS[action],verified:false}]}))}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
   if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'))throw Error('Geçersiz katalog');
   const old=this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(version);
@@ -51,7 +51,7 @@ export class ArenaStore {
  mapGift(id:string,procedure:Procedure){
   if(!this.experimental&&(procedure==='decay'||procedure==='heal'))throw Error('Bu işlem yalnız demo modunda eşleştirilebilir');
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
-  if(!gift||!['extract','implant','decay','heal'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure])throw Error('Doğrulanmış hediye ve jeton değeri gerekli');
+  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure])throw Error('Doğrulanmış hediye ve jeton değeri gerekli');
   if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
   this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(id,procedure);
  }
@@ -84,11 +84,12 @@ export class ArenaStore {
     const mapped=(this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId)?.procedure??'score') as Procedure;
     const procedure=(!this.experimental&&(mapped==='decay'||mapped==='heal'))||(mapped!=='score'&&gift.coins!==PROCEDURE_COINS[mapped])?'score':mapped;
     if(previous&&Number(previous.unit)!==p.coins)result=empty('Seri birim fiyatı değişti');
+    else if((procedure==='claimBad'||procedure==='claimGood')&&previous)result={accepted:true,delta,message:'Sahiplenme hediye serisi zaten işlendi',visuals:[]};
     else if(procedure!=='score'&&delta>1000)result=empty('İşlem serisi 1000 sınırını aştı; olay incelemeye alındı');
     else if(!Number.isSafeInteger(delta*p.coins))result=empty('Jeton taşması');
     else {
      result={accepted:true,delta,message:delta?'İşlendi':'Eski veya tekrarlı seri güncellemesi',visuals:[]};
-     const loops=procedure==='score'?(delta?1:0):delta;
+     const loops=procedure==='score'||procedure==='claimBad'||procedure==='claimGood'?(delta?1:0):delta;
      for(let i=0;i<loops;i++){
       const pre=state;
       const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:gift.name,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure});
