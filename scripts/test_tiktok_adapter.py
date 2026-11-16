@@ -2,7 +2,7 @@ import unittest
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace as N
-from tiktok_adapter import normalize_event, Outbox, validate_username
+from tiktok_adapter import normalize_event, normalize_catalog, merge_catalogs, Outbox, validate_username
 
 def event(count=1,group=900,msg=100):
     return N(gift=N(id=1,name='Rose',diamond_count=1,streakable=True),gift_id=1,user=N(user_id=123,unique_id='alice'),repeat_count=count,repeat_end=False,group_id=group,common=N(msg_id=msg,create_time=1))
@@ -62,3 +62,33 @@ class ReusedMessageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             q=Outbox(Path(d)/'queue');q.put(normalize_event(event(10),'r',1000));q.put(normalize_event(event(15),'r',1001))
             self.assertEqual(len(q.pending()),2);q.close()
+
+class SavedGiftCatalogueTests(unittest.TestCase):
+    def test_saved_459_provider_ids_merge_and_override_room_price_by_exact_id(self):
+        import json
+        from pathlib import Path
+        path=Path(__file__).with_name('live_gift_catalog.json')
+        saved=json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(len(saved['gifts']),459)
+        room=normalize_catalog({'gifts':[{'id':17473,'name':'Room Name','diamond_count':999,'type':0}]})
+        merged=merge_catalogs(room,saved['gifts'])
+        by_id={g['giftId']:g for g in merged}
+        self.assertEqual(len(by_id),459)
+        self.assertEqual(by_id['17473']['name'],'Bouquet')
+        self.assertEqual(by_id['17473']['coins'],20)
+        self.assertEqual(by_id['17473']['streak'],False)
+        self.assertTrue(by_id['17473']['streakKnown'])
+        self.assertEqual(by_id['1429000']['coins'],30)
+        self.assertEqual(by_id['10022']['coins'],20000)
+
+    def test_saved_catalogue_fallback_id_uses_event_streak_metadata_and_exact_price(self):
+        from tiktok_adapter import merge_catalogs
+        merged=merge_catalogs([], [{'id':'17473','name':'Bouquet','coins':20}])
+        known={g['giftId']:g for g in merged}
+        e=N(gift=N(id=17473,name='Wrong provider label',diamond_count=999,streakable=False),
+            user=N(user_id=123,unique_id='alice'),repeat_count=1,repeat_end=False,
+            group_id=0,common=N(msg_id=700,create_time=1))
+        payload=normalize_event(e,'room',1000,known)
+        self.assertEqual(payload['coins'],20)
+        self.assertEqual(payload['giftName'],'Bouquet')
+        self.assertFalse(known['17473']['streakKnown'])
