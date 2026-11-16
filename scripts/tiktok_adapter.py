@@ -10,7 +10,7 @@ def validate_username(value):
         raise ValueError('Geçerli TikTok kullanıcı adı gerekli (@kullanici_adi)')
     return value.lstrip('@')
 
-def normalize_event(event,room_id,received_at):
+def normalize_event(event,room_id,received_at,catalog_by_id=None):
     gift=event.gift
     user=event.user
     common=getattr(event,'common',None)
@@ -19,7 +19,11 @@ def normalize_event(event,room_id,received_at):
     gift_id=getattr(gift,'id',0) or getattr(event,'gift_id',0)
     if not msg_id or not user_id or not gift_id or not room_id:
         raise ValueError('Olay, kullanıcı, hediye veya oda kimliği eksik')
-    coins=getattr(gift,'diamond_count',None)
+    # The connected room catalogue is authoritative: event data cannot override a verified ID price.
+    known=(catalog_by_id or {}).get(str(gift_id)) if catalog_by_id is not None else None
+    if catalog_by_id is not None and known is None:
+        raise ValueError('Hediye ID canlı odanın doğrulanmış kataloğunda yok')
+    coins=known['coins'] if known is not None else getattr(gift,'diamond_count',None)
     count=getattr(event,'repeat_count',1) or 1
     if type(coins) is not int or coins<1 or type(count) is not int or not 1<=count<=100000:
         raise ValueError('Hediye fiyatı veya adedi geçersiz')
@@ -31,7 +35,7 @@ def normalize_event(event,room_id,received_at):
     timestamp=int(provider_time)*1000 if provider_time else received_at
     return {'type':'gift','eventId':str(msg_id),'roomId':str(room_id),'userId':str(user_id),
             'username':str(getattr(user,'unique_id','') or user_id),'giftId':str(gift_id),
-            'giftName':str(getattr(gift,'name','') or gift_id),'coins':coins,
+            'giftName':str(known['name'] if known is not None else (getattr(gift,'name','') or gift_id)),'coins':coins,
             'repeatCount':count if streak else 1,'streak':streak,'streakId':str(group) if streak else '',
             'repeatEnd':bool(getattr(event,'repeat_end',False)),'timestamp':timestamp,'receivedAt':received_at}
 
@@ -55,18 +59,27 @@ class Outbox:
     def close(self):self.db.close()
 
 def normalize_catalog(info):
-    """TikTokLive 7 returns the gift/list `data` object containing `gifts`."""
+    """Normalize and de-duplicate the provider's live-room gift catalogue."""
     raw_gifts=info.get('gifts') if isinstance(info,dict) else None
     if raw_gifts is None and isinstance(info,dict):
         raw_gifts=[v for v in info.values() if isinstance(v,dict)]
     if not isinstance(raw_gifts,list):raise ValueError('Katalog biçimi desteklenmiyor')
-    entries=[]
+    by_id={}
     for raw in raw_gifts:
         if not isinstance(raw,dict):continue
         price=raw.get('diamond_count');gid=raw.get('id')
         if type(price) is not int or price<1 or not gid:continue
         image=raw.get('image') or {};urls=image.get('url_list',[]) if isinstance(image,dict) else []
-        entries.append({'giftId':str(gid),'name':str(raw.get('name',gid)),'coins':price,
-                        'streak':raw.get('type')==1,'image':urls[0] if urls else '', 'region':'provider-room'})
-    if not entries:raise ValueError('Doğrulanabilir katalog kaydı yok')
-    return sorted(entries,key=lambda g:g['giftId'])
+        entry={'giftId':str(gid),'name':str(raw.get('name',gid)),'coins':price,
+               'streak':raw.get('type')==1,'image':urls[0] if urls else '', 'region':'provider-room'}
+        previous=by_id.get(entry['giftId'])
+        if previous is not None:
+            if previous['coins']!=entry['coins']:
+                raise ValueError('Aynı hediye ID için çelişkili jeton değeri: '+entry['giftId'])
+            continue
+        by_id[entry['giftId']]=entry
+    if not by_id:raise ValueError('Doğrulanabilir katalog kaydı yok')
+    def sort_key(g):
+        gid=g['giftId']
+        return (g['coins'],0,int(gid)) if gid.isdigit() else (g['coins'],1,gid)
+    return sorted(by_id.values(),key=sort_key)
