@@ -1,7 +1,7 @@
 export const ROUND_MS = 600_000;
 export const EXTRACTION_MS = 30_000;
 export const DECAY_MS = 15_000;
-export const TEA_COINS = 50;
+export const TEA_COINS = 20;
 export const IMPLANT_COINS = 20;
 export const DECAY_COINS = 10;
 export const HEAL_COINS = 10;
@@ -9,7 +9,7 @@ export const IMPLANT_NAMES = ['parfüm', 'perfume'];
 export const TEA_NAMES = ['çay', 'tea'];
 export const POSITIONS = [7,8,24,23,6,9,25,22,5,10,26,21,4,11,27,20,3,12,28,19,2,13,29,18,1,14,30,17];
 export type Procedure = 'extract' | 'implant' | 'decay' | 'heal' | 'score';
-export const PROCEDURE_COINS: Record<Procedure, number> = {extract:50, implant:20, decay:10, heal:10, score:0};
+export const PROCEDURE_COINS: Record<Procedure, number> = {extract:20, implant:20, decay:10, heal:10, score:0};
 export type Player = {userId:string;username:string;coins:number;joinedAt:number;lockedUntil:number;condition?:'extracted'|'decayed'};
 export type CoinArena = {version:2;roundId:string;startedAt:number;players:Player[];processedIds:string[];history:string[];finishedAt?:number;winners?:Player[]};
 export type Gift = {eventId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;procedure?:Procedure};
@@ -36,7 +36,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  // Name fallback exists for old local demos only. The authoritative server ALWAYS
  // supplies an explicit procedure based on a verified gift ID, never on its name.
  const name=gift.giftName.trim().toLocaleLowerCase('tr-TR');
- const procedure=gift.procedure??(TEA_NAMES.includes(name)&&gift.coins===50?'extract':IMPLANT_NAMES.includes(name)&&gift.coins===20?'implant':'score');
+ const procedure=gift.procedure??(TEA_NAMES.includes(name)&&gift.coins===20?'extract':IMPLANT_NAMES.includes(name)&&gift.coins===20?'implant':'score');
  if(!(procedure in PROCEDURE_COINS)||(procedure!=='score'&&gift.coins!==PROCEDURE_COINS[procedure]))return fail('İşlem jeton değeri uyuşmuyor');
  const players=state.players.map(p=>({...p}));const order=ranked(state);
  let sender=players.find(p=>p.userId===gift.userId);
