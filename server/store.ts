@@ -120,8 +120,10 @@ export class ArenaStore {
     const key=JSON.stringify([p.roomId,p.userId,p.giftId,p.streakId]);
     const previous=p.streak?this.db.prepare('SELECT count,unit FROM streaks WHERE id=?').get(key):undefined;
     const delta=Math.max(0,count-Number(previous?.count??0));
-    const mapped=(this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId)?.procedure??'score') as Procedure;
+    const mapping=this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId) as {procedure:Procedure}|undefined;
+    const mapped=(mapping?.procedure??'score') as Procedure;
     const procedure=mapped!=='score'&&gift.coins!==PROCEDURE_COINS[mapped]?'score':mapped;
+    const displayName=String(this.db.prepare('SELECT value FROM settings WHERE key=?').get('mapping-name:'+procedure)?.value??gift.name);
     if(previous&&Number(previous.unit)!==p.coins)result=empty('Seri birim fiyatı değişti');
     else if((procedure==='claimBad'||procedure==='claimGood')&&previous)result={accepted:true,delta,message:'Sahiplenme hediye serisi zaten işlendi',visuals:[]};
     else if(procedure!=='score'&&delta>1000)result=empty('İşlem serisi 1000 sınırını aştı; olay incelemeye alındı');
@@ -131,7 +133,7 @@ export class ArenaStore {
      const loops=procedure==='score'||procedure==='claimBad'||procedure==='claimGood'?(delta?1:0):delta;
      for(let i=0;i<loops;i++){
       const pre=state;
-      const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:mapped!=='score'&&mappingDisplayName(this.db,mapped)?mappingDisplayName(this.db,mapped)!:gift.name,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure,giftImage:gift.image??''});
+      const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:displayName,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure,giftImage:gift.image??''});
       if(!r.accepted){result=empty(r.message);break;}
       state={...r.state,processedIds:[]};result.message=r.message;result.action=r.action;
       if(['extract','implant','decay','heal'].includes(r.action)&&r.targetId!==null)result.visuals.push({id:0,action:r.action as VisualEvent['action'],targetId:r.targetId,targetUserId:r.targetUserId!,user:p.username,before:pre,after:state});
