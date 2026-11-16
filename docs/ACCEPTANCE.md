@@ -6,7 +6,7 @@
 
 - `/arena` canlı izleyici, `/demo` ayrı demo izleyici, `/obs` temiz 9:16, `/admin` ayrı yayıncı yönetimi. Eski query adresleri yönlenir. İzleyici DOM'unda yönetici formu/düğmesi yoktur.
 - Yayıncı ve isteğe bağlı oda şifreleri ayrı yetkilerdir. scrypt + rastgele tuz, SQLite şifre özetleri, HttpOnly/SameSite oturum, oturum iptali, yanlış giriş sınırı ve ayrı API kontrolü vardır. HTTPS'te Secure cookie ortam değişkeniyle açılır. Tek kullanımlık yerel kurulum kodu 2 dakika geçerlidir.
-- Son talimata göre canlı Çay/çekim **50**, Parfüm/implant **20** jetondur. Çürütme/iyileştirme yalnız ayrı demo içinde tutulur. Hedef hediye öncesindeki sıralama/dişe sabittir; kilit uzatılmaz. Eski yanlış fiyatlı atama normal puanı kaybetmeden saldırısız işlenir.
+- Son talimata göre canlı Çay/çekim **20**, Parfüm/implant **20** jetondur. Çürütme/iyileştirme yalnız ayrı demo içinde tutulur. Hedef hediye öncesindeki sıralama/dişe sabittir; kilit uzatılmaz. Eski yanlış fiyatlı atama normal puanı kaybetmeden saldırısız işlenir.
 - Node tek otoritedir. SQLite transaction olay, seri ilerlemesi ve tur durumunu birlikte saklar; tarayıcı render'ı puan yazamaz. Kalıcı idempotency 10.000 sınırıyla kırpılmaz. Canlı/demo veritabanları ayrıdır.
 - Python kalıcı outbox ve ACK/retry, kullanıcı adı kontrolü, sağlayıcı kimliklerinin korunması, katalog aktarımı ve backoff/jitter korunmuştur. Eksik katalog/seri kimliğinde puan uydurulmaz. Gerçek katalogdaki eşleştirilmiş ad izleyicide gösterilir; doğrulanmayan eşleme açıkça bekleniyor görünür.
 - Üst dört lider, gerçek FDI diş numaraları, sayaç/tur, lider değişimi, rekabet ve üç satırlık canlı olay akışı vardır. Sağdaki boş sıralama paneli kaldırıldı. OBS üst/alt TikTok güvenli alanları CSS değişkenleriyle ayarlanır.
@@ -53,7 +53,7 @@ Başarısız eski testler:
 
 ## Açık kabul işleri ve sınırlar
 
-1. Gerçek yayıncı adı verilmedi: aktif TikTok LIVE oda çözümleme/gerçek hediye teslimatı/gerçek katalog ID seçimi yapılmadı. Panelden 50 ve 20 jetonluk doğrulanmış iki farklı gerçek hediye eşleştirilmeli. Üçüncü taraf TikTokLive sıfır veri kaybı garantisi vermez.
+1. Gerçek yayıncı adı verilmedi: aktif TikTok LIVE oda çözümleme/gerçek hediye teslimatı/gerçek katalog ID seçimi yapılmadı. Panelden iki farklı, doğrulanmış 20 jetonluk gerçek hediye eşleştirilmeli. Üçüncü taraf TikTokLive sıfır veri kaybı garantisi vermez.
 2. Yeni sürüm kullanıcı telefonunda Android + Termux ile henüz denenmedi. Önceki çalışan kurulum korunmuştur; Node SQLite ve Python 3.14 bağımlılık uyumu cihazda doğrulanmalı. Uzun süreli canlı + OBS yayın testi yapılmadı.
 3. Karakterler hâlâ prosedürel/stilize Three.js modelleridir; profesyonel sanatçı yapımı rigged karakter kalitesi iddia edilmez. 28 oyuncunun tam adı dişlerin üzerine yığılmaz: FDI numarası kullanılır; seçilen dişin kartı, ilk dört ve yönetim tablosu tam adları gösterir.
 4. Docker imajı/çok sunuculu dağıtım doğrulanmadı. JS paket boyutu uyarısı ve TikTokLive websockets legacy deprecation uyarısı sürüyor. Aktif motor testleri geçse de yukarıdaki 22 eski HP testi başarısızdır.
@@ -61,4 +61,4 @@ Başarısız eski testler:
 
 ## Cihazda sıradaki adım
 
-`git pull --ff-only` ardından `bash termux-preview.sh`; yayıncı şifresiyle girip dört işlem turunu çalıştırın. `/demo` ve `/obs?mode=demo` görüntülerini cihazda kontrol edin. Ardından `--live` ile gerçek kullanıcıyı bağlayıp katalogdan 50/20 ID eşleştirin; gerçek Gül serisi, kopma/yeniden bağlantı ve tur sonunu deneyin. Bu kabul tamamlanana kadar PR taslak kalmalıdır.
+`git pull --ff-only` ardından `bash termux-preview.sh`; yayıncı şifresiyle girip dört işlem turunu çalıştırın. `/demo` ve `/obs?mode=demo` görüntülerini cihazda kontrol edin. Ardından `--live` ile gerçek kullanıcıyı bağlayıp katalogdan iki farklı 20 jetonluk ID eşleştirin; gerçek Gül serisi, kopma/yeniden bağlantı ve tur sonunu deneyin. Bu kabul tamamlanana kadar PR taslak kalmalıdır.
