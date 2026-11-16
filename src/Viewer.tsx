@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {DentalArenaScene} from './DentalArenaScene';
-import {ranked,timeLeft,toothOf,type CoinArena} from './coinArena';
+import {ranked,timeLeft,toothOf,ROUND_MS,type CoinArena} from './coinArena';
 import {useArena} from './useArena';
 import {toothLabel} from './routes';
 import type {AnimationCue} from './ActionAnimation';
@@ -8,7 +8,7 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  const [fps,setFps]=useState(0),[leaderNotice,setLeaderNotice]=useState('');
  const game=useArena(mode,true);const {state,now,metadata,active}=game;const players=ranked(state);const previousLeader=useRef('');
  useEffect(()=>{const id=players[0]?.userId??'';if(previousLeader.current&&id&&id!==previousLeader.current)setLeaderNotice(players[0].username);previousLeader.current=id;const timer=setTimeout(()=>setLeaderNotice(''),2500);return()=>clearTimeout(timer)},[players[0]?.userId]);
- const remaining=state.finishedAt?0:state.startedAt?timeLeft(state,now):600000;
+ const remaining=state.finishedAt?0:state.startedAt?timeLeft(state,now):ROUND_MS;
  const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
  const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId,user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
  const scene:CoinArena=active?{...active.before,players:active.before.players.map(p=>p.userId===active.targetUserId?{...p,condition:active.action==='decay'?'decayed':active.action==='extract'?'extracted':undefined,lockedUntil:['decay','extract'].includes(active.action)?now+5000:0}:p)}:state;
