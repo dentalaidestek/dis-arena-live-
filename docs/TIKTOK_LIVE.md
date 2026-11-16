@@ -24,7 +24,7 @@ Geliş sırası sunucu transaction sırasıdır; sağlayıcı zamanıyla geçmi�
 
 Katalog, bağlantıda `client.web.fetch_gift_list()` üzerinden alınır; 7.0.1'in `data.gifts` dizisi normalize edilir. ID/ad/birim jeton/tür/seri davranışı/görsel, sağlayıcı oda kapsamı, doğrulama zamanı ve içerik hash sürümü kaydedilir. Ülke bilgisi sağlayıcıda yoksa tahmin edilmez. Katalog alınamazsa son doğrulanmış sürüm saklanır; panel 24 saati aşanı eski işaretler. Bilinmeyen ID, farklı fiyat veya seri türü puanlanmaz.
 
-Gül/Çay/Parfüm için evrensel ve güncel ID doğrulanmadı. Gerçek yayın kataloğu olmadan işlem ID'leri seçilmedi. Yönetici paneli ana oyunda doğrulanmış katalogdaki ayrı iki 20 jetonluk çekim ve implant hediyelerini eşler. Çürütme ve iyileştirme yalnız demo ortamındadır. Adı Çay'a veya Parfüm'e benziyor diye işlem seçilmez.
+Gül/Bouquet/Parfüm için evrensel ve güncel ID doğrulanmadı. Gerçek yayın kataloğu olmadan işlem ID'leri seçilmedi. Yönetici paneli ana oyunda doğrulanmış katalogdaki ayrı iki 20 jetonluk çekim ve implant hediyelerini eşler. Çürütme ve iyileştirme yalnız demo ortamındadır. Adı Bouquet'a veya Parfüm'e benziyor diye işlem seçilmez.
 
 Kaynaklar (15 Kasım 2026'da incelendi):
 - https://ttl.docs.isaackogan.com/guides/gifts/
