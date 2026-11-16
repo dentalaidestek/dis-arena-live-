@@ -49,6 +49,8 @@ export class ArenaStore {
   if(old&&String(old.gifts)!==JSON.stringify(gifts))throw Error('Katalog sürümü farklı içerikle tekrar kullanılamaz');
   this.db.prepare('INSERT INTO catalogs VALUES(?,?,?) ON CONFLICT(version) DO UPDATE SET verified=excluded.verified,gifts=excluded.gifts').run(version,now,JSON.stringify(gifts));
   this.db.prepare("INSERT INTO settings VALUES('catalog-version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(version);
+  const defaults=[{giftId:'17473',procedure:'extract',coins:20,name:'Buket'},{giftId:'1354581',procedure:'implant',coins:20,name:'Mantar'},{giftId:'1354579',procedure:'decay',coins:10,name:'Sihirli Tüy'},{giftId:'1143818',procedure:'heal',coins:10,name:'Cesaret İksiri'},{giftId:'1429000',procedure:'claimBad',coins:30,name:'Hayalet Ateşi'},{giftId:'1213441',procedure:'claimGood',coins:30,name:'Sıcak Kakao'}] as const;
+  for(const item of defaults){const gift=gifts.find(g=>g.giftId===item.giftId&&g.coins===item.coins&&/^https:\/\//i.test(g.image??''));if(!gift||this.db.prepare('SELECT gift_id FROM mappings WHERE procedure=? OR gift_id=?').get(item.procedure,item.giftId))continue;this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(item.giftId,item.procedure);this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+item.procedure,item.name);}
  }
  mappings(){return this.db.prepare("SELECT m.gift_id,m.procedure,(SELECT value FROM settings WHERE key='mapping-name:'||m.procedure) AS display_name FROM mappings m").all()}
  mapGift(id:string,procedure:Procedure,displayName:string){
