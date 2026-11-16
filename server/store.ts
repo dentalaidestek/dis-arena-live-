@@ -53,8 +53,8 @@ export class ArenaStore {
  mapGift(id:string,procedure:Procedure,displayName:string){
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
   if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||!/^https:\/\//i.test(gift.image??''))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
-  if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
-  this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(id,procedure);
+  this.db.prepare('DELETE FROM mappings WHERE gift_id=? OR procedure=?').run(id,procedure);
+  this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(id,procedure);
   this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+procedure,displayName.trim());
  }
  diagnostics(){return {units:Number(this.db.prepare("SELECT COALESCE(sum(json_extract(result,'$.delta')),0) AS n FROM events WHERE json_extract(result,'$.accepted')=1 AND json_extract(raw,'$.type')='gift'").get()!.n),events:Number(this.db.prepare('SELECT count(*) AS n FROM events').get()!.n),engagementEvents:Number(this.db.prepare("SELECT count(*) AS n FROM events WHERE json_extract(raw,'$.type') IN ('follow','like')").get()!.n),claimedTeeth:Number(this.db.prepare("SELECT COALESCE(sum(json_extract(result,'$.delta')),0) AS n FROM events WHERE json_extract(result,'$.accepted')=1 AND json_extract(raw,'$.type') IN ('follow','like')").get()!.n),duplicates:Number(this.db.prepare("SELECT value FROM settings WHERE key='duplicates'").get()?.value??0),invalid:Number(this.db.prepare("SELECT count(*) AS n FROM events WHERE json_extract(result,'$.accepted')=0").get()!.n),recent:this.db.prepare("SELECT seq,received,raw,result FROM events WHERE json_extract(raw,'$.type')='gift' ORDER BY seq DESC LIMIT 10").all().map(r=>({...r,raw:parse(r.raw),result:parse(r.result)}))}}
