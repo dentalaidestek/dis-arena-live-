@@ -40,28 +40,22 @@ export class ArenaStore {
   const gifts=parse<CatalogGift[]>(this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(String(r.version))!.gifts);
   this.giftIndex=new Map(gifts.map(g=>[g.giftId,g]));return this.cachedCatalog={version:String(r.version),verified:Number(r.verified),gifts};
  }
- publicGifts(){this.catalog();const mapped=this.mappings();const defaults:Record<string,string>={extract:'Bouquet',implant:'Parfüm',claimBad:'Ghostfire',claimGood:'Warm Cocoa'};return Object.fromEntries((['extract','implant','claimBad','claimGood'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,giftId:gift.giftId,verified:true}:{name:defaults[action],coins:PROCEDURE_COINS[action],verified:false}]}))}
+ publicGifts(){this.catalog();const mapped=this.mappings();const actions=['extract','implant','decay','heal','claimBad','claimGood'] as const;return Object.fromEntries(actions.map(action=>{const mapping=mapped.find(m=>m.procedure===action);const gift=this.giftIndex.get(String(mapping?.gift_id??''));return [action,gift&&mapping?.display_name&&gift.coins===PROCEDURE_COINS[action]?{name:mapping.display_name,coins:gift.coins,giftId:gift.giftId,image:gift.image??'',verified:true}:{name:'Eşleştirme bekleniyor',coins:PROCEDURE_COINS[action],giftId:'',image:'',verified:false}]}))}
+ mappedGift(id:string){const mapping=this.mappings().find(m=>m.gift_id===id);const gift=this.catalog().gifts.find(g=>g.giftId===id);return mapping&&gift?{name:String(mapping.display_name??''),image:String(gift.image??''),coins:gift.coins,giftId:id,procedure:mapping.procedure}:undefined}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
   if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'||(g.streakKnown!==undefined&&typeof g.streakKnown!=='boolean')))throw Error('Geçersiz katalog');
   const old=this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(version);
   if(old&&String(old.gifts)!==JSON.stringify(gifts))throw Error('Katalog sürümü farklı içerikle tekrar kullanılamaz');
   this.db.prepare('INSERT INTO catalogs VALUES(?,?,?) ON CONFLICT(version) DO UPDATE SET verified=excluded.verified,gifts=excluded.gifts').run(version,now,JSON.stringify(gifts));
   this.db.prepare("INSERT INTO settings VALUES('catalog-version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(version);
-  const auto=[
-   {procedure:'extract',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='bouquet'&&g.coins===20)},
-   {procedure:'implant',matches:gifts.filter(g=>['parfüm','parfum','perfume'].includes(g.name.trim().toLocaleLowerCase('tr-TR'))&&g.coins===20)},
-   {procedure:'claimBad',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='ghostfire'&&g.coins===DOCTOR_CLAIM_COINS)},
-   {procedure:'claimGood',matches:gifts.filter(g=>g.name.trim().toLocaleLowerCase('tr-TR')==='warm cocoa'&&g.coins===DOCTOR_CLAIM_COINS)}
-  ];
-  for(const rule of auto){if(rule.matches.length===1)this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(rule.matches[0].giftId,rule.procedure);else if(rule.procedure==='claimBad'||rule.procedure==='claimGood')this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(rule.procedure);}
  }
- mappings(){return this.db.prepare('SELECT gift_id,procedure FROM mappings').all()}
- mapGift(id:string,procedure:Procedure){
-  if(!this.experimental&&(procedure==='decay'||procedure==='heal'))throw Error('Bu işlem yalnız demo modunda eşleştirilebilir');
+ mappings(){return this.db.prepare("SELECT m.gift_id,m.procedure,(SELECT value FROM settings WHERE key='mapping-name:'||m.procedure) AS display_name FROM mappings m").all()}
+ mapGift(id:string,procedure:Procedure,displayName:string){
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
-  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure])throw Error('Doğrulanmış hediye ve jeton değeri gerekli');
+  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||!/^https:\/\//i.test(gift.image??''))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
   if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
   this.db.prepare('INSERT INTO mappings VALUES(?,?) ON CONFLICT(procedure) DO UPDATE SET gift_id=excluded.gift_id').run(id,procedure);
+  this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+procedure,displayName.trim());
  }
  diagnostics(){return {units:Number(this.db.prepare("SELECT COALESCE(sum(json_extract(result,'$.delta')),0) AS n FROM events WHERE json_extract(result,'$.accepted')=1 AND json_extract(raw,'$.type')='gift'").get()!.n),events:Number(this.db.prepare('SELECT count(*) AS n FROM events').get()!.n),engagementEvents:Number(this.db.prepare("SELECT count(*) AS n FROM events WHERE json_extract(raw,'$.type') IN ('follow','like')").get()!.n),claimedTeeth:Number(this.db.prepare("SELECT COALESCE(sum(json_extract(result,'$.delta')),0) AS n FROM events WHERE json_extract(result,'$.accepted')=1 AND json_extract(raw,'$.type') IN ('follow','like')").get()!.n),duplicates:Number(this.db.prepare("SELECT value FROM settings WHERE key='duplicates'").get()?.value??0),invalid:Number(this.db.prepare("SELECT count(*) AS n FROM events WHERE json_extract(result,'$.accepted')=0").get()!.n),recent:this.db.prepare("SELECT seq,received,raw,result FROM events WHERE json_extract(raw,'$.type')='gift' ORDER BY seq DESC LIMIT 10").all().map(r=>({...r,raw:parse(r.raw),result:parse(r.result)}))}}
  engage(value:unknown,now=Date.now()):Receipt {
@@ -123,7 +117,7 @@ export class ArenaStore {
     const previous=p.streak?this.db.prepare('SELECT count,unit FROM streaks WHERE id=?').get(key):undefined;
     const delta=Math.max(0,count-Number(previous?.count??0));
     const mapped=(this.db.prepare('SELECT procedure FROM mappings WHERE gift_id=?').get(p.giftId)?.procedure??'score') as Procedure;
-    const procedure=(!this.experimental&&(mapped==='decay'||mapped==='heal'))||(mapped!=='score'&&gift.coins!==PROCEDURE_COINS[mapped])?'score':mapped;
+    const procedure=mapped!=='score'&&gift.coins!==PROCEDURE_COINS[mapped]?'score':mapped;
     if(previous&&Number(previous.unit)!==p.coins)result=empty('Seri birim fiyatı değişti');
     else if((procedure==='claimBad'||procedure==='claimGood')&&previous)result={accepted:true,delta,message:'Sahiplenme hediye serisi zaten işlendi',visuals:[]};
     else if(procedure!=='score'&&delta>1000)result=empty('İşlem serisi 1000 sınırını aştı; olay incelemeye alındı');
