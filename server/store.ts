@@ -1,7 +1,7 @@
 import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,createHash} from 'node:crypto';
 import {applyGift,finishRound,newCoinArena,DOCTOR_CLAIM_COINS,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
-export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;image?:string;region?:string};
+export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;streakKnown?:boolean;image?:string;region?:string};
 export type Packet={type:'gift';eventId:string;roomId:string;giftId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;streak?:boolean;streakId?:string;repeatEnd?:boolean};
 export type VisualEvent={id:number;action:'extract'|'implant'|'decay'|'heal';targetId:number;targetUserId:string;user:string;before:CoinArena;after:CoinArena};
 export type Receipt={accepted:boolean;duplicate?:boolean;delta:number;message:string;action?:GiftResult['action'];sequence?:number;visuals:VisualEvent[]};
@@ -41,7 +41,7 @@ export class ArenaStore {
  }
  publicGifts(){this.catalog();const mapped=this.mappings();const defaults:Record<string,string>={extract:'Bouquet',implant:'Parfüm',claimBad:'Ghostfire',claimGood:'Warm Cocoa'};return Object.fromEntries((['extract','implant','claimBad','claimGood'] as const).map(action=>{const id=String(mapped.find(m=>m.procedure===action)?.gift_id??'');const gift=this.giftIndex.get(id);return [action,gift&&gift.coins===PROCEDURE_COINS[action]?{name:gift.name,coins:gift.coins,giftId:gift.giftId,verified:true}:{name:defaults[action],coins:PROCEDURE_COINS[action],verified:false}]}))}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
-  if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'))throw Error('Geçersiz katalog');
+  if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'||(g.streakKnown!==undefined&&typeof g.streakKnown!=='boolean')))throw Error('Geçersiz katalog');
   const old=this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(version);
   if(old&&String(old.gifts)!==JSON.stringify(gifts))throw Error('Katalog sürümü farklı içerikle tekrar kullanılamaz');
   this.db.prepare('INSERT INTO catalogs VALUES(?,?,?) ON CONFLICT(version) DO UPDATE SET verified=excluded.verified,gifts=excluded.gifts').run(version,now,JSON.stringify(gifts));
@@ -82,7 +82,7 @@ export class ArenaStore {
    let result=empty('Katalog veya seri doğrulanamadı');const catalog=this.catalog();
    const gift=this.giftIndex.get(p.giftId);
    const count=p.repeatCount??1;
-   const valid=gift&&gift.coins===p.coins&&gift.streak===(p.streak===true)&&Number.isSafeInteger(count)&&count>0&&count<=100000&&(!p.streak||text(p.streakId))&&(!p.streak?count===1:true);
+   const valid=gift&&gift.coins===p.coins&&(gift.streakKnown===false||gift.streak===(p.streak===true))&&Number.isSafeInteger(count)&&count>0&&count<=100000&&(!p.streak||text(p.streakId))&&(!p.streak?count===1:true);
    const created=Number(this.db.prepare('SELECT created FROM rounds WHERE id=?').get(state.roundId)!.created);
    if(valid&&p.timestamp>=created&&p.timestamp<=now+5000&&!state.finishedAt){
     const key=JSON.stringify([p.roomId,p.userId,p.giftId,p.streakId]);
