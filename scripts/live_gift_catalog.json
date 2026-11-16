@@ -1,0 +1,20 @@
+{
+  "source": "User-provided TikTok LIVE gift catalogue in conversation",
+  "status": "partial",
+  "note": "This file contains only the entries that could be verified in the retained working context. It is NOT the complete pasted catalogue. Do not treat it as exhaustive.",
+  "gifts": [
+    {"name":"Bouquet","coins":20,"id":"17473"},
+    {"name":"Mushroom","coins":20,"id":"1354581"},
+    {"name":"No Comment","coins":20,"id":"1473091"},
+    {"name":"Huh?","coins":20,"id":"1473093"},
+    {"name":"Rage Mode","coins":20,"id":"1473095"},
+    {"name":"Tiny Blush","coins":20,"id":"1473096"},
+    {"name":"LOL","coins":20,"id":"1473098"},
+    {"name":"Ghostfire","coins":30,"id":"1429000"},
+    {"name":"Energy Drop","coins":30,"id":"1354583"},
+    {"name":"Capybara","coins":30,"id":"14488"},
+    {"name":"Warm Cocoa","coins":30,"id":"1213441"},
+    {"name":"Bouquet","coins":100,"id":"10994"},
+    {"name":"Bouquet","coins":100,"id":"13913"}
+  ]
+}
