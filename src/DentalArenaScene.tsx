@@ -11,8 +11,8 @@ import {ClinicRoom,PatientActor,Clinician} from './ClinicActors';
 const gold='#d7b773',teal='#80d8cd';
 const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
 const sphere=new THREE.SphereGeometry(1,24,16),rootGeometry=new THREE.ConeGeometry(1,1,16),cariesColor=new THREE.Color('#8c783e');
-type ToothProps={id:number;rank?:number;locked:boolean;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
-function Tooth({id,rank,locked,condition,cue,mini=false,selected=false,onPick}:ToothProps){
+type ToothProps={id:number;rank?:number;username?:string;locked:boolean;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
+function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,onPick}:ToothProps){
  const upper=id<16,slot=upper?id-1:id-17,centered=Math.abs(slot-6.5),angle=(slot-6.5)/6.5*1.12;
  const kind=centered>4.5?'molar':centered>2.5?'premolar':centered>1.5?'canine':'incisor';
  const width=kind==='molar'?.235:kind==='premolar'?.222:kind==='canine'?.208:.20,height=kind==='molar'?.28:kind==='premolar'?.31:kind==='canine'?.37:.35;
@@ -44,6 +44,7 @@ function Tooth({id,rank,locked,condition,cue,mini=false,selected=false,onPick}:T
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
+   {username&&<Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.02]} fontSize={.095} maxWidth={.94} color="#f2f7f8" anchorX="center" outlineWidth={.012} outlineColor="#142a38">@{username.replace(/^@+/,"").slice(0,10)}</Text>}
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
@@ -55,7 +56,7 @@ function DentalModel({state,now,cue,mini=false,selected,onPick}:{state:CoinArena
   <mesh geometry={sphere} dispose={null} scale={[3.70,1.44,.22]} position={[0,0,.20]}><meshStandardMaterial color="#a9747e" roughness={.58}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[3.45,1.09,.16]} position={[0,0,.38]}><meshStandardMaterial color="#4a2c35" roughness={.82}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[1.55,.20,.10]} position={[0,-.28,.59]}><meshStandardMaterial color="#8a535e" roughness={.68}/></mesh>
- </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} locked={!!p&&isLocked(p,now)} condition={p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
+ </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} username={p?.username} locked={!!p&&isLocked(p,now)} condition={p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
 }
 function OpticalInstrument({cue}:{cue?:AnimationCue}){
  const root=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0),pos=useMemo(()=>new THREE.Vector3(),[]);
