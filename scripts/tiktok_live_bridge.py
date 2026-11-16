@@ -11,7 +11,7 @@ import random
 import sys
 import time
 import urllib.request
-from tiktok_adapter import normalize_event,normalize_catalog,merge_catalogs,Outbox,validate_username
+from tiktok_adapter import normalize_event,normalize_engagement,normalize_catalog,merge_catalogs,Outbox,validate_username
 
 async def main():
     if len(sys.argv)!=2:raise SystemExit('TikTok kullanıcı adı gerekli; bağlantı başlatılmadı')
@@ -21,7 +21,7 @@ async def main():
     if not token:raise SystemExit('ARENA_BRIDGE_TOKEN gerekli; bağlantı başlatılmadı')
     # Validate before importing/initializing any provider client.
     from TikTokLive import TikTokLiveClient
-    from TikTokLive.events import ConnectEvent,DisconnectEvent,GiftEvent,LiveEndEvent
+    from TikTokLive.events import ConnectEvent,DisconnectEvent,GiftEvent,LiveEndEvent,FollowEvent,LikeEvent
     from importlib.metadata import version
     print('TikTokLive version:',version('TikTokLive'),flush=True)
     directory=Path(os.environ.get('ARENA_DATA_DIR','data'));directory.mkdir(parents=True,exist_ok=True)
@@ -50,7 +50,7 @@ async def main():
         while True:
             try:
                 for key,payload in outbox.pending():
-                    result=await post('gift',payload)
+                    result=await post('engagement' if payload.get('type') in ('follow','like') else 'gift',payload)
                     # 200 means it was committed or safely quarantined in the server.
                     if not result.get('accepted') and not result.get('duplicate'):
                         print('QUARANTINED:',result.get('message'),flush=True)
@@ -109,6 +109,23 @@ async def main():
                     outbox.reject(exc,str(event),now);await status('live-connected',str(exc))
                 except RuntimeError as exc:
                     outbox.reject(exc,str(event),now);await status('queue-full',str(exc));await client.disconnect()
+
+            async def queue_engagement(event,kind):
+                now=int(time.time()*1000)
+                await catalog_ready.wait()
+                try:
+                    payload=normalize_engagement(event,client.room_id,now,kind)
+                    outbox.put(payload)
+                except ValueError as exc:
+                    outbox.reject(exc,str(event),now);await status('live-connected',str(exc))
+                except RuntimeError as exc:
+                    outbox.reject(exc,str(event),now);await status('queue-full',str(exc));await client.disconnect()
+            @client.on(FollowEvent)
+            async def on_follow(event):
+                await queue_engagement(event,'follow')
+            @client.on(LikeEvent)
+            async def on_like(event):
+                await queue_engagement(event,'like')
             try:
                 await status('connecting')
                 await client.connect(fetch_gift_info=False)
