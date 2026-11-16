@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {ranked,isLocked,type Procedure} from '../src/coinArena';
 import {ArenaStore,type Receipt} from './store';
 const names=['Ahmet','Zeynep','Mehmet','Elif','Veli','Ali','Hasan','Cem','Deniz','Eren','Mert','Aslı','Ece','Kerem','Buse','Selin','Emre','Derya','Ayşe','Can','Ozan','İrem','Berk','Seda','Mina','Efe','Yusuf','Ada'];
-const gifts=[{giftId:'demo-rose',name:'Demo Gül',coins:1,streak:true},{giftId:'demo-extract',name:'Demo Çay',coins:50,streak:false},{giftId:'demo-implant',name:'Demo İmplant',coins:20,streak:false},{giftId:'demo-decay',name:'Demo Çürütme',coins:10,streak:false},{giftId:'demo-heal',name:'Demo İyileştirme',coins:10,streak:false}];
+const gifts=[{giftId:'demo-rose',name:'Demo Gül',coins:1,streak:true},{giftId:'demo-extract',name:'Demo Bouquet',coins:20,streak:false},{giftId:'demo-implant',name:'Demo İmplant',coins:20,streak:false},{giftId:'demo-decay',name:'Demo Çürütme',coins:10,streak:false},{giftId:'demo-heal',name:'Demo İyileştirme',coins:10,streak:false}];
 export function runDemo(store:ArenaStore,body:{action:string;userId?:string;autoTarget?:boolean},now=Date.now()):Receipt|undefined {
  if(!['populate','extract','implant','decay','heal','rose1000','burst','finish'].includes(body.action))throw Error('Geçersiz demo işlemi');
  store.setCatalog(gifts,'demo-only',now);for(const proc of ['extract','implant','decay','heal'] as Procedure[])store.mapGift('demo-'+proc,proc);
