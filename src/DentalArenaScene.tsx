@@ -44,8 +44,8 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
-   <mesh position={[0,upper?1.19:-1.19,.005]}><circleGeometry args={[.255,32]}/><meshBasicMaterial color={hp<=30?'#642d38':hp<=60?'#59472c':'#17433f'} transparent opacity={.96}/></mesh>
-   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.035]} fontSize={.145} color={hp<=30?'#fff0f0':hp<=60?'#fff0c8':'#e4fff8'} anchorX="center" anchorY="middle" outlineWidth={.009} outlineColor="#101820">{hp} HP</Text>
+   <mesh position={[0,upper?.35:-1.12,.025]}><circleGeometry args={[.205,32]}/><meshBasicMaterial color={hp<=30?'#642d38':hp<=60?'#59472c':'#17433f'} transparent opacity={.98}/></mesh>
+   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.35:-1.12,.055]} fontSize={.165} color={hp<=30?'#fff0f0':hp<=60?'#fff0c8':'#e4fff8'} anchorX="center" anchorY="middle" outlineWidth={.012} outlineColor="#101820">{hp} HP</Text>
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
@@ -100,7 +100,6 @@ export function DentalArenaScene({state,now,cue,quality='high',onFps=()=>{}}:{st
  return <div className={'dental-3d-stage clinic-edition '+(cue?'is-treating':'')}>
   <SceneBoundary><React.Suspense fallback={<div className="scene-fallback"><strong>Klinik hazırlanıyor…</strong></div>}><Scene state={state} now={now} cue={cue} quality={quality} onFps={onFps} selected={chosen} onPick={setSelected}/></React.Suspense></SceneBoundary>
   <div className="clinic-edition-label"><span/>DENTAL STUDIO <small>CANLI ARENA</small></div>
-  <div className="optical-label">AĞIZ YAKIN PLANI <span>28 DİŞ · DOKUN</span></div>
   {!cue&&<div className="dental-focus-card" data-testid="tooth-inspector"><span>DİŞ {toothLabel(chosen)}</span><b>{owner?.username??'Katılımcı bekleniyor'}</b><strong>{owner?owner.coins.toLocaleString('tr-TR')+' JETON':'Dişe dokun, oyuncuyu gör'}</strong></div>}
   {cue&&<div className={'dental-action-banner '+(['extract','decay'].includes(cue.action)?'danger':'success')}>{ACTION_LABELS[cue.action]}<small>@{cue.user}</small></div>}
  </div>;
