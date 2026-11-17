@@ -77,7 +77,7 @@ export class ArenaStore {
    if(state.finishedAt||p.timestamp<created||p.timestamp>now+5000){const result=empty(state.finishedAt?'Tur sona erdi':'Etkileşim zamanı geçersiz');this.db.prepare('INSERT INTO events(id,round_id,received,raw,result) VALUES(?,?,?,?,?)').run(identity,state.roundId,now,JSON.stringify(p),JSON.stringify(result));this.db.exec('COMMIT');return result;}
    let result:Receipt={accepted:true,delta:0,message:'',visuals:[]};
    if(p.type==='comment'){
-    const match=p.comment!.trim().match(/^(\\d{1,2})$/),tooth=match?Number(match[1]):0;
+    const match=p.comment!.trim().match(/^(\d{1,2})$/),tooth=match?Number(match[1]):0;
     if(!POSITIONS.includes(tooth))result=empty('Yorumuna 1–30 arasındaki geçerli diş numarasını tek başına yaz');
     else{this.db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('comment-target:'+state.roundId+':'+p.userId,String(tooth));result.message='Diş '+tooth+' hedef olarak kaydedildi';}
    }else{
