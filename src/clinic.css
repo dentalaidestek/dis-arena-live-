@@ -66,3 +66,28 @@
 
 /* Visible guide and verified gift map */
 .broadcast-guide{display:flex;flex-direction:column;gap:.45cqh;overflow:hidden}.broadcast-guide h2{flex:0 0 auto}.guide-score{flex:0 0 auto;margin:0}.guide-rules{display:grid;grid-template-columns:1fr 1fr;gap:.35cqh 1.3cqw;flex:0 0 auto}.guide-rules p{font-size:1.75cqw;line-height:1.22;margin:0}.guide-gifts{display:grid;grid-template-columns:1fr 1fr;gap:.45cqh 1.2cqw;min-height:0;flex:1}.guide-gift{display:flex;align-items:center;gap:1cqw;min-width:0;padding:.3cqh .8cqw;border-radius:.8cqw;background:#ffffff09}.guide-gift img{width:4.5cqw;height:4.5cqw;object-fit:contain;flex-shrink:0}.guide-gift span{display:flex;flex-direction:column;min-width:0}.guide-gift b{font-size:1.75cqw;line-height:1.15;color:#e3ecec}.guide-gift small{font-size:1.45cqw;line-height:1.15;color:#93b4b9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+
+/* New HP arena hierarchy: make the clinic stage the visual focus and surface both doctors. */
+.broadcast-shell{grid-template-rows:13fr 57fr 12fr 18fr}
+.broadcast-leaders.doctor-leaders{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2cqw}
+.leader-doctor{display:flex;align-items:center;gap:1.1cqw;min-width:0}
+.leader-doctor>span{font-size:3.1cqw;flex:0 0 auto;color:#d2b77a}
+.leader-doctor img{width:4.8cqw;height:4.8cqw;object-fit:contain;flex:0 0 auto}
+.leader-doctor>div{min-width:0;display:flex;flex-direction:column;gap:.12cqh}
+.leader-doctor b{font-size:1.7cqw!important;line-height:1.1;color:#c8d9d8;white-space:normal}
+.leader-doctor strong{font-size:2.5cqw!important;line-height:1.1;color:#f0e8d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leader-doctor em{font-size:1.6cqw;color:#9fc7c0}
+.leader-bad{border-color:#b9798a70;background:linear-gradient(120deg,#3a2936,#172b38)}
+.leader-good{border-color:#80c4b970;background:linear-gradient(120deg,#173b3c,#172b38)}
+.broadcast-guide h2{font-size:3.1cqw;color:#e1f0ec;text-shadow:0 1px 0 #0008}
+.guide-score{font-size:2.55cqw;color:#e0eceb;font-weight:750}
+.guide-score b{font-size:2.2cqw;color:#f0d89a}
+.guide-rules{gap:.55cqh 1.6cqw}
+.guide-rules p{font-size:2.05cqw;line-height:1.35;color:#d0e0df;text-shadow:0 1px 0 #0005}
+.guide-rules p b{color:#fff0c7;font-weight:850}
+.guide-gift{background:#ffffff10;border:1px solid #a9c7c51c}
+.guide-gift img{width:5cqw;height:5cqw}
+.guide-gift b{font-size:1.95cqw;color:#f1f5ee}
+.guide-gift small{font-size:1.65cqw;color:#bdd2d2}
+@media(max-width:520px){.guide-rules p{font-size:2.2cqw}.leader-doctor b{font-size:1.8cqw!important}.leader-doctor strong{font-size:2.6cqw!important}}
