@@ -2,7 +2,7 @@ import React,{useMemo,useRef,useState} from 'react';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {RoundedBox,Text} from '@react-three/drei';
 import * as THREE from 'three';
-import {POSITIONS,ranked,hpOf,TOOTH_MAX_HP,type CoinArena} from './coinArena';
+import {POSITIONS,ranked,toothStatesOf,TOOTH_MAX_HP,type CoinArena} from './coinArena';
 import type {AnimationCue} from './ActionAnimation';
 import {MOUTH_VIEWS,sceneToothPosition,procedurePhase} from './procedureMotion';
 import {createCrownGeometry} from './toothGeometry';
@@ -51,12 +51,12 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
  </group>;
 }
 function DentalModel({state,now,cue,mini=false,selected,onPick}:{state:CoinArena;now:number;cue?:AnimationCue;mini?:boolean;selected?:number;onPick?:(id:number)=>void}){
- const people=ranked(state),owners=new Map(people.slice(0,28).map((p,i)=>[p.toothId??POSITIONS[i],{...p,rank:i,hp:hpOf(p)}]));
+ const people=ranked(state),owners=new Map(people.slice(0,28).map((p,i)=>[p.toothId??POSITIONS[i],{...p,rank:i}])),teeth=new Map(toothStatesOf(state).map(t=>[t.toothId,t]));
  return <>{!mini&&<>
   <mesh geometry={sphere} dispose={null} scale={[3.70,1.44,.22]} position={[0,0,.20]}><meshStandardMaterial color="#a9747e" roughness={.58}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[3.45,1.09,.16]} position={[0,0,.38]}><meshStandardMaterial color="#4a2c35" roughness={.82}/></mesh>
   <mesh geometry={sphere} dispose={null} scale={[1.55,.20,.10]} position={[0,-.28,.59]}><meshStandardMaterial color="#8a535e" roughness={.68}/></mesh>
- </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} hp={p?.hp??100} condition={p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
+ </>}{POSITIONS.map(id=>{const p=owners.get(id);return <Tooth key={id} id={id} rank={p?.rank} hp={teeth.get(id)?.hp??100} condition={teeth.get(id)?.condition??p?.condition} cue={cue} mini={mini} selected={id===selected} onPick={onPick}/>})}</>;
 }
 function OpticalInstrument({cue}:{cue?:AnimationCue}){
  const root=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0),pos=useMemo(()=>new THREE.Vector3(),[]);
