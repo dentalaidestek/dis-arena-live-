@@ -14,8 +14,8 @@ export function runDemo(store:ArenaStore,body:{action:string;userId?:string;auto
   if(!players.length||store.state().finishedAt)throw Error('Önce 28 oyunculu demo başlatın');
   if(body.action==='implant'||body.action==='heal'){
    const condition=body.action==='implant'?'extracted':'decayed';const target=players.find(p=>isLocked(p,now)&&p.condition===condition);
-   if(!target)throw Error(body.action==='implant'?'Önce çekim yapın; ardından implantı deneyin':'Önce çürütme yapın; ardından iyileştirmeyi deneyin');
-   userId=target.userId;
+   if(target)userId=target.userId;
+   else if(!body.userId)throw Error(body.action==='implant'?'Önce çekim yapın; ardından implantı deneyin':'Önce çürütme yapın; ardından iyileştirmeyi deneyin');
   }else userId=players.find((p,i)=>i>0&&!isLocked(p,now)&&!isLocked(players[i-1],now))?.userId??players.find(p=>!isLocked(p,now))!.userId;
  }
  let result:Receipt|undefined;
