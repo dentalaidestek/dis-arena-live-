@@ -44,8 +44,8 @@ function awardDoctor(state:CoinArena,side:'bad'|'good',gift:Gift):CoinArena{
  if(leader)doctors[side]={userId:leader.userId,username:leader.username,claimedAt:leader.updatedAt,giftName:leader.giftName,giftImage:leader.giftImage,giftCoins:leader.giftCoins,points:leader[key]};
  return {...state,doctorScores:scores,doctors};
 }
-function weakest(state:CoinArena){return toothStatesOf(state).filter(alive).sort((a,b)=>a.hp-b.hp||POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
-function extracted(state:CoinArena){return toothStatesOf(state).filter(t=>!alive(t)).sort((a,b)=>POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
+function weakest(state:CoinArena){return (state.teeth??toothStatesOf(state)).filter(alive).sort((a,b)=>a.hp-b.hp||POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
+function extracted(state:CoinArena){return (state.teeth??toothStatesOf(state)).filter(t=>!alive(t)).sort((a,b)=>POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
 export function finishRound(state:CoinArena,now:number):CoinArena {
  if(state.finishedAt)return state;
  const allTeethGone=toothStatesOf(state).every(t=>!alive(t));
