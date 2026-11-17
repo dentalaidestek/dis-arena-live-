@@ -22,7 +22,7 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
   if(affected&&cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=affected&&cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,work=procedurePhase(t).work;
   const extracting=affected&&cue?.action==='extract',implanting=affected&&cue?.action==='implant';
-  const damageRatio=1-hp/TOOTH_MAX_HP;const disease=affected&&cue?.action==='decay'?Math.min(1,Math.pow(Math.max(0,damageRatio+work*.18),.72)):affected&&cue?.action==='heal'?Math.pow(damageRatio,.72)*(1-work):condition==='decayed'?Math.pow(damageRatio,.72):0;
+  const damageRatio=1-hp/TOOTH_MAX_HP;const disease=affected&&cue?.action==='decay'?Math.min(1,Math.sqrt(Math.max(0,damageRatio+work*.2))):affected&&cue?.action==='heal'?Math.sqrt(damageRatio)*(1-work):condition==='decayed'?Math.sqrt(damageRatio):0;
   if(enamel.current)enamel.current.color.set('#f0e9dc').lerp(cariesColor,Math.min(.98,disease*.98));
   if(lesion.current){lesion.current.visible=disease>.035;lesion.current.scale.set(width*.88*disease,.19*disease,.035);}
   if(healing.current){healing.current.visible=affected&&cue?.action==='heal'&&t>.2&&t<.9;healing.current.rotation.z+=delta*1.7;}
