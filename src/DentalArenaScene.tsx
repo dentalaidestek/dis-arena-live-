@@ -39,7 +39,6 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
    <mesh ref={lesion} visible={false} geometry={sphere} dispose={null} position={[0,upper?-.08:.08,.24]}><meshStandardMaterial color="#493322" roughness={.98}/></mesh>
    {!mini&&<mesh ref={healing} visible={false} position={[0,0,.35]}><torusGeometry args={[.28,.018,8,32]}/><meshBasicMaterial color={teal}/></mesh>}
   </group>
-  {condition==='extracted'&&!affected&&<mesh geometry={sphere} dispose={null} position={[0,.04,.0]} scale={[width*.8,.18,.08]}><meshStandardMaterial color="#663740" roughness={.8}/></mesh>}
   <group ref={screw} visible={false} position={[0,0,.11]}><mesh><cylinderGeometry args={[.07,.065,.38,16]}/><meshStandardMaterial color="#a9bcc3" metalness={.9} roughness={.28}/></mesh>{[-.14,-.07,0,.07,.14].map(v=><mesh key={v} position={[0,v,0]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.075,.01,6,16]}/><meshStandardMaterial color="#d3dfe0" metalness={.8} roughness={.25}/></mesh>)}</group>
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
