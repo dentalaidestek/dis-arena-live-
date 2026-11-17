@@ -97,6 +97,7 @@ export class ArenaStore {
       this.db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,String(total%100));
      }
      for(let i=0;i<hits;i++){
+      if(state.finishedAt)break;
       const before=state,r=applyToothDamage(state,target,ENGAGEMENT_DAMAGE,now);
       if(!r.accepted){result.message=r.message;break;}
       state=r.state;result.delta++;result.action=r.action;result.message=r.message;
