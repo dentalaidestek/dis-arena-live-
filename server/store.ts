@@ -146,14 +146,16 @@ export class ArenaStore {
     else if(!Number.isSafeInteger(delta*p.coins))result=empty('Jeton taşması');
     else {
      result={accepted:true,delta,message:delta?'İşlendi':'Eski veya tekrarlı seri güncellemesi',visuals:[]};
-     const loops=procedure==='score'||procedure==='claimBad'||procedure==='claimGood'?(delta?1:0):delta;
+     const loops=procedure==='score'||procedure==='claimBad'||procedure==='claimGood'?(delta?1:0):delta;let processed=0;
      for(let i=0;i<loops;i++){
+      if(state.finishedAt)break;
       const pre=state;
       const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:displayName,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure,giftImage:gift.image??''});
       if(!r.accepted){result=empty(r.message);break;}
-      state={...r.state,processedIds:[]};result.message=r.message;result.action=r.action;
+      state={...r.state,processedIds:[]};processed++;result.message=r.message;result.action=r.action;
       if(['extract','implant','decay','heal'].includes(r.action)&&r.targetId!==null)result.visuals.push({id:0,action:r.action as VisualEvent['action'],targetId:r.targetId,...(r.targetUserId?{targetUserId:r.targetUserId}:{}),user:p.username,before:pre,after:state});
      }
+     if(result.accepted&&procedure!=='score'&&procedure!=='claimBad'&&procedure!=='claimGood')result.delta=processed;
      if(result.accepted&&p.streak)this.db.prepare('INSERT INTO streaks VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET count=MAX(count,excluded.count)').run(key,count,p.coins);
     }
    }else if(state.finishedAt)result=empty('Tur sona erdi');
