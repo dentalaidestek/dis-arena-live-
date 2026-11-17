@@ -1,10 +1,10 @@
 import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,createHash} from 'node:crypto';
-import {applyGift,applyToothDamage,finishRound,newCoinArena,ranked,POSITIONS,ENGAGEMENT_DAMAGE,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
+import {applyGift,applyToothDamage,finishRound,newCoinArena,ranked,POSITIONS,toothStatesOf,ENGAGEMENT_DAMAGE,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
 export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;streakKnown?:boolean;image?:string;region?:string};
 export type Packet={type:'gift';eventId:string;roomId:string;giftId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;streak?:boolean;streakId?:string;repeatEnd?:boolean};
 export type EngagementPacket={type:'comment'|'follow'|'like';eventId:string;roomId:string;userId:string;username:string;timestamp:number;count?:number;comment?:string};
-export type VisualEvent={id:number;action:'extract'|'implant'|'decay'|'heal';targetId:number;targetUserId:string;user:string;before:CoinArena;after:CoinArena};
+export type VisualEvent={id:number;action:'extract'|'implant'|'decay'|'heal';targetId:number;targetUserId?:string;user:string;before:CoinArena;after:CoinArena};
 export type Receipt={accepted:boolean;duplicate?:boolean;delta:number;message:string;action?:GiftResult['action'];sequence?:number;visuals:VisualEvent[]};
 const parse=<T>(v:unknown):T=>JSON.parse(String(v));
 const text=(v:unknown,max=128):v is string=>typeof v==='string'&&v.length>0&&v.length<=max;
@@ -24,7 +24,7 @@ export class ArenaStore {
   this.db.exec("DELETE FROM mappings WHERE procedure IN ('decay','heal','claimBad','claimGood') OR NOT EXISTS (SELECT 1 FROM settings WHERE key='mapping-name:'||mappings.procedure)");
   if(!this.db.prepare('SELECT id FROM rounds LIMIT 1').get())this.newRound(now);
  }
- state():CoinArena{const s=parse<CoinArena>(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state);let changed=false;const used=new Set<number>();for(const p of ranked(s)){if(!Number.isInteger(p.hp)){p.hp=100;changed=true;}if(Number.isInteger(p.toothId)&&POSITIONS.includes(p.toothId!)){used.add(p.toothId!);continue;}const id=POSITIONS.find(x=>!used.has(x));if(id!==undefined){p.toothId=id;used.add(id);changed=true;}}if(!Array.isArray(s.doctorScores)){s.doctorScores=[];s.doctors={};changed=true;}if(!Number.isSafeInteger(s.badPausedUntil)){s.badPausedUntil=0;changed=true;}if(changed)this.save(s);return s}
+ state():CoinArena{const s=parse<CoinArena>(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state);let changed=false;const used=new Set<number>();for(const p of ranked(s)){if(!Number.isInteger(p.hp)){p.hp=100;changed=true;}if(Number.isInteger(p.toothId)&&POSITIONS.includes(p.toothId!)){used.add(p.toothId!);continue;}const id=POSITIONS.find(x=>!used.has(x));if(id!==undefined){p.toothId=id;used.add(id);changed=true;}}const teeth=toothStatesOf(s);if(JSON.stringify(s.teeth??[])!==JSON.stringify(teeth)){s.teeth=teeth;changed=true;}if(!Array.isArray(s.doctorScores)){s.doctorScores=[];s.doctors={};changed=true;}if(!Number.isSafeInteger(s.badPausedUntil)){s.badPausedUntil=0;changed=true;}if(changed)this.save(s);return s}
  private save(s:CoinArena){this.db.prepare('UPDATE rounds SET state=? WHERE id=?').run(JSON.stringify(s),s.roundId)}
  tick(now=Date.now()){const s=this.state(),next=finishRound(s,now);if(next!==s)this.save(next);return next}
  newRound(now=Date.now()){
@@ -101,7 +101,7 @@ export class ArenaStore {
       const before=state,r=applyToothDamage(state,target,ENGAGEMENT_DAMAGE,now);
       if(!r.accepted){result.message=r.message;break;}
       state=r.state;result.delta++;result.action=r.action;result.message=r.message;
-      if(r.targetId!==null&&r.targetUserId)result.visuals.push({id:0,action:r.action==='extract'?'extract':'decay',targetId:r.targetId,targetUserId:r.targetUserId,user:p.username,before,after:state});
+      if(r.targetId!==null)result.visuals.push({id:0,action:r.action==='extract'?'extract':'decay',targetId:r.targetId,...(r.targetUserId?{targetUserId:r.targetUserId}:{}),user:p.username,before,after:state});
      }
      if(!hits&&!result.message)result.message=p.type==='like'?'100 beğeniye kalan ilerleme kaydedildi':'Takip işlendi';
     }
@@ -152,7 +152,7 @@ export class ArenaStore {
       const r:GiftResult=applyGift({...state,processedIds:[]},{eventId:p.eventId+':'+i,userId:p.userId,username:p.username,giftName:displayName,coins:procedure==='score'?delta*p.coins:p.coins,timestamp:now,procedure,giftImage:gift.image??''});
       if(!r.accepted){result=empty(r.message);break;}
       state={...r.state,processedIds:[]};result.message=r.message;result.action=r.action;
-      if(['extract','implant','decay','heal'].includes(r.action)&&r.targetId!==null)result.visuals.push({id:0,action:r.action as VisualEvent['action'],targetId:r.targetId,targetUserId:r.targetUserId!,user:p.username,before:pre,after:state});
+      if(['extract','implant','decay','heal'].includes(r.action)&&r.targetId!==null)result.visuals.push({id:0,action:r.action as VisualEvent['action'],targetId:r.targetId,...(r.targetUserId?{targetUserId:r.targetUserId}:{}),user:p.username,before:pre,after:state});
      }
      if(result.accepted&&p.streak)this.db.prepare('INSERT INTO streaks VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET count=MAX(count,excluded.count)').run(key,count,p.coins);
     }
