@@ -10,7 +10,7 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  useEffect(()=>{const id=players[0]?.userId??'';if(previousLeader.current&&id&&id!==previousLeader.current)setLeaderNotice(players[0].username);previousLeader.current=id;const timer=setTimeout(()=>setLeaderNotice(''),2500);return()=>clearTimeout(timer)},[players[0]?.userId]);
  const remaining=state.finishedAt?0:state.startedAt?timeLeft(state,now):ROUND_MS;
  const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
- const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId,user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
+ const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId??'unowned',user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
  // Render the latest authoritative mouth state while animations play. Replacing the whole
  // scene with active.before replayed stale 28-tooth snapshots and caused teeth to flash.
  const scene:CoinArena=state;
