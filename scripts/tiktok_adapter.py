@@ -40,20 +40,20 @@ def normalize_event(event,room_id,received_at,catalog_by_id=None):
             'repeatEnd':bool(getattr(event,'repeat_end',False)),'timestamp':timestamp,'receivedAt':received_at}
 
 def normalize_engagement(event,room_id,received_at,kind):
-    """Normalize FollowEvent / LikeEvent into an idempotent tooth-claim packet."""
+    """Normalize comment, follow and like events into idempotent tooth-target packets."""
     common=getattr(event,'common',None)
     user=getattr(event,'user',None)
     msg_id=getattr(common,'msg_id',0) or getattr(event,'msg_id',0)
     user_id=getattr(user,'user_id',0) or getattr(user,'id',0)
     if kind not in ('comment','follow','like') or not msg_id or not user_id or not room_id:
-        raise ValueError('Takip/beğeni olayında oda, olay veya kullanıcı kimliği eksik')
+        raise ValueError('Yorum/takip/beğeni olayında oda, olay veya kullanıcı kimliği eksik')
     count=1
     if kind=='comment':
         comment=getattr(event,'comment',None) or getattr(event,'comment_text',None) or ''
         if not isinstance(comment,str) or not comment.strip() or len(comment)>500:
             raise ValueError('Yorum metni geçersiz')
     if kind=='like':
-        count=getattr(event,'like_count',0)
+        count=getattr(event,'count',0) or getattr(event,'like_count',0)
         if type(count) is not int or not 1<=count<=10000:
             raise ValueError('Beğeni adedi geçersiz')
     provider_time=getattr(common,'create_time',0)
