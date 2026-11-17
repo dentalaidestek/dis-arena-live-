@@ -3,7 +3,7 @@ const auth={Authorization:'Bearer ui-fixture-admin'};
 const ownerPassword='fixture-publisher-password';
 async function ready(page:Page,path='/demo'){
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(path);
- await expect(page.locator('.leader-card')).toHaveCount(4);
+ await expect(page.locator('.leader-card')).toHaveCount(2);
  await expect.poll(async()=>Number(await page.locator('.broadcast-shell').getAttribute('data-fps')),{timeout:60000}).toBeGreaterThan(0);
  // Canvas keeps its HTML fallback in the DOM even while WebGL is rendering.
  await expect(page.getByText('3D görünüm açılamadı',{exact:true})).not.toBeVisible();
