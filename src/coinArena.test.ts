@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{newCoinArena,applyGift,applyToothDamage,ranked,toothOf,POSITIONS,TOOTH_MAX_HP,DECAY_DAMAGE,ENGAGEMENT_DAMAGE}from'./coinArena';
+import{newCoinArena,applyGift,applyToothDamage,ranked,toothOf,POSITIONS,TOOTH_MAX_HP,ENGAGEMENT_DAMAGE}from'./coinArena';
 const start=1_000_000;
 const gift=(eventId:string,userId:string,coins:number,procedure?:'extract'|'implant'|'decay'|'heal',timestamp=start+1000)=>({eventId,userId,username:userId,giftName:procedure??'Normal',coins,timestamp,...(procedure?{procedure}:{})});
 function players(hps:number[]){const s=newCoinArena(start);s.players=hps.map((hp,i)=>({userId:'u'+i,username:'u'+i,coins:100-i,joinedAt:start+i,lockedUntil:0,toothId:POSITIONS[i],hp,...(hp===0?{condition:'extracted' as const}:{})}));return s;}
@@ -12,7 +12,7 @@ test('comment-driven damage applies 30 HP and extracts at zero',()=>{let s=playe
 test('the arena ends only when all 28 teeth are extracted',()=>{const s=players([30]);s.teeth=s.teeth!.map(t=>t.toothId===POSITIONS[0]?t:{...t,hp:0,condition:'extracted'});const r=applyToothDamage(s,POSITIONS[0],ENGAGEMENT_DAMAGE,start+1000);assert.ok(r.state.finishedAt);});
 test('tooth identity does not change when leaderboard ranking changes',()=>{let s=players([100,100]);const a=toothOf(s,'u0'),b=toothOf(s,'u1');s=applyGift(s,gift('score','u1',1000)).state;assert.equal(toothOf(s,'u0'),a);assert.equal(toothOf(s,'u1'),b);assert.equal(ranked(s)[0].userId,'u1');});
 test('unmapped gifts score normally and duplicate gift IDs are rejected',()=>{let s=newCoinArena(start);const g=gift('score','a',5);s=applyGift(s,g).state;assert.equal(s.players[0].coins,5);assert.equal(applyGift(s,g).accepted,false);});
-test('doctor leader is based on cumulative relevant treatment gifts',()=>{let s=players([100,100]);s=applyGift(s,gift('d1','bad-a',1,'decay')).state;s=applyGift(s,gift('d2','bad-b',1,'extract',start+2000)).state;assert.equal(s.doctors.bad?.username,'bad-b');s=applyGift(s,gift('d3','bad-a',1,'decay',start+3000)).state;assert.equal(s.doctors.bad?.username,'bad-a');});
+test('doctor leader is based on cumulative relevant treatment gifts',()=>{let s=players([100,100]);s=applyGift(s,gift('d1','bad-a',1,'decay')).state;s=applyGift(s,gift('d2','bad-b',20,'extract',start+2000)).state;s=applyGift(s,gift('d2b','bad-b',20,'extract',start+2500)).state;assert.equal(s.doctors.bad?.username,'bad-b');s=applyGift(s,gift('d3','bad-a',1,'decay',start+3000)).state;assert.equal(s.doctors.bad?.username,'bad-a');});
 
 test('every numbered tooth can take damage before a participant owns it',()=>{const s=newCoinArena(start);const r=applyToothDamage(s,11,ENGAGEMENT_DAMAGE,start+1000);assert.equal(r.accepted,true);assert.equal(r.targetId,11);assert.equal(r.targetUserId,undefined);assert.equal(r.state.teeth?.find(t=>t.toothId===11)?.hp,70);});
 
