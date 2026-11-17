@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {applyGift,newCoinArena,toothOf,type Gift,type Procedure} from './coinArena';
+import {applyGift,newCoinArena,toothOf,POSITIONS,type Gift,type Procedure} from './coinArena';
 const t=1_000_000;
 const gift=(id:string,user:string,coins:number,procedure?:Procedure,time=t+1000):Gift=>({eventId:id,userId:user,username:user,coins,giftName:procedure??'Verified gift',timestamp:time,...(procedure?{procedure}:{})});
 function seed(){let s=newCoinArena(t);s=applyGift(s,gift('a','a',100)).state;s=applyGift(s,gift('b','b',90)).state;return s;}
