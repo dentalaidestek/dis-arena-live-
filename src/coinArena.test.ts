@@ -41,3 +41,12 @@ test('extraction applies a 60-second lock; only implant unlocks the extracted ow
  const restored=applyGift(s,gift('implant-unlocks-owner','u0',20,'implant',start+4000));
  assert.equal(restored.accepted,true);assert.equal(restored.targetId,POSITIONS[0]);assert.equal(restored.state.players[0].hp,100);assert.equal(restored.state.players[0].lockedUntil,0);assert.equal(restored.state.players[0].lockReason,undefined);
 });
+
+test('a tooth under an active decay lock cannot receive a second attack or have its timer extended',()=>{
+ let s=players([100,45,70]);const id=POSITIONS[1];
+ s=applyGift(s,gift('lock-target','attacker',1,'decay')).state;
+ const owner=s.players.find(p=>p.toothId===id)!;const until=owner.lockedUntil;const hp=owner.hp;
+ const social=applyToothDamage(s,id,ENGAGEMENT_DAMAGE,start+2000);assert.equal(social.accepted,false);assert.equal(toothStatesOf(social.state).find(t=>t.toothId===id)?.hp,hp);
+ const second=applyGift(s,gift('second-decay','attacker-two',1,'decay',start+3000));
+ assert.notEqual(second.targetId,id);assert.equal(second.state.players.find(p=>p.toothId===id)?.lockedUntil,until);
+});
