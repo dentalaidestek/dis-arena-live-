@@ -1,9 +1,9 @@
 import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,createHash} from 'node:crypto';
-import {applyGift,finishRound,newCoinArena,ranked,POSITIONS,DOCTOR_CLAIM_COINS,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
+import {applyGift,applyToothDamage,finishRound,newCoinArena,ranked,POSITIONS,ENGAGEMENT_DAMAGE,PROCEDURE_COINS,type CoinArena,type Procedure,type GiftResult} from '../src/coinArena';
 export type CatalogGift={giftId:string;name:string;coins:number;streak:boolean;streakKnown?:boolean;image?:string;region?:string};
 export type Packet={type:'gift';eventId:string;roomId:string;giftId:string;userId:string;username:string;giftName:string;coins:number;timestamp:number;repeatCount?:number;streak?:boolean;streakId?:string;repeatEnd?:boolean};
-export type EngagementPacket={type:'follow'|'like';eventId:string;roomId:string;userId:string;username:string;timestamp:number;count?:number};
+export type EngagementPacket={type:'comment'|'follow'|'like';eventId:string;roomId:string;userId:string;username:string;timestamp:number;count?:number;comment?:string};
 export type VisualEvent={id:number;action:'extract'|'implant'|'decay'|'heal';targetId:number;targetUserId:string;user:string;before:CoinArena;after:CoinArena};
 export type Receipt={accepted:boolean;duplicate?:boolean;delta:number;message:string;action?:GiftResult['action'];sequence?:number;visuals:VisualEvent[]};
 const parse=<T>(v:unknown):T=>JSON.parse(String(v));
@@ -41,7 +41,7 @@ export class ArenaStore {
   const gifts=parse<CatalogGift[]>(this.db.prepare('SELECT gifts FROM catalogs WHERE version=?').get(String(r.version))!.gifts);
   this.giftIndex=new Map(gifts.map(g=>[g.giftId,g]));return this.cachedCatalog={version:String(r.version),verified:Number(r.verified),gifts};
  }
- publicGifts(){this.catalog();const mapped=this.mappings();const actions=['extract','implant','decay','heal','claimBad','claimGood'] as const;return Object.fromEntries(actions.map(action=>{const mapping=mapped.find(m=>m.procedure===action);const gift=this.giftIndex.get(String(mapping?.gift_id??''));return [action,gift&&mapping?.display_name&&gift.coins===PROCEDURE_COINS[action]&&/^https:\/\//i.test(gift.image??'')?{name:mapping.display_name,coins:gift.coins,giftId:gift.giftId,image:gift.image??'',verified:true}:{name:'Eşleştirme bekleniyor',coins:PROCEDURE_COINS[action],giftId:'',image:'',verified:false}]}))}
+ publicGifts(){this.catalog();const mapped=this.mappings();const actions=['extract','implant','decay','heal'] as const;return Object.fromEntries(actions.map(action=>{const mapping=mapped.find(m=>m.procedure===action);const gift=this.giftIndex.get(String(mapping?.gift_id??''));return [action,gift&&mapping?.display_name&&gift.coins===PROCEDURE_COINS[action]&&/^https:\/\//i.test(gift.image??'')?{name:mapping.display_name,coins:gift.coins,giftId:gift.giftId,image:gift.image??'',verified:true}:{name:'Eşleştirme bekleniyor',coins:PROCEDURE_COINS[action],giftId:'',image:'',verified:false}]}))}
  mappedGift(id:string){const mapping=this.mappings().find(m=>m.gift_id===id);const gift=this.catalog().gifts.find(g=>g.giftId===id);return mapping&&gift&&mapping.display_name&&/^https:\/\//i.test(gift.image??'')?{name:String(mapping.display_name),image:String(gift.image),coins:gift.coins,giftId:id,procedure:mapping.procedure}:undefined}
  setCatalog(gifts:CatalogGift[],version:string,now=Date.now()){
   if(!text(version,128)||!Array.isArray(gifts)||!gifts.length||gifts.length>10000||new Set(gifts.map(g=>g.giftId)).size!==gifts.length||gifts.some(g=>!text(g.giftId)||!text(g.name)||!Number.isSafeInteger(g.coins)||g.coins<1||typeof g.streak!=='boolean'||(g.streakKnown!==undefined&&typeof g.streakKnown!=='boolean')))throw Error('Geçersiz katalog');
@@ -49,13 +49,14 @@ export class ArenaStore {
   if(old&&String(old.gifts)!==JSON.stringify(gifts))throw Error('Katalog sürümü farklı içerikle tekrar kullanılamaz');
   this.db.prepare('INSERT INTO catalogs VALUES(?,?,?) ON CONFLICT(version) DO UPDATE SET verified=excluded.verified,gifts=excluded.gifts').run(version,now,JSON.stringify(gifts));
   this.db.prepare("INSERT INTO settings VALUES('catalog-version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(version);
-  const defaults=[{giftId:'17473',procedure:'extract',coins:20,name:'Buket'},{giftId:'1354581',procedure:'implant',coins:20,name:'Mantar'},{giftId:'1354579',procedure:'decay',coins:10,name:'Sihirli Tüy'},{giftId:'1143818',procedure:'heal',coins:10,name:'Cesaret İksiri'},{giftId:'1429000',procedure:'claimBad',coins:30,name:'Hayalet Ateşi'},{giftId:'1213441',procedure:'claimGood',coins:30,name:'Sıcak Kakao'}] as const;
+  const defaults=[{giftId:'17473',procedure:'extract',coins:20,name:'Buket'},{giftId:'1354581',procedure:'implant',coins:20,name:'Mantar'}] as const;
   for(const item of defaults){const gift=gifts.find(g=>g.giftId===item.giftId&&g.coins===item.coins&&/^https:\/\//i.test(g.image??''));if(!gift||this.db.prepare('SELECT gift_id FROM mappings WHERE procedure=? OR gift_id=?').get(item.procedure,item.giftId))continue;this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(item.giftId,item.procedure);this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+item.procedure,item.name);}
+  for(const [name,procedure,label] of [['Rose','heal','Gül · İyileştirme'],['TikTok','decay','TikTok · Çürütme']] as const){const gift=gifts.find(g=>g.name.trim().toLowerCase()===name.toLowerCase()&&g.coins===1&&/^https:\/\//i.test(g.image??''));if(gift&&!this.db.prepare('SELECT gift_id FROM mappings WHERE procedure=? OR gift_id=?').get(procedure,gift.giftId)){this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(gift.giftId,procedure);this.db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run('mapping-name:'+procedure,label);}}
  }
  mappings(){return this.db.prepare("SELECT m.gift_id,m.procedure,(SELECT value FROM settings WHERE key='mapping-name:'||m.procedure) AS display_name FROM mappings m").all()}
  mapGift(id:string,procedure:Procedure,displayName:string){
   const gift=this.catalog().gifts.find(g=>g.giftId===id);
-  if(!gift||!['extract','implant','decay','heal','claimBad','claimGood'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||(!this.experimental&&!/^https:\/\//i.test(gift.image??'')))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
+  if(!gift||!['extract','implant','decay','heal'].includes(procedure)||gift.coins!==PROCEDURE_COINS[procedure]||!text(displayName,64)||!displayName.trim()||(!this.experimental&&!/^https:\/\//i.test(gift.image??'')))throw Error('Bu işlem için aynı jeton değerinde, TikTok görselli bir hediye ve Türkçe adı gerekli');
   if(this.db.prepare('SELECT gift_id FROM mappings WHERE gift_id=? AND procedure<>?').get(id,procedure))throw Error('Her işlem farklı hediye kullanmalı');
   this.db.prepare('DELETE FROM mappings WHERE procedure=?').run(procedure);
   this.db.prepare('INSERT INTO mappings VALUES(?,?)').run(id,procedure);
@@ -65,7 +66,7 @@ export class ArenaStore {
  engage(value:unknown,now=Date.now()):Receipt {
   const p=value as EngagementPacket;
   const empty=(message:string):Receipt=>({accepted:false,delta:0,message,visuals:[]});
-  if(!p||!['follow','like'].includes(p.type)||!text(p.eventId,256)||!text(p.roomId,256)||!text(p.userId,128)||!text(p.username,128)||!Number.isSafeInteger(p.timestamp)||p.timestamp<=0||(p.type==='like'&&(!Number.isSafeInteger(p.count)||Number(p.count)<1||Number(p.count)>10000)))return empty('Geçersiz takip/beğeni olayı');
+  if(!p||!['comment','follow','like'].includes(p.type)||!text(p.eventId,256)||!text(p.roomId,256)||!text(p.userId,128)||!text(p.username,128)||!Number.isSafeInteger(p.timestamp)||p.timestamp<=0||(p.type==='like'&&(!Number.isSafeInteger(p.count)||Number(p.count)<1||Number(p.count)>10000))||(p.type==='comment'&&!text(p.comment,500)))return empty('Geçersiz yorum/takip/beğeni olayı');
   const identity=JSON.stringify([p.roomId,p.type,p.eventId]);
   this.db.exec('BEGIN IMMEDIATE');
   try{
@@ -73,26 +74,39 @@ export class ArenaStore {
    let state=this.tick(now);
    const created=Number(this.db.prepare('SELECT created FROM rounds WHERE id=?').get(state.roundId)!.created);
    if(state.finishedAt||p.timestamp<created||p.timestamp>now+5000){const result=empty(state.finishedAt?'Tur sona erdi':'Etkileşim zamanı geçersiz');this.db.prepare('INSERT INTO events(id,round_id,received,raw,result) VALUES(?,?,?,?,?)').run(identity,state.roundId,now,JSON.stringify(p),JSON.stringify(result));this.db.exec('COMMIT');return result;}
-   let claimCount=1;
-   if(p.type==='like'){
-    const key='likes-progress:'+state.roundId;
-    const previous=Number(this.db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value??0);
-    const total=previous+Number(p.count);
-    claimCount=Math.floor(total/100);
-    this.db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,String(total%100));
+   let result:Receipt={accepted:true,delta:0,message:'',visuals:[]};
+   if(p.type==='comment'){
+    const match=p.comment!.trim().match(/^(\\d{1,2})$/),tooth=match?Number(match[1]):0;
+    if(!POSITIONS.includes(tooth))result=empty('Yorumuna 1–30 arasındaki geçerli diş numarasını tek başına yaz');
+    else{this.db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('comment-target:'+state.roundId+':'+p.userId,String(tooth));result.message='Diş '+tooth+' hedef olarak kaydedildi';}
+   }else{
+    const targetRaw=this.db.prepare('SELECT value FROM settings WHERE key=?').get('comment-target:'+state.roundId+':'+p.userId)?.value;
+    const target=Number(targetRaw??0);
+    if(!POSITIONS.includes(target))result.message='Önce yorum olarak hedef diş numaranı yaz';
+    else{
+     let hits=0;
+     if(p.type==='follow'){
+      const key='follow-used:'+state.roundId+':'+p.userId;
+      if(this.db.prepare('SELECT value FROM settings WHERE key=?').get(key))result.message='Takip hakkın bu turda kullanıldı';
+      else{this.db.prepare('INSERT INTO settings VALUES(?,?)').run(key,'1');hits=1;}
+     }else{
+      const key='likes-progress:'+state.roundId+':'+p.userId;
+      const previous=Number(this.db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value??0);
+      const total=previous+Number(p.count);hits=Math.min(100,Math.floor(total/100));
+      this.db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,String(total%100));
+     }
+     for(let i=0;i<hits;i++){
+      const before=state,r=applyToothDamage(state,target,ENGAGEMENT_DAMAGE,now);
+      if(!r.accepted){result.message=r.message;break;}
+      state=r.state;result.delta++;result.action=r.action;result.message=r.message;
+      if(r.targetId!==null&&r.targetUserId)result.visuals.push({id:0,action:r.action==='extract'?'extract':'decay',targetId:r.targetId,targetUserId:r.targetUserId,user:p.username,before,after:state});
+     }
+     if(!hits&&!result.message)result.message=p.type==='like'?'100 beğeniye kalan ilerleme kaydedildi':'Takip işlendi';
+    }
    }
-   let claimed=0;let message='';
-   for(let i=0;i<claimCount;i++){
-    if(state.players.some(player=>player.userId===p.userId)){message='@'+p.username+' zaten bir diş sahiplenmiş';break;}
-    if(state.players.length>=28){message='28 dişin tamamı sahiplenildi';break;}
-    const player={userId:p.userId,username:p.username.replace(/^@+/,'').slice(0,40),coins:0,joinedAt:p.timestamp,lockedUntil:0};
-    state={...state,startedAt:state.startedAt||p.timestamp,players:[...state.players,player],history:['🦷 @'+player.username+' bir diş sahiplendi · '+(p.type==='follow'?'TAKİP':'100 BEĞENİ'),...state.history].slice(0,12)};
-    claimed++;message='@'+player.username+' bir diş sahiplendi';
-   }
-   if(!message)message=p.type==='like'?'100 beğeni tamamlandı; diş sahiplenildi':'Takip kaydedildi';
-   const result:Receipt={accepted:true,delta:claimed,message,visuals:[]};
-   const row=this.db.prepare('INSERT INTO events(id,round_id,received,raw,result) VALUES(?,?,?,?,?)').run(identity,state.roundId,now,JSON.stringify(p),JSON.stringify(result));
-   result.sequence=Number(row.lastInsertRowid);this.save(state);this.db.exec('COMMIT');return result;
+   const row=this.db.prepare('INSERT INTO events(id,round_id,received,raw,result) VALUES(?,?,?,?,?)').run(identity,state.roundId,now,JSON.stringify(p),JSON.stringify({...result,visuals:[]}));
+   result.sequence=Number(row.lastInsertRowid);result.visuals.forEach((v,i)=>v.id=result.sequence!*1000+i);
+   this.save(state);this.db.exec('COMMIT');return result;
   }catch(e){this.db.exec('ROLLBACK');throw e;}
  }
  ingest(value:unknown,now=Date.now()):Receipt {
