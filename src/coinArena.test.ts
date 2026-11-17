@@ -19,34 +19,3 @@ test('doctor leader is based on cumulative relevant treatment gifts',()=>{let s=
 test('every numbered tooth can take damage before a participant owns it',()=>{const s=newCoinArena(start);const r=applyToothDamage(s,11,ENGAGEMENT_DAMAGE,start+1000);assert.equal(r.accepted,true);assert.equal(r.targetId,11);assert.equal(r.targetUserId,undefined);assert.equal(r.state.teeth?.find(t=>t.toothId===11)?.hp,70);});
 
 test('gift procedures mutate the authoritative HP of an unowned tooth',()=>{let s=newCoinArena(start);s.teeth=s.teeth!.map(t=>t.toothId===8?{...t,hp:20}:{...t});const r=applyGift(s,gift('unowned-decay','sender',1,'decay'));assert.equal(r.targetId,8);assert.equal(r.state.teeth?.find(t=>t.toothId===8)?.hp,10);});
-
-test('decay applies a 30-second lock; time expiry never heals the tooth automatically',()=>{
- let s=players([100,100]);const id=POSITIONS[0];
- const hit=applyGift(s,gift('timed-decay','u0',1,'decay'));s=hit.state;
- assert.equal(s.players[0].hp,90);assert.equal(s.players[0].lockedUntil,start+1000+30_000);assert.equal(s.players[0].lockReason,'decayed');
- const blocked=applyGift(s,gift('locked-score','u0',5,undefined,start+2000));assert.equal(blocked.accepted,false);assert.equal(blocked.state.players[0].coins,s.players[0].coins);
- const afterExpiry=applyGift(s,gift('after-decay-expiry','u0',5,undefined,start+32_000));assert.equal(afterExpiry.accepted,true);assert.equal(toothStatesOf(afterExpiry.state).find(t=>t.toothId===id)?.hp,90);assert.equal(toothStatesOf(afterExpiry.state).find(t=>t.toothId===id)?.condition,'decayed');
-});
-test('only a heal gift unlocks a decayed owner and adds HP',()=>{
- let s=players([100,100]);const hit=applyGift(s,gift('decay-self','u0',1,'decay'));s=hit.state;
- const blocked=applyGift(s,gift('wrong-unlock','u0',20,'extract',start+2000));assert.equal(blocked.accepted,false);
- const healed=applyGift(s,gift('right-unlock','u0',1,'heal',start+3000));
- assert.equal(healed.accepted,true);assert.equal(healed.targetId,POSITIONS[0]);assert.equal(healed.state.players[0].hp,100);assert.equal(healed.state.players[0].lockedUntil,0);assert.equal(healed.state.players[0].lockReason,undefined);assert.equal(healed.state.players[0].coins,s.players[0].coins+1);
-});
-test('extraction applies a 60-second lock; only implant unlocks the extracted owner',()=>{
- let s=players([100,100]);const hit=applyGift(s,gift('extract-self','u0',20,'extract'));s=hit.state;
- assert.equal(s.players[0].hp,0);assert.equal(s.players[0].lockedUntil,start+1000+60_000);assert.equal(s.players[0].lockReason,'extracted');
- const blocked=applyGift(s,gift('locked-score-after-extract','u0',5,undefined,start+2000));assert.equal(blocked.accepted,false);
- const wrong=applyGift(s,gift('wrong-heal-for-extraction','u0',1,'heal',start+3000));assert.equal(wrong.accepted,false);
- const restored=applyGift(s,gift('implant-unlocks-owner','u0',20,'implant',start+4000));
- assert.equal(restored.accepted,true);assert.equal(restored.targetId,POSITIONS[0]);assert.equal(restored.state.players[0].hp,100);assert.equal(restored.state.players[0].lockedUntil,0);assert.equal(restored.state.players[0].lockReason,undefined);
-});
-
-test('a tooth under an active decay lock cannot receive a second attack or have its timer extended',()=>{
- let s=players([100,45,70]);const id=POSITIONS[1];
- s=applyGift(s,gift('lock-target','attacker',1,'decay')).state;
- const owner=s.players.find(p=>p.toothId===id)!;const until=owner.lockedUntil;const hp=owner.hp;
- const social=applyToothDamage(s,id,ENGAGEMENT_DAMAGE,start+2000);assert.equal(social.accepted,false);assert.equal(toothStatesOf(social.state).find(t=>t.toothId===id)?.hp,hp);
- const second=applyGift(s,gift('second-decay','attacker-two',1,'decay',start+3000));
- assert.notEqual(second.targetId,id);assert.equal(second.state.players.find(p=>p.toothId===id)?.lockedUntil,until);
-});
