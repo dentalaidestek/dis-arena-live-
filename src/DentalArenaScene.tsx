@@ -44,7 +44,7 @@ function Tooth({id,rank,username,condition,cue,mini=false,selected=false,onPick}
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
-   {username&&<Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.02]} fontSize={.14} maxWidth={1.25} color="#f2f7f8" anchorX="center" outlineWidth={.012} outlineColor="#142a38">@{username.replace(/^@+/,"").slice(0,10)}</Text>}
+   {username&&<><mesh position={[0,upper?1.12:-1.12,-.015]}><RoundedBox args={[.66,.22,.025]} radius={.07} smoothness={3}><meshBasicMaterial color="#102432" transparent opacity={.94}/></RoundedBox></mesh><Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.12:-1.12,.025]} fontSize={.17} maxWidth={.64} color="#ffffff" anchorX="center" anchorY="middle" outlineWidth={.014} outlineColor="#102432">{username.replace(/^@+/,"").slice(0,12)}</Text></>}
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
