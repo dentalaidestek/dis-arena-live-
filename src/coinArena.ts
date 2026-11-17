@@ -103,11 +103,11 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
   Object.assign(nextBase,awardDoctor(nextBase,'good',gift));nextBase.badPausedUntil=gift.timestamp+BAD_DOCTOR_PAUSE_MS;
  }else if(procedure==='extract'){
   const target=weakest(nextBase);
-  if(target){const before=target.hp;target.hp=0;target.condition='extracted';setTarget(target,'extract');message='🦷 '+targetId+' numaralı diş çekildi';}
+  if(target){target.hp=0;target.condition='extracted';setTarget(target,'extract');message='🦷 '+targetId+' numaralı diş çekildi';}
   Object.assign(nextBase,awardDoctor(nextBase,'bad',gift));
  }else if(procedure==='implant'){
   const target=extracted(nextBase);
-  if(target){const before=target.hp;target.hp=TOOTH_MAX_HP;delete target.condition;setTarget(target,'implant');message='🔩 '+targetId+' numaralı dişe implant yapıldı · 100 HP';}
+  if(target){target.hp=TOOTH_MAX_HP;delete target.condition;setTarget(target,'implant');message='🔩 '+targetId+' numaralı dişe implant yapıldı · 100 HP';}
   Object.assign(nextBase,awardDoctor(nextBase,'good',gift));
  }else{
   message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
