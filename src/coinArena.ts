@@ -92,22 +92,22 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  sender.username=gift.username;sender.coins+=gift.coins;
  let action:GiftResult['action']='score',targetId:number|null=null,targetUserId:string|undefined,message='';
  const nextBase:CoinArena={...state,players,teeth,startedAt:state.startedAt||gift.timestamp,processedIds:[...state.processedIds,gift.eventId]};
- const setTarget=(tooth:ToothState,kind:'extract'|'implant'|'decay'|'heal',before:number)=>{syncOwner(players,tooth);targetId=tooth.toothId;targetUserId=players.find(p=>p.toothId===tooth.toothId)?.userId;action=kind;};
+ const setTarget=(tooth:ToothState,kind:'extract'|'implant'|'decay'|'heal')=>{syncOwner(players,tooth);targetId=tooth.toothId;targetUserId=players.find(p=>p.toothId===tooth.toothId)?.userId;action=kind;};
  if(procedure==='decay'){
   const target=weakest(nextBase);
-  if(target){const before=target.hp;target.hp=Math.max(0,before-DECAY_DAMAGE);target.condition=target.hp===0?'extracted':'decayed';setTarget(target,target.hp===0?'extract':'decay',before);message=target.hp===0?'☣ '+targetId+' numaralı diş 0 HP oldu ve çekildi':'☣ '+targetId+' numaralı diş '+before+' → '+target.hp+' HP';}
+  if(target){const before=target.hp;target.hp=Math.max(0,before-DECAY_DAMAGE);target.condition=target.hp===0?'extracted':'decayed';setTarget(target,target.hp===0?'extract':'decay');message=target.hp===0?'☣ '+targetId+' numaralı diş 0 HP oldu ve çekildi':'☣ '+targetId+' numaralı diş '+before+' → '+target.hp+' HP';}
   Object.assign(nextBase,awardDoctor(nextBase,'bad',gift));nextBase.badPausedUntil=gift.timestamp+BAD_DOCTOR_PAUSE_MS;
  }else if(procedure==='heal'){
   const target=weakest(nextBase);
-  if(target){const before=target.hp;target.hp=Math.min(TOOTH_MAX_HP,before+10);if(target.hp===TOOTH_MAX_HP)delete target.condition;else target.condition='decayed';setTarget(target,'heal',before);message='✚ '+targetId+' numaralı diş '+before+' → '+target.hp+' HP · +10';}
+  if(target){const before=target.hp;target.hp=Math.min(TOOTH_MAX_HP,before+10);if(target.hp===TOOTH_MAX_HP)delete target.condition;else target.condition='decayed';setTarget(target,'heal');message='✚ '+targetId+' numaralı diş '+before+' → '+target.hp+' HP · +10';}
   Object.assign(nextBase,awardDoctor(nextBase,'good',gift));nextBase.badPausedUntil=gift.timestamp+BAD_DOCTOR_PAUSE_MS;
  }else if(procedure==='extract'){
   const target=weakest(nextBase);
-  if(target){const before=target.hp;target.hp=0;target.condition='extracted';setTarget(target,'extract',before);message='🦷 '+targetId+' numaralı diş çekildi';}
+  if(target){const before=target.hp;target.hp=0;target.condition='extracted';setTarget(target,'extract');message='🦷 '+targetId+' numaralı diş çekildi';}
   Object.assign(nextBase,awardDoctor(nextBase,'bad',gift));
  }else if(procedure==='implant'){
   const target=extracted(nextBase);
-  if(target){const before=target.hp;target.hp=TOOTH_MAX_HP;delete target.condition;setTarget(target,'implant',before);message='🔩 '+targetId+' numaralı dişe implant yapıldı · 100 HP';}
+  if(target){const before=target.hp;target.hp=TOOTH_MAX_HP;delete target.condition;setTarget(target,'implant');message='🔩 '+targetId+' numaralı dişe implant yapıldı · 100 HP';}
   Object.assign(nextBase,awardDoctor(nextBase,'good',gift));
  }else{
   message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
