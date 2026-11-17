@@ -11,7 +11,9 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  const remaining=state.finishedAt?0:state.startedAt?timeLeft(state,now):ROUND_MS;
  const clock=String(Math.floor(remaining/60000)).padStart(2,'0')+':'+String(Math.floor(remaining%60000/1000)).padStart(2,'0');
  const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId,user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
- const scene:CoinArena=active?{...active.before,players:active.before.players.map(p=>p.userId===active.targetUserId?{...p,condition:active.action==='decay'?'decayed':active.action==='extract'?'extracted':undefined,lockedUntil:['decay','extract'].includes(active.action)?now+5000:0}:p)}:state;
+ // Render the latest authoritative mouth state while animations play. Replacing the whole
+ // scene with active.before replayed stale 28-tooth snapshots and caused teeth to flash.
+ const scene:CoinArena=state;
  const first=players[0],second=players[1];const share=first?Math.max(8,Math.min(92,first.coins/((first.coins+(second?.coins??0))||1)*100)):50;
  const target=active?.before.players.find(p=>p.userId===active.targetUserId);
  const events=metadata.events?.length?metadata.events:state.history.slice(0,3).map((message,i)=>({id:String(i),message}));const gifts=metadata.gifts??{};const giftRows=[['extract','DİŞ ÇEKİMİ'],['implant','İMPLANT'],['decay','ÇÜRÜTME'],['heal','İYİLEŞTİRME'],['claimGood','İYİ HEKİM'],['claimBad','KÖTÜ HEKİM']];
