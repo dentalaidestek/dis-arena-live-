@@ -79,7 +79,6 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
   const message='@'+owner.username+' '+(side==='bad'?'kötü':'iyi')+' hekim koltuğuna oturdu';
   return {state:{...state,doctors:{...doctors,[side]:owner},processedIds:[...state.processedIds,gift.eventId],history:[message,...state.history].slice(0,12)},accepted:true,message,action:procedure,targetId:null};
  }
- const procedure=gift.procedure??'score';
  const players=state.players.map(p=>({...p,hp:hpOf(p)})),teeth=toothStatesOf(state);
  let sender=players.find(p=>p.userId===gift.userId);
  if(!sender){
@@ -108,6 +107,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
    else{target.hp=Math.min(TOOTH_MAX_HP,before+10);if(target.hp===TOOTH_MAX_HP)delete target.condition;else target.condition='decayed';message='✚ '+target.toothId+' numaralı diş '+before+' → '+target.hp+' HP · +10';}
    sender!.lockedUntil=0;delete sender!.lockReason;syncOwner(players,target);setTarget(target,procedure);
   }
+  Object.assign(nextBase,awardDoctor(nextBase,'good',gift));nextBase.badPausedUntil=gift.timestamp+BAD_DOCTOR_PAUSE_MS;
  }else if(procedure==='decay'){
   const target=weakest(nextBase);
   if(target){const before=target.hp;target.hp=Math.max(0,before-DECAY_DAMAGE);target.condition=target.hp===0?'extracted':'decayed';const owner=players.find(p=>p.toothId===target.toothId);if(owner){owner.lockedUntil=gift.timestamp+(target.hp===0?EXTRACTION_MS:DECAY_MS);owner.lockReason=target.hp===0?'extracted':'decayed';}setTarget(target,target.hp===0?'extract':'decay');message=target.hp===0?'☣ '+targetId+' numaralı diş 0 HP oldu ve çekildi':'☣ '+targetId+' numaralı diş '+before+' → '+target.hp+' HP';}
