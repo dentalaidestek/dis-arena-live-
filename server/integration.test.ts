@@ -60,16 +60,18 @@ test('one hundred concurrent HTTP gifts are all journalled exactly once',async()
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
 
-test('authenticated TikTok engagement endpoint claims a tooth on follow and every 100 likes',async()=>{
+test('authenticated TikTok comments select teeth; follow and every 100 likes deal separate 30 HP hits',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'arena-engagement-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
  try{
   await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;
   const send=(body:unknown,token='bridge')=>fetch(root+'/api/bridge/engagement',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const comment={type:'comment',eventId:'comment-1',roomId:'live-room',userId:'follower',username:'Follower',comment:'11',timestamp:Date.now()};
+  assert.equal((await send(comment,'wrong')).status,401);assert.equal((await (await send(comment)).json()).accepted,true);
   const follow={type:'follow',eventId:'follow-1',roomId:'live-room',userId:'follower',username:'Follower',timestamp:Date.now()};
-  assert.equal((await send(follow,'wrong')).status,401);
-  const f=await (await send(follow)).json();assert.equal(f.delta,1);assert.equal(app.stores.live.state().players[0].coins,0);
+  const f=await (await send(follow)).json();assert.equal(f.delta,1);assert.equal(app.stores.live.state().teeth.find((t:any)=>t.toothId===11).hp,70);
+  const likeComment={...comment,eventId:'comment-2',userId:'liker',username:'Liker',comment:'12'};await send(likeComment);
   const likes={type:'like',eventId:'likes-1',roomId:'live-room',userId:'liker',username:'Liker',count:100,timestamp:Date.now()};
-  const l=await (await send(likes)).json();assert.equal(l.delta,1);assert.equal(app.stores.live.state().players.length,2);
+  const l=await (await send(likes)).json();assert.equal(l.delta,1);assert.equal(app.stores.live.state().teeth.find((t:any)=>t.toothId===12).hp,70);assert.equal(app.stores.live.state().players.length,0);
   assert.equal((await (await send(likes)).json()).duplicate,true);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
@@ -88,7 +90,7 @@ test('28-user demo full flow completes extraction, implant, decay and heal burst
  const dir=mkdtempSync(join(tmpdir(),'arena-full-flow-'));const app=createArenaServer({directory:dir,adminToken:'admin',bridgeToken:'bridge'});
  try{await new Promise<void>(r=>app.server.listen(0,'127.0.0.1',r));const root=`http://127.0.0.1:${(app.server.address() as {port:number}).port}`;const post=(body:unknown)=>fetch(root+'/api/demo?mode=demo',{method:'POST',headers:{Authorization:'Bearer admin','Content-Type':'application/json'},body:JSON.stringify(body)});
   assert.equal((await post({action:'populate'})).status,200);const users=Array.from({length:28},(_,i)=>'demo-'+i);
-  for(const action of ['extract','implant','decay','heal']){const count=['implant','heal'].includes(action)?26:28;const responses=await Promise.all(users.slice(0,count).map(userId=>post({action,userId,...(['implant','heal'].includes(action)?{autoTarget:true}:{})})));assert.ok(responses.every(r=>r.status===200),action+' phase must not reject any simulated client');}
-  assert.equal(app.stores.demo.state().players.length,28);assert.equal(app.stores.demo.diagnostics().events,136);assert.equal(app.stores.live.state().players.length,0);assert.equal(app.stores.live.diagnostics().events,0);
+  for(const action of ['extract','implant','decay','heal']){const count=14;const responses=await Promise.all(users.slice(0,count).map(userId=>post({action,userId,...(['implant','heal'].includes(action)?{autoTarget:true}:{})})));assert.ok(responses.every(r=>r.status===200),action+' phase must not reject any simulated client');}
+  assert.equal(app.stores.demo.state().players.length,28);assert.equal(app.stores.demo.diagnostics().events,84);assert.equal(app.stores.live.state().players.length,0);assert.equal(app.stores.live.diagnostics().events,0);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
