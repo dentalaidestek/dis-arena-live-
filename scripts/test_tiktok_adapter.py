@@ -146,3 +146,9 @@ class CommentTargetTests(unittest.TestCase):
             p=normalize_engagement(e,'room',1000,'comment');q.put(p)
             self.assertEqual(len(q.pending()),1);self.assertEqual(q.pending()[0][1]['comment'],'12');q.close()
 
+
+
+    def test_incremental_like_count_field_is_preferred_to_total_like_count(self):
+        e=N(common=N(msg_id=802,create_time=11),user=N(user_id=88,unique_id='like_user'),count=7,like_count=125)
+        packet=normalize_engagement(e,'room',20000,'like')
+        self.assertEqual(packet['count'],7)
