@@ -1,0 +1,98 @@
+/* Clinic edition: one restrained broadcast palette and a legible optical closeup. */
+.broadcast-shell{background:radial-gradient(ellipse at 50% 30%,#18313d,#091321 70%);grid-template-rows:16fr 52fr 12fr 20fr;gap:.65dvh}
+.broadcast-brand>span{color:#8ecfc6;text-shadow:none}
+.broadcast-brand h1{color:#e9f1f2;text-shadow:none;font-size:6.8cqw;letter-spacing:-.02em;font-weight:850}
+.broadcast-brand p{letter-spacing:.16em;color:#8bb5be;font-size:1.9cqw}
+.broadcast-clock{border-color:#7996a132;background:#102432;padding:.5cqh 2.2cqw}
+.broadcast-clock>strong{color:#eaf5f3;font-size:7cqw}
+.broadcast-clock>span{color:#7fb5ba}
+.broadcast-leaders{gap:1.2cqw}
+.leader-card,.leader-1,.leader-2,.leader-3{background:linear-gradient(135deg,#18333f,#102432);border:1px solid #668f9947;box-shadow:none;border-radius:1.4cqw;padding:.6cqh 1.3cqw}
+.leader-0{border-color:#beaa6c80;background:linear-gradient(135deg,#35413d,#1d3036)}
+.leader-card b{font-weight:650;font-size:2.8cqw;color:#e1edee}
+.leader-card strong{font-weight:750;color:#c8d7d5}
+.leader-0 strong{color:#e5cd90}
+.leader-card>span{color:#86b1b7}
+.leader-0>span{color:#e5cd90}
+.leader-card em{color:#8cafb7}
+.broadcast-stage{border-color:#7395a235;border-radius:2.4cqw;box-shadow:0 1cqh 6cqw #0003}
+.stage-corners{top:13%;left:7%;right:7%;font-size:1.9cqw;letter-spacing:.07em}
+.stage-corners span{color:#dbadb8;background:#3e2937c9;border-color:#b9798a4d;padding:.5cqh 1.4cqw;border-radius:1cqw}
+.stage-corners span+span{background:#173c40cc;color:#a5d9d2;border-color:#74b8b74d}
+.clinic-edition-label{position:absolute;top:3.2%;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:1.6cqw;font-size:2.1cqw;font-weight:650;letter-spacing:.16em;color:#c4dbdf;pointer-events:none}
+.clinic-edition-label>span{width:1.1cqw;height:1.1cqw;border-radius:50%;background:#8ddbd0;box-shadow:0 0 1.5cqw #88d5ce55}
+.clinic-edition-label small{font-size:1.45cqw;color:#769ca9;letter-spacing:.12em;padding-left:1.3cqw;border-left:1px solid #91b9bb44}
+.optical-label{position:absolute;left:10%;right:10%;top:61%;z-index:5;display:flex;justify-content:space-between;color:#a6c1c9;font-size:1.8cqw;letter-spacing:.12em;font-weight:650;pointer-events:none}
+.optical-label span{font-size:1.65cqw;color:#6f98a4;letter-spacing:.04em}
+.dental-focus-card{position:absolute;top:52.8%;left:13%;right:13%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:2cqw;z-index:6;padding:.75cqh 2cqw;border:1px solid #82a9ac44;border-radius:1.2cqw;background:#102432e6;box-shadow:0 .5cqh 2cqw #0002;pointer-events:none}
+.dental-focus-card>span{font-size:1.9cqw;letter-spacing:.04em;color:#84cfc4}
+.dental-focus-card>b{font-size:2.6cqw;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e3ecec}
+.dental-focus-card>strong{font-size:1.9cqw;color:#b9c9c4;font-weight:600;white-space:nowrap}
+.broadcast-stage .dental-action-banner{top:50.4%;bottom:auto;width:68%;min-width:0;padding:.7cqh 1.8cqw;border-radius:1.3cqw;box-shadow:0 .5cqh 2cqw #0003;font-size:2.15cqw;letter-spacing:.045em;font-weight:650}
+.broadcast-stage .dental-action-banner small{font-size:2.0cqw;margin-top:.4cqh;letter-spacing:0}
+.dental-action-banner.danger{background:#432b38ee;border:1px solid #b7768755}
+.dental-action-banner.success{background:#163c40ed;border:1px solid #80c4b957}
+.procedure-target{top:56.5%;bottom:auto;font-size:2.1cqw;font-weight:600}
+.procedure-target span{font-size:1.7cqw;color:#a7d1ca;border-color:#80c4b940}
+.leader-alert,.round-finished{top:6%;font-size:2.7cqw;border-color:#c8b27255;background:#273d3bf0;color:#e5d29e;box-shadow:none}
+.broadcast-live{padding:.1cqh 0}
+.rival-heading b{color:#9ccac6;font-size:2.3cqw}
+.rival-heading b:last-child{color:#b3b5d4}
+.rival-heading>span{color:#a9bfbc;font-size:2.4cqw}
+.rival-bar{height:.4cqh;margin:.4cqh 0 .6cqh;gap:.5cqw}
+.rival-bar span{background:#78b8b0;box-shadow:none}
+.rival-bar span+span{background:#7e89af;box-shadow:none}
+.events-heading{font-size:1.6cqw;color:#8caeb7;margin-bottom:.4cqh}
+.broadcast-event{background:linear-gradient(95deg,#1a3440,#142735);border-left:.4cqw solid #76b8af;border-radius:.8cqw;padding:.55cqh 1.7cqw;min-height:2.5cqh}
+.broadcast-event p{font-size:2.65cqw;font-weight:550}
+.broadcast-event>b{color:#adccaf;font-weight:650}
+.broadcast-event>span{color:#81bdb6;font-size:2.2cqw}
+.broadcast-guide{background:linear-gradient(135deg,#142a36,#0d1d2b);border-color:#77999540;border-radius:1.8cqw;padding:.9cqh 2.4cqw}
+.broadcast-guide h2{font-size:2.8cqw;font-weight:750;color:#bcd8d4;letter-spacing:.06em;margin-bottom:.6cqh}
+.guide-score{font-size:2.3cqw;color:#aac4cc}
+.guide-score b{color:#c6b887;font-size:1.9cqw}
+.guide-procedures b{font-size:2.25cqw;color:#d0e1df;line-height:1.3}
+.guide-procedures small{font-size:clamp(8px,2.15cqw,26px);line-height:1.35;color:#91adb6}
+.guide-procedures svg{color:#c398a7;width:5cqw;height:5cqw}
+.guide-procedures>div+div svg{color:#8bc6bd}
+.broadcast-guide>p{color:#698d9b;margin-top:.6cqh}
+
+/* Compact public game rules; no gift-to-procedure mapping is rendered here. */
+.guide-rules{display:grid;grid-template-columns:1fr 1fr;gap:.55cqh 1.8cqw;align-items:start}
+.guide-rules p{margin:0;color:#a9c0c8;font-size:1.85cqw;line-height:1.35}
+.guide-rules p b{color:#e1e9e4;font-weight:800}
+.guide-rules>small{grid-column:1/-1;color:#78939d;font-size:1.65cqw;line-height:1.3;text-align:center}
+@media(max-width:520px){.guide-rules{gap:.45cqh 1.4cqw}.guide-rules p{font-size:2.05cqw}}
+
+/* Visible guide and verified gift map */
+.broadcast-guide{display:flex;flex-direction:column;gap:.45cqh;overflow:hidden}.broadcast-guide h2{flex:0 0 auto}.guide-score{flex:0 0 auto;margin:0}.guide-rules{display:grid;grid-template-columns:1fr 1fr;gap:.35cqh 1.3cqw;flex:0 0 auto}.guide-rules p{font-size:1.75cqw;line-height:1.22;margin:0}.guide-gifts{display:grid;grid-template-columns:1fr 1fr;gap:.45cqh 1.2cqw;min-height:0;flex:1}.guide-gift{display:flex;align-items:center;gap:1cqw;min-width:0;padding:.3cqh .8cqw;border-radius:.8cqw;background:#ffffff09}.guide-gift img{width:4.5cqw;height:4.5cqw;object-fit:contain;flex-shrink:0}.guide-gift span{display:flex;flex-direction:column;min-width:0}.guide-gift b{font-size:1.75cqw;line-height:1.15;color:#e3ecec}.guide-gift small{font-size:1.45cqw;line-height:1.15;color:#93b4b9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+
+/* New HP arena hierarchy: make the clinic stage the visual focus and surface both doctors. */
+.broadcast-shell{grid-template-rows:13fr 57fr 12fr 18fr}
+.broadcast-leaders.doctor-leaders{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2cqw}
+.leader-doctor{display:flex;align-items:center;gap:1.1cqw;min-width:0}
+.leader-doctor>span{font-size:3.1cqw;flex:0 0 auto;color:#d2b77a}
+.leader-doctor img{width:4.8cqw;height:4.8cqw;object-fit:contain;flex:0 0 auto}
+.leader-doctor>div{min-width:0;display:flex;flex-direction:column;gap:.12cqh}
+ .leader-doctor b{font-size:2.2cqw!important;line-height:1.1;color:#c8d9d8;white-space:normal}
+.leader-doctor strong{font-size:2.8cqw!important;line-height:1.1;color:#f0e8d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leader-doctor em{font-size:1.8cqw;color:#9fc7c0}
+.leader-bad{border-color:#b9798a70;background:linear-gradient(120deg,#3a2936,#172b38)}
+.leader-good{border-color:#80c4b970;background:linear-gradient(120deg,#173b3c,#172b38)}
+.broadcast-guide h2{font-size:3.1cqw;color:#e1f0ec;text-shadow:0 1px 0 #0008}
+.guide-score{font-size:2.55cqw;color:#e0eceb;font-weight:750}
+.guide-score b{font-size:2.2cqw;color:#f0d89a}
+.guide-rules{gap:.55cqh 1.6cqw}
+.guide-rules p{font-size:2.05cqw;line-height:1.35;color:#d0e0df;text-shadow:0 1px 0 #0005}
+.guide-rules p b{color:#fff0c7;font-weight:850}
+.guide-gift{background:#ffffff10;border:1px solid #a9c7c51c}
+.guide-gift img{width:5cqw;height:5cqw}
+.guide-gift b{font-size:1.95cqw;color:#f1f5ee}
+.guide-gift small{font-size:1.65cqw;color:#bdd2d2}
+@media(max-width:520px){.guide-rules p{font-size:2.2cqw}.leader-doctor b{font-size:2.2cqw!important}.leader-doctor strong{font-size:2.8cqw!important}}
+
+
+.admin-test-buttons button{display:inline-flex;align-items:center;justify-content:flex-start;gap:.65rem}
+.admin-test-buttons button img{width:38px;height:38px;object-fit:contain;flex:0 0 auto}
+.admin-log img,.admin-section p>img{object-fit:contain;vertical-align:middle}

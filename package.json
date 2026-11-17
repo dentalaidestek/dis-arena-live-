@@ -7,22 +7,34 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "tsx --test src/*.test.ts"
+    "test": "node --import tsx --test src/coinArena.test.ts src/bridgeGift.test.ts src/proceduresV3.test.ts src/visualQueue.test.ts src/procedureMotion.test.ts src/toothGeometry.test.ts src/routes.test.ts server/*.test.ts scripts/launcher.test.ts",
+    "test:legacy": "node --import tsx --test src/*.test.ts",
+    "test:python": "python3 -m unittest discover -s scripts -p \"test_*.py\"",
+    "start": "node --import tsx server/server.ts",
+    "benchmark": "node --import tsx scripts/benchmark.ts",
+    "test:provider": "node --import tsx --test server/provider.fixture.spec.ts",
+    "test:ui": "playwright test"
   },
   "dependencies": {
-    "@react-three/fiber": "^9.1.2",
     "@react-three/drei": "^10.0.6",
-    "three": "^0.175.0",
+    "@react-three/fiber": "^9.1.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "three": "^0.175.0",
+    "ws": "^8.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.15.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.175.0",
+    "@types/ws": "^8.18.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.8.3",
-    "vite": "^6.2.6",
-    "@types/node": "^22.15.0",
-    "tsx": "^4.19.2"
+    "vite": "^6.2.6"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

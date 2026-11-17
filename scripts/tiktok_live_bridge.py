@@ -1,131 +1,154 @@
 #!/usr/bin/env python3
-"""Unofficial TikTok LIVE -> local browser WebSocket bridge (Termux).
-Install: pip install TikTokLive websockets
-Run: python scripts/tiktok_live_bridge.py @live_username
-Only run against a stream you are authorized to monitor. No TikTok login is stored.
+"""Unofficial TikTokLive ingestion. Normally managed by the arena control panel.
+All incremental gift packets enter a durable SQLite outbox before HTTP delivery.
 """
 import asyncio
+import hashlib
 import json
 import os
+from pathlib import Path
+import random
 import sys
 import time
-import random
-from TikTokLive import TikTokLiveClient
-from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent
-from websockets.asyncio.server import serve
-
-PORT = int(os.environ.get('ARENA_WS_PORT', '8765'))
-CLIENTS = set()
-LIVE_STATE = {'type': 'status', 'state': 'live-disconnected'}
-
-async def broadcast(message):
-    payload = json.dumps(message, ensure_ascii=False)
-    for ws in tuple(CLIENTS):
-        try:
-            await ws.send(payload)
-        except Exception:
-            CLIENTS.discard(ws)
-
-async def websocket_handler(ws):
-    CLIENTS.add(ws)
-    try:
-        await ws.send(json.dumps(LIVE_STATE, ensure_ascii=False))
-        async for _ in ws:
-            pass  # Browser cannot inject gift events into TikTok.
-    finally:
-        CLIENTS.discard(ws)
+import urllib.request
+from tiktok_adapter import normalize_event,normalize_engagement,normalize_catalog,merge_catalogs,Outbox,validate_username
 
 async def main():
-    if len(sys.argv) != 2 or not sys.argv[1].strip('@ '):
-        raise SystemExit('Usage: python scripts/tiktok_live_bridge.py @tiktok_username')
-    username = sys.argv[1].strip().lstrip('@')
-    if username == '--demo':
-        print(f'DEMO bridge ws://127.0.0.1:{PORT} | no TikTok LIVE required', flush=True)
-        async with serve(websocket_handler, '127.0.0.1', PORT):
-            LIVE_STATE.update({'state': 'live-connected', 'username': 'demo'})
-            counter = 0
-            while True:
-                await asyncio.sleep(2)
-                counter += 1
-                gift = ('Rose', 'Finger Heart', 'Perfume')[counter % 3]
-                coins = {'Rose': 1, 'Finger Heart': 5, 'Perfume': 20}[gift]
-                await broadcast({'type': 'gift', 'eventId': f'demo-{counter}', 'userId': f'demo-{counter}', 'username': f'demo{counter}', 'giftName': gift, 'coins': coins, 'repeatCount': 1, 'timestamp': int(time.time() * 1000)})
-                print('DEMO GIFT:', gift, 'from demo'+str(counter), flush=True)
-        return
-    client = TikTokLiveClient(unique_id='@' + username)
-
-    @client.on(ConnectEvent)
-    async def on_connect(event):
-        LIVE_STATE.update({'state': 'live-connected', 'username': username})
-        print('LIVE connected:', username, flush=True)
-        await broadcast(LIVE_STATE)
-
-    @client.on(DisconnectEvent)
-    async def on_disconnect(event):
-        LIVE_STATE.update({'state': 'live-disconnected'})
-        print('LIVE disconnected', flush=True)
-        await broadcast(LIVE_STATE)
-
-    @client.on(GiftEvent)
-    async def on_gift(event):
-        gift = event.gift
-        # Streak gifts emit intermediate events; count only the completed streak.
-        if getattr(gift, 'streakable', False) and not getattr(event, 'repeat_end', False):
-            return
-        user = event.user
-        gift_name = getattr(gift, 'name', '')
-        coin_value = getattr(gift, 'diamond_count', None)
-        repeat_count = max(1, int(getattr(event, 'repeat_count', 1) or 1))
-        msg_id = str(getattr(event, 'msg_id', '') or '')
-        # Never turn a repeated gift streak into a single ownership event of a different price.
-        if coin_value is None:
-            print('Unknown gift price:', gift_name, flush=True)
-            return
-        payload = {
-            'type': 'gift',
-            'eventId': msg_id or f'{username}:{getattr(user,"user_id","")}:{gift_name}:{time.time_ns()}',
-            'userId': str(getattr(user, 'user_id', '') or getattr(user, 'unique_id', '')),
-            'username': str(getattr(user, 'unique_id', '')),
-            'giftName': str(gift_name),
-            'coins': int(coin_value),
-            'repeatCount': repeat_count,
-            'timestamp': int(time.time() * 1000)
-        }
-        print('GIFT:', payload['username'], gift_name, coin_value, 'x', repeat_count, flush=True)
-        await broadcast(payload)
-
-    print(f'Local bridge ws://127.0.0.1:{PORT} | TikTok @{username}', flush=True)
-    async with serve(websocket_handler, '127.0.0.1', PORT):
-        retry = 0
+    if len(sys.argv)!=2:raise SystemExit('TikTok kullanıcı adı gerekli; bağlantı başlatılmadı')
+    try:username=validate_username(sys.argv[1])
+    except ValueError as exc:raise SystemExit(str(exc))
+    token=os.environ.get('ARENA_BRIDGE_TOKEN','')
+    if not token:raise SystemExit('ARENA_BRIDGE_TOKEN gerekli; bağlantı başlatılmadı')
+    # Validate before importing/initializing any provider client.
+    from TikTokLive import TikTokLiveClient
+    from TikTokLive.events import ConnectEvent,DisconnectEvent,GiftEvent,LiveEndEvent,FollowEvent,LikeEvent,CommentEvent
+    from importlib.metadata import version
+    print('TikTokLive version:',version('TikTokLive'),flush=True)
+    directory=Path(os.environ.get('ARENA_DATA_DIR','data'));directory.mkdir(parents=True,exist_ok=True)
+    outbox=Outbox(directory/'bridge-outbox.sqlite')
+    catalog_path=Path(__file__).with_name('live_gift_catalog.json')
+    try:
+        with catalog_path.open('r',encoding='utf-8') as handle:
+            user_catalog=json.load(handle)
+        user_gifts=user_catalog.get('gifts') if isinstance(user_catalog,dict) else None
+        if not isinstance(user_gifts,list) or not user_gifts:
+            raise ValueError('Kayıtlı hediye kataloğu boş veya geçersiz')
+        print(f'USER GIFT CATALOG: {len(user_gifts)} exact provider IDs loaded',flush=True)
+    except Exception as exc:
+        raise SystemExit('Kayıtlı hediye kataloğu okunamadı: '+str(exc))
+    base=os.environ.get('ARENA_SERVER_URL','http://127.0.0.1:8787').rstrip('/')
+    def post_sync(path,body):
+        request=urllib.request.Request(base+'/api/bridge/'+path,data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST')
+        with urllib.request.urlopen(request,timeout=10) as response:return json.load(response)
+    async def post(path,body):return await asyncio.to_thread(post_sync,path,body)
+    async def status(state,error=''):
+        print('STATUS:',state,error,flush=True)
+        try:await post('status',{'state':state,'username':username,'error':error})
+        except Exception as exc:print('Status delivery:',str(exc)[:120],flush=True)
+    async def deliver():
+        retry=0
         while True:
             try:
-                await client.start()
-                retry = 0
-                print('LIVE session ended; reconnecting...', flush=True)
-            except (KeyboardInterrupt, asyncio.CancelledError):
-                raise
+                for key,payload in outbox.pending():
+                    result=await post('engagement' if payload.get('type') in ('comment','follow','like') else 'gift',payload)
+                    # 200 means it was committed or safely quarantined in the server.
+                    if not result.get('accepted') and not result.get('duplicate'):
+                        print('QUARANTINED:',result.get('message'),flush=True)
+                    outbox.ack(key)
+                retry=0
+                await asyncio.sleep(.05)
+            except asyncio.CancelledError:raise
             except Exception as exc:
-                LIVE_STATE.update({'state': 'live-disconnected'})
-                await broadcast(LIVE_STATE)
-                details = str(exc)
-                print('LIVE connection error:', type(exc).__name__, details[:200], flush=True)
-                if isinstance(exc, ValueError) and 'invalid literal for int()' in details:
-                    print('TikTok oda kimliği boş döndü. Yayın aktif değil veya TikTokLive oda kimliğini çözemiyor. 60 saniye sonra tekrar denenecek.', flush=True)
-                    await asyncio.sleep(60)
-                    retry = 0
-                    continue
-                if type(exc).__name__ in ('UserNotFoundError', 'UserOfflineError'):
-                    print('Yayıncı bulunamadı veya LIVE kapalı. Kullanıcı adını ve yayının açık olduğunu kontrol edin. 60 saniye sonra tekrar denenecek.', flush=True)
-                    await asyncio.sleep(60)
-                    retry = 0
-                    continue
-            retry += 1
-            delay = min(60, 2 ** min(retry, 5)) + random.uniform(0, 1)
-            await asyncio.sleep(delay)
-            client = TikTokLiveClient(unique_id='@' + username)
-            client.add_listener(ConnectEvent, on_connect)
-            client.add_listener(DisconnectEvent, on_disconnect)
-            client.add_listener(GiftEvent, on_gift)
+                retry+=1;print('Outbox retained:',str(exc)[:150],flush=True)
+                await asyncio.sleep(min(30,2**min(retry,5))+random.random())
+    delivery=asyncio.create_task(deliver())
+    retry=0
+    catalog_by_id={}
+    try:
+        while True:
+            catalog_by_id.clear()  # Never reuse a previous room/session's catalogue.
+            client=TikTokLiveClient(unique_id='@'+username)
+            catalog_ready=asyncio.Event()
+            @client.on(ConnectEvent)
+            async def on_connect(event):
+                await status('live-connected')
+                try:
+                    # Combine current-room streak/image metadata with the user's exact ID/coin list.
+                    # The saved catalogue remains usable even if TikTok's regional gift-list endpoint fails.
+                    provider_entries=[]
+                    try:
+                        info=client.gift_info or await client.web.fetch_gift_list()
+                        provider_entries=normalize_catalog(info)
+                    except Exception as provider_exc:
+                        print('ROOM CATALOG UNAVAILABLE; using saved provider-ID list:',str(provider_exc)[:150],flush=True)
+                    entries=merge_catalogs(provider_entries,user_gifts)
+                    next_catalog_by_id={gift['giftId']:gift for gift in entries}
+                    print(f'LIVE GIFT CATALOG: {len(entries)} unique IDs (saved list + room metadata)',flush=True)
+                    for gift in entries:
+                        print(f"GIFT: {gift['name']} | {gift['coins']} jeton | ID {gift['giftId']}",flush=True)
+                    ver=hashlib.sha256(json.dumps(entries,sort_keys=True).encode()).hexdigest()[:24]
+                    # Do not accept events against a catalogue the server has not committed yet.
+                    await post('catalog',{'version':ver,'gifts':entries})
+                    catalog_by_id.clear()
+                    catalog_by_id.update(next_catalog_by_id)
+                    print('CATALOG SYNCED: saved gift IDs and coin values are active for LIVE scoring',flush=True)
+                except Exception as exc:await status('live-connected','Katalog sunucuya aktarılamadı; hediyeler puanlanmayacak: '+str(exc)[:150])
+                finally:catalog_ready.set()
+            @client.on(DisconnectEvent)
+            async def on_disconnect(event):await status('disconnected')
+            @client.on(LiveEndEvent)
+            async def on_end(event):await status('live-ended')
+            @client.on(GiftEvent)
+            async def on_gift(event):
+                now=int(time.time()*1000)
+                await catalog_ready.wait()
+                try:
+                    payload=normalize_event(event,client.room_id,now,catalog_by_id)
+                    outbox.put(payload)
+                except ValueError as exc:
+                    outbox.reject(exc,str(event),now);await status('live-connected',str(exc))
+                except RuntimeError as exc:
+                    outbox.reject(exc,str(event),now);await status('queue-full',str(exc));await client.disconnect()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+            async def queue_engagement(event,kind):
+                now=int(time.time()*1000)
+                await catalog_ready.wait()
+                try:
+                    payload=normalize_engagement(event,client.room_id,now,kind)
+                    outbox.put(payload)
+                except ValueError as exc:
+                    outbox.reject(exc,str(event),now);await status('live-connected',str(exc))
+                except RuntimeError as exc:
+                    outbox.reject(exc,str(event),now);await status('queue-full',str(exc));await client.disconnect()
+            @client.on(FollowEvent)
+            async def on_follow(event):
+                await queue_engagement(event,'follow')
+            @client.on(LikeEvent)
+            async def on_like(event):
+                await queue_engagement(event,'like')
+            @client.on(CommentEvent)
+            async def on_comment(event):
+                await queue_engagement(event,'comment')
+            try:
+                await status('connecting')
+                await client.connect(fetch_gift_info=False)
+                retry=0
+            except asyncio.CancelledError:raise
+            except Exception as exc:
+                name=type(exc).__name__
+                state='offline' if name in ('UserOfflineError','UserNotFoundError') else 'room-error' if name=='FailedParseRoomIdError' else 'connection-error'
+                await status(state,name+': '+str(exc)[:200])
+            finally:
+                try:await client.close()
+                except Exception:pass
+            retry+=1
+            await asyncio.sleep(min(60,2**min(retry,6))+random.uniform(0,1))
+    finally:
+        delivery.cancel()
+        try:await delivery
+        except asyncio.CancelledError:pass
+        outbox.close()
+
+if __name__=='__main__':
+    try:asyncio.run(main())
+    except KeyboardInterrupt:pass

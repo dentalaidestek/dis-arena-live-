@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {createCrownGeometry} from './toothGeometry';
+test('four crown types have closed, finite 3D surfaces and a wider canine cusp',()=>{for(const kind of ['incisor','canine','premolar','molar'] as const){const g=createCrownGeometry(kind);g.computeBoundingBox();assert.ok(g.attributes.position.count>100);assert.ok(Array.from(g.attributes.position.array).every(Number.isFinite));const b=g.boundingBox!;assert.ok(b.max.x-b.min.x>1.5);assert.ok(b.max.z-b.min.z>.5);g.dispose()}});

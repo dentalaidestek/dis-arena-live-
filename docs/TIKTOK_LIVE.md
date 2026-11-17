@@ -1,34 +1,32 @@
-# TikTok LIVE → Diş Arena (Termux)
+# TikTok LIVE köprüsü
 
-Bu deneysel bağlantı TikTok'un resmi API'si değildir. TikTokLive üçüncü taraf kütüphanesini kullanır. TikTok erişimi, ülke, sürüm ve yayının açık olmasına göre başarısız olabilir. Kendi veya izinli yayınınızda deneyin.
+TikTokLive **7.0.1** üçüncü taraf kütüphanesi kullanılır. Resmi TikTok API'si veya garanti edilmiş teslimat kanalı değildir.
 
-## Terminal 1: Diş Arena
+## Bağlantı
 
-```bash
-cd ~/dis-arena-live-
-git pull
-npm install
-npm run dev -- --host 0.0.0.0
-```
+Yayıncı paneli doğrulanmış kullanıcı adıyla Python sürecini başlatır. Boş ad, URL, `--demo` ve bozuk adlar sağlayıcı istemcisi oluşturulmadan reddedilir. `client.connect()` oturum tamamlanana kadar beklenir; `start()` tarafından dönen arka plan task'ının yanlışlıkla bırakılması engellenmiştir.
 
-## Terminal 2: canlı yayın dinleyicisi
+Durumlar: connecting, live-connected, disconnected, live-ended, offline, room-error, connection-error, queue-full. FailedParseRoomIdError oda çözümleme hatası olarak gösterilir. Üstel bekleme ve jitter ile yeniden denenir. Yeni istemci her denemeden sonra kapatılır. Panelden bağlantı kesme yönetilen köprüyü sonlandırır; outbox sonraki açılışa kalır.
 
-Termux'ta ikinci bir oturum açın:
+## Olay sözleşmesi
 
-```bash
-pkg install python -y
-python -m pip install TikTokLive websockets
-cd ~/dis-arena-live-
-python scripts/tiktok_live_bridge.py @YAYINCI_ADI
-```
+`common.msg_id`, `user.id`, `gift.id`, `gift.diamond_count`, `repeat_count`, `repeat_end`, `group_id` (yoksa gerçek `order_id`), `common.create_time`, oda kimliği korunur. Ara seri bildirimleri filtrelenmez. Kullanıcı adı ID yerine kullanılmaz. Mesaj kimliği veya seri kimliği yoksa karantinaya alınır; saat tabanlı sahte olay/seri ID'si oluşturulmaz.
 
-Tarayıcıdan http://localhost:5173 açın. Durum satırında **TikTok LIVE bağlı** görünmelidir. TikTok yayıncısı LIVE değilse bağlanamayabilir. Hediye gönderildiğinde kullanıcı adı otomatik alınır ve hediye adına göre boş diş atanır.
+TikTokLive gerçek protobuf nesneleriyle adaptör testi ve ×1…×1000 uçtan uca fixture testi vardır. FollowEvent ve LikeEvent de dinlenir: takip bir diş sahiplenir; LikeEvent içindeki like_count, tur bazında biriktirilir ve her 100 yeni beğeni bir sahiplenme hakkı üretir. Bu olaylar kalıcı outbox'a yazılır ve Bearer korumalı `/api/bridge/engagement` adresine teslim edilir. Olay kimliği/oda/kullanıcı kimliğiyle tekrarlar engellenir; bir kullanıcı tur başına tek diş alır ve toplam kapasite 28'dir. Gerçek yayın üzerinde hediye gönderilerek test yapılmadı. Sağlayıcı mesaj kimliğini ara seri güncellemelerinde yeniden kullanırsa benzersizlik anahtarı kümülatif adedi de kapsar; tekrar puanlamayı ayrıca kalıcı seri ilerlemesi engeller.
 
-## Bilinen sınırlar
+## Kalıcılık ve sınırlar
 
-- WebSocket sadece 127.0.0.1:8765 adresine bağlanır; köprü ile oyun aynı telefonda çalışmalıdır.
-- Tarayıcıyı başka cihazda açmak bu yerel köprüyle çalışmaz.
-- Gerçek hediyeler yalnızca tanınan ad ve eşleşen jeton değeriyle işlenir. TikTok'un bölgesel isim/fiyat farklılıkları için hediye kataloğu güncellenmelidir.
-- Streak hediyelerinde yalnız tamamlanan seri olayı gönderilir. Bir serinin tekrar sayısı şimdilik ayrı oyun işlemlerine çevrilmez.
-- Yayın bağlantısı kesilirse dinleyicinin yeniden başlatılması gerekebilir. Tarayıcı köprüye otomatik yeniden bağlanır.
-- Köprü demo amaçlıdır; güvenlik, hediye doğrulaması, dayanıklılık ve platform koşulları doğrulanmadan ücretli yarışma olarak kullanılmamalıdır.
+Adaptör ham normalize hediye ve etkileşim paketini SQLite outbox'a yazdıktan sonra hediye için Bearer korumalı `/api/bridge/gift`, takip/beğeni için `/api/bridge/engagement` adresine teslim eder. Başarılı HTTP yanıtı işlem veya kalıcı karantina kaydı anlamına gelir; ardından outbox kaydı silinir. Yanıt kaybolursa aynı paket tekrar iletilir. Kuyruk 50.000 pakette durdurulur ve hata bildirilir. Kaynağın kendisinin göndermediği, ağ kopukken sağlayıcıdan hiç alınmamış veya işlem başlamadan önce sürecin kaybettiği olaylar geri getirilemez. Sıfır kayıp garantisi yoktur.
+
+Geliş sırası sunucu transaction sırasıdır; sağlayıcı zamanıyla geçmişe dönük sıralama yapılmaz. Eski tura ait gecikmiş paketler, tamamlanan tur hediyeleri ve taşma yapan paketler kalıcı inceleme kaydında tutulur. Reddedilmiş paketi otomatik sonradan puana çevirme yoktur; canlı tur sonuçlarını sessizce değiştirmez.
+
+## Katalog ve gerçek hediyeler
+
+Katalog, bağlantıda `client.web.fetch_gift_list()` üzerinden alınır; 7.0.1'in `data.gifts` dizisi normalize edilir. ID/ad/birim jeton/tür/seri davranışı/görsel, sağlayıcı oda kapsamı, doğrulama zamanı ve içerik hash sürümü kaydedilir. Ülke bilgisi sağlayıcıda yoksa tahmin edilmez. Katalog alınamazsa son doğrulanmış sürüm saklanır; panel 24 saati aşanı eski işaretler. Bilinmeyen ID, farklı fiyat veya seri türü puanlanmaz.
+
+Hediye ID'leri kaynak koduna sabit yazılmaz; aynı ad farklı ülke/oda kataloglarında farklı ID veya fiyatla gelebilir. Termux köprüsü her bağlantıda gerçek oda kataloğunu alır. Bağlı oda kataloğu, repodaki kullanıcı tarafından sağlanmış 459 kayıtlık ID/ad/jeton listesiyle birleştirilir; kullanıcı listesindeki ID ve fiyat önceliklidir. Son iletide ID'si eksik kalan Santa Owl Surprise kaydı eklenmez. Bouquet 20 jeton çekim, Ghostfire 30 jeton kötü hekim, Warm Cocoa 30 jeton iyi hekim olarak ID/fiyat doğrulamasıyla eşlenir. İmplant için Parfüm kaydı yoksa yönetici panelinden katalogdaki uygun hediye manuel seçilmelidir. İsim/fiyat eşleşmesi tekil değilse sistem tahmin yürütmez. Çürütme ve iyileştirme yalnız demo ortamındadır.
+
+Kaynaklar (15 Kasım 2026'da incelendi):
+- https://ttl.docs.isaackogan.com/guides/gifts/
+- https://github.com/isaackogan/TikTokLive/blob/master/TikTokLive/events/proto_events.py
+- Yerelde kurulan TikTokLive 7.0.1: `client.connect`, `start`, `fetch_gift_list`, `ExtendedGift`, `ExtendedUser` kaynakları.
