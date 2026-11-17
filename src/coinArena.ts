@@ -52,8 +52,8 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
  let message='';
  if(sender.condition){
   const treatment=(sender.condition==='extracted'&&procedure==='implant')||(sender.condition==='decayed'&&procedure==='heal');
-  if(isLocked(sender,gift.timestamp)){action='blocked';message=`⏳ @${sender.username} tedavi için ${Math.ceil((sender.lockedUntil-gift.timestamp)/1000)} sn beklemeli`;}
-  else if(treatment){sender.lockedUntil=0;delete sender.condition;sender.coins+=gift.coins;action=procedure;targetId=toothOf(state,sender.userId);targetUserId=sender.userId;message=`✚ @${sender.username} ${procedure==='heal'?'iyileşti':'implant yaptı'} · +${gift.coins} jeton`;}
+  if(treatment){sender.lockedUntil=0;delete sender.condition;sender.coins+=gift.coins;action=procedure;targetId=toothOf(state,sender.userId);targetUserId=sender.userId;message=`✚ @${sender.username} ${procedure==='heal'?'iyileşti':'implant yaptı'} · +${gift.coins} jeton`;}
+  else if(isLocked(sender,gift.timestamp)){action='blocked';message=`⏳ @${sender.username} tedavi için ${Math.ceil((sender.lockedUntil-gift.timestamp)/1000)} sn beklemeli`;}
   else{sender.coins+=gift.coins;action='score';message=`🪙 @${sender.username} +${gift.coins} jeton · diş tedavi bekliyor`;}
  }else{
   sender.lockedUntil=0;sender.coins+=gift.coins;
