@@ -21,7 +21,7 @@ async def main():
     if not token:raise SystemExit('ARENA_BRIDGE_TOKEN gerekli; bağlantı başlatılmadı')
     # Validate before importing/initializing any provider client.
     from TikTokLive import TikTokLiveClient
-    from TikTokLive.events import ConnectEvent,DisconnectEvent,GiftEvent,LiveEndEvent,FollowEvent,LikeEvent
+    from TikTokLive.events import ConnectEvent,DisconnectEvent,GiftEvent,LiveEndEvent,FollowEvent,LikeEvent,CommentEvent
     from importlib.metadata import version
     print('TikTokLive version:',version('TikTokLive'),flush=True)
     directory=Path(os.environ.get('ARENA_DATA_DIR','data'));directory.mkdir(parents=True,exist_ok=True)
@@ -50,7 +50,7 @@ async def main():
         while True:
             try:
                 for key,payload in outbox.pending():
-                    result=await post('engagement' if payload.get('type') in ('follow','like') else 'gift',payload)
+                    result=await post('engagement' if payload.get('type') in ('comment','follow','like') else 'gift',payload)
                     # 200 means it was committed or safely quarantined in the server.
                     if not result.get('accepted') and not result.get('duplicate'):
                         print('QUARANTINED:',result.get('message'),flush=True)
@@ -126,6 +126,9 @@ async def main():
             @client.on(LikeEvent)
             async def on_like(event):
                 await queue_engagement(event,'like')
+            @client.on(CommentEvent)
+            async def on_comment(event):
+                await queue_engagement(event,'comment')
             try:
                 await status('connecting')
                 await client.connect(fetch_gift_info=False)
