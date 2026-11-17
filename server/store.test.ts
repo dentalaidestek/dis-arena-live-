@@ -18,7 +18,6 @@ test('1000 cumulative packets add 1000 coins in the authoritative store',()=>{co
 test('malformed and duplicate malformed packets are visible in durable diagnostics',()=>{const s=new ArenaStore(':memory:',1000);s.ingest({type:'gift',coins:-1},1000);s.ingest({type:'gift',coins:-1},1001);assert.equal(s.diagnostics().invalid,1);assert.equal(s.diagnostics().duplicates,1);s.close()});
 test('imported old replay IDs remain blocked after migration',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog(catalog,'v',1000);s.importLegacy({...s.state(),processedIds:['old-event']},1000);assert.equal(s.ingest({...packet('old-event'),streak:false},1001).duplicate,true);s.close()});
 test('providers that reuse a message ID for cumulative updates still advance exactly once',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog(catalog,'v',1000);assert.equal(s.ingest(packet('same',10),1000).delta,10);assert.equal(s.ingest(packet('same',15),1001).delta,5);assert.equal(s.ingest(packet('same',15),1002).duplicate,true);assert.equal(s.state().players[0].coins,15);s.close()});
-test('LIVE supports decay and heal mappings when exact-value TikTok gifts have images',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'d',name:'D',coins:10,streak:false,image:'https://cdn.test/d.png'},{giftId:'h',name:'H',coins:10,streak:false,image:'https://cdn.test/h.png'}],'v',1000);s.mapGift('d','decay','Çürütme Hediyesi');s.mapGift('h','heal','İyileştirme Hediyesi');assert.equal(s.publicGifts().decay.name,'Çürütme Hediyesi');assert.equal(s.publicGifts().heal.image,'https://cdn.test/h.png');s.close()});
 test('a retired 50-coin extraction mapping is no longer valid under the 20-coin rule',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'old',name:'Old 50-coin gift',coins:50,streak:false}],'v',1000);s.db.prepare('INSERT INTO mappings VALUES(?,?)').run('old','extract');const r=s.ingest({...packet('old50'),giftId:'old',coins:50,streak:false,repeatCount:1},1000);assert.equal(r.action,'score');assert.equal(s.state().players[0].coins,50);s.close()});
 
 test('viewer gift names follow verified mapping and refreshed catalogue prices',()=>{
@@ -32,12 +31,50 @@ test('viewer gift names follow verified mapping and refreshed catalogue prices',
  assert.equal(receipt.accepted,true);assert.equal(receipt.action,'score');assert.equal(s.state().players[0].coins,25);s.close();
 });
 
-test('LIVE doctor-claim gifts are explicitly mapped with Turkish names and TikTok images',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'actual-ghostfire-id',name:'Ghostfire',coins:30,streak:false,image:'https://cdn.test/bad.png'},{giftId:'actual-warm-cocoa-id',name:'Warm Cocoa',coins:30,streak:false,image:'https://cdn.test/good.png'}],'tr-live',1000);s.mapGift('actual-ghostfire-id','claimBad','Kötü Hekim Tacı');s.mapGift('actual-warm-cocoa-id','claimGood','İyi Hekim Tacı');const mappings=s.mappings();assert.equal(mappings.find(m=>m.procedure==='claimBad')?.display_name,'Kötü Hekim Tacı');assert.equal(mappings.find(m=>m.procedure==='claimGood')?.display_name,'İyi Hekim Tacı');const bad=s.ingest({...packet('claim-ghostfire'),giftId:'actual-ghostfire-id',giftName:'Ghostfire',coins:30,streak:false,repeatCount:1},1000);assert.equal(bad.action,'claimBad');assert.equal(s.state().doctors.bad?.username,'Alice');assert.equal(s.state().doctors.bad?.giftName,'Kötü Hekim Tacı');assert.equal(s.state().doctors.bad?.giftImage,'https://cdn.test/bad.png');assert.equal(s.state().players.length,0);const badReplacement=s.ingest({...packet('claim-ghostfire-replacement'),giftId:'actual-ghostfire-id',giftName:'Ghostfire',coins:30,streak:false,repeatCount:1,userId:'new-bad',username:'NewBad'},1002);assert.equal(badReplacement.action,'claimBad');assert.equal(s.state().doctors.bad?.username,'NewBad');assert.equal(s.state().doctors.bad?.giftImage,'https://cdn.test/bad.png');const good=s.ingest({...packet('claim-warm-cocoa'),giftId:'actual-warm-cocoa-id',giftName:'Warm Cocoa',coins:30,streak:false,repeatCount:1,userId:'g',username:'GoodDoctor'},1001);assert.equal(good.action,'claimGood');assert.equal(s.state().doctors.good?.username,'GoodDoctor');assert.equal(s.state().players.length,0);s.close()});
 
 test('saved LIVE gift IDs award exact catalogue coin values when streak metadata is unavailable',()=>{const s=new ArenaStore(':memory:',1000);s.setCatalog([{giftId:'17473',name:'Bouquet',coins:20,streak:false,streakKnown:false},{giftId:'1354583',name:'Energy Drop',coins:30,streak:false,streakKnown:false},{giftId:'10022',name:'Gyeongbokgung',coins:20000,streak:false,streakKnown:false}],'saved-live-catalog',1000);const p=(giftId:string,coins:number,eventId:string,userId:string)=>({type:'gift',eventId,roomId:'room',giftId,userId,username:userId,giftName:'provider payload name',coins,timestamp:1000,repeatCount:1,streak:false,streakId:''});assert.equal(s.ingest(p('17473',20,'bouquet','a'),1000).accepted,true);assert.equal(s.ingest(p('1354583',30,'energy-drop','b'),1000).accepted,true);assert.equal(s.ingest(p('10022',20000,'palace','c'),1000).accepted,true);assert.deepEqual(s.state().players.map(x=>x.coins).sort((a,b)=>a-b),[20,30,20000]);assert.equal(s.ingest(p('17473',999,'wrong-price','d'),1000).accepted,false);s.close()});
 
-test('follow claims one free tooth without points and duplicate follows cannot claim twice',()=>{const s=new ArenaStore(':memory:',1000);const follow={type:'follow',eventId:'follow-1',roomId:'live',userId:'follower-1',username:'Follower',timestamp:1001};const first=s.engage(follow,1001);assert.equal(first.accepted,true);assert.equal(first.delta,1);assert.equal(s.state().players.length,1);assert.equal(s.state().players[0].coins,0);assert.equal(s.engage(follow,1002).duplicate,true);const again=s.engage({...follow,eventId:'follow-2'},1003);assert.equal(again.delta,0);assert.equal(s.state().players.length,1);s.close()});
-test('every 100 cumulative likes claim one tooth and duplicate like events are idempotent',()=>{const s=new ArenaStore(':memory:',1000);const first=s.engage({type:'like',eventId:'likes-1',roomId:'live',userId:'liker-1',username:'Liker',count:60,timestamp:1001},1001);assert.equal(first.delta,0);assert.equal(s.state().players.length,0);const secondPacket={type:'like',eventId:'likes-2',roomId:'live',userId:'liker-1',username:'Liker',count:40,timestamp:1002};const second=s.engage(secondPacket,1002);assert.equal(second.delta,1);assert.equal(s.state().players.length,1);assert.equal(s.engage(secondPacket,1003).duplicate,true);assert.equal(s.state().players[0].coins,0);s.close()});
-test('100 likes can claim a different viewer tooth, but 28-tooth capacity is enforced',()=>{const s=new ArenaStore(':memory:',1000);for(let i=0;i<28;i++)assert.equal(s.engage({type:'follow',eventId:'f-'+i,roomId:'live',userId:'u-'+i,username:'u'+i,timestamp:1001+i},1001+i).delta,1);const full=s.engage({type:'like',eventId:'like-full',roomId:'live',userId:'extra',username:'extra',count:100,timestamp:1100},1100);assert.equal(full.delta,0);assert.equal(full.message,'28 dişin tamamı sahiplenildi');assert.equal(s.state().players.length,28);s.close()});
 
-test('provided TikTok IDs are preselected by exact action coin value and localized in Turkish',()=>{const s=new ArenaStore(':memory:',1000);const gifts=[['17473',20,'Bouquet','https://cdn.test/bouquet.png'],['1354581',20,'Mushroom','https://cdn.test/mushroom.png'],['1354579',10,'Magic Feather','https://cdn.test/feather.png'],['1143818',10,'Courage potion','https://cdn.test/potion.png'],['1429000',30,'Ghostfire','https://cdn.test/fire.png'],['1213441',30,'Warm Cocoa','https://cdn.test/cocoa.png']].map(([giftId,coins,name,image])=>({giftId:String(giftId),coins:Number(coins),name:String(name),image:String(image),streak:false}));s.setCatalog(gifts,'chosen-gifts',1000);assert.deepEqual(['extract','implant','decay','heal','claimBad','claimGood'].map(action=>s.publicGifts()[action].name),['Buket','Mantar','Sihirli Tüy','Cesaret İksiri','Hayalet Ateşi','Sıcak Kakao']);assert.deepEqual(['extract','implant','decay','heal','claimBad','claimGood'].map(action=>s.publicGifts()[action].image),gifts.map(g=>g.image));s.close()});
+
+
+test('live catalog auto-maps exact Rose and TikTok gifts with provider IDs and images',()=>{
+ const s=new ArenaStore(':memory:',1000);
+ s.setCatalog([{giftId:'17473',name:'Bouquet',coins:20,streak:false,image:'https://cdn.test/bouquet.png'},{giftId:'1354581',name:'Mushroom',coins:20,streak:false,image:'https://cdn.test/mushroom.png'},{giftId:'rose-live-id',name:'Rose',coins:1,streak:false,image:'https://cdn.test/rose.png'},{giftId:'tiktok-live-id',name:'TikTok',coins:1,streak:false,image:'https://cdn.test/tiktok.png'}],'live-room',1000);
+ const gifts=s.publicGifts();
+ assert.equal(gifts.heal.giftId,'rose-live-id');assert.equal(gifts.heal.image,'https://cdn.test/rose.png');assert.equal(gifts.heal.coins,1);
+ assert.equal(gifts.decay.giftId,'tiktok-live-id');assert.equal(gifts.decay.image,'https://cdn.test/tiktok.png');assert.equal(gifts.decay.coins,1);
+ assert.equal(gifts.extract.image,'https://cdn.test/bouquet.png');assert.equal(gifts.implant.image,'https://cdn.test/mushroom.png');
+ s.close();
+});
+test('comments select a tooth; follow and each 100 likes separately remove 30 HP',()=>{
+ const s=new ArenaStore(':memory:',1000);const base=s.state();
+ s.importLegacy({...base,startedAt:1000,players:[{userId:'tooth-a',username:'A',coins:10,joinedAt:1000,lockedUntil:0,toothId:11,hp:100},{userId:'tooth-b',username:'B',coins:5,joinedAt:1000,lockedUntil:0,toothId:12,hp:100}]},1000);
+ const comment={type:'comment',eventId:'comment-1',roomId:'live',userId:'attacker',username:'Attacker',comment:'11',timestamp:1001};
+ assert.equal(s.engage(comment,1001).accepted,true);assert.equal(s.state().players.find(p=>p.toothId===11)?.hp,100);
+ const follow={type:'follow',eventId:'follow-1',roomId:'live',userId:'attacker',username:'Attacker',timestamp:1002};
+ assert.equal(s.engage(follow,1002).delta,1);assert.equal(s.state().players.find(p=>p.toothId===11)?.hp,70);
+ assert.equal(s.engage({...follow,eventId:'follow-2'},1003).delta,0);
+ assert.equal(s.engage({type:'like',eventId:'like-1',roomId:'live',userId:'attacker',username:'Attacker',count:60,timestamp:1004},1004).delta,0);
+ assert.equal(s.engage({type:'like',eventId:'like-2',roomId:'live',userId:'attacker',username:'Attacker',count:40,timestamp:1005},1005).delta,1);
+ assert.equal(s.state().players.find(p=>p.toothId===11)?.hp,40);
+ assert.equal(s.state().players.find(p=>p.toothId===12)?.hp,100);
+ s.close();
+});
+test('100 likes are counted per user and invalid tooth comments are ignored',()=>{
+ const s=new ArenaStore(':memory:',1000);const base=s.state();
+ s.importLegacy({...base,startedAt:1000,players:[{userId:'tooth-a',username:'A',coins:1,joinedAt:1000,lockedUntil:0,toothId:11,hp:100},{userId:'tooth-b',username:'B',coins:1,joinedAt:1000,lockedUntil:0,toothId:12,hp:100}]},1000);
+ assert.equal(s.engage({type:'comment',eventId:'bad-comment',roomId:'live',userId:'x',username:'X',comment:'99',timestamp:1001},1001).accepted,false);
+ for(const [user,tooth] of [['x','11'],['y','12']] as const)s.engage({type:'comment',eventId:'c-'+user,roomId:'live',userId:user,username:user,comment:tooth,timestamp:1002},1002);
+ assert.equal(s.engage({type:'like',eventId:'lx',roomId:'live',userId:'x',username:'x',count:100,timestamp:1003},1003).delta,1);
+ assert.equal(s.engage({type:'like',eventId:'ly',roomId:'live',userId:'y',username:'y',count:100,timestamp:1004},1004).delta,1);
+ assert.equal(s.state().players.find(p=>p.toothId===11)?.hp,70);assert.equal(s.state().players.find(p=>p.toothId===12)?.hp,70);
+ s.close();
+});
+test('30 HP engagement hit extracts a zero-HP tooth and ends the arena when it is the last tooth',()=>{
+ const s=new ArenaStore(':memory:',1000);const base=s.state();
+ s.importLegacy({...base,startedAt:1000,players:[{userId:'tooth-a',username:'A',coins:1,joinedAt:1000,lockedUntil:0,toothId:11,hp:30}]},1000);
+ s.engage({type:'comment',eventId:'c',roomId:'live',userId:'x',username:'X',comment:'11',timestamp:1001},1001);
+ const r=s.engage({type:'follow',eventId:'f',roomId:'live',userId:'x',username:'X',timestamp:1002},1002);
+ assert.equal(r.action,'extract');assert.equal(s.state().players[0].hp,0);assert.ok(s.state().finishedAt);
+ s.close();
+});
