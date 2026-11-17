@@ -128,3 +128,21 @@ class InstalledEngagementProviderTests(unittest.TestCase):
         self.assertIsNotNone(LikeEvent)
 
 if __name__=='__main__':unittest.main()
+
+
+class CommentTargetTests(unittest.TestCase):
+    def test_comment_event_is_normalized_for_target_tooth(self):
+        e=N(common=N(msg_id=77,create_time=1),user=N(user_id=321,unique_id='dentist'),comment='11')
+        p=normalize_engagement(e,'room',1000,'comment')
+        self.assertEqual(p['type'],'comment');self.assertEqual(p['comment'],'11')
+        self.assertEqual(p['userId'],'321');self.assertEqual(p['eventId'],'77')
+    def test_invalid_comment_is_rejected(self):
+        e=N(common=N(msg_id=78,create_time=1),user=N(user_id=321,unique_id='dentist'),comment='')
+        with self.assertRaises(ValueError):normalize_engagement(e,'room',1000,'comment')
+    def test_comment_events_have_independent_durable_outbox_identity(self):
+        with tempfile.TemporaryDirectory() as d:
+            q=Outbox(Path(d)/'comments.db')
+            e=N(common=N(msg_id=79,create_time=1),user=N(user_id=321,unique_id='dentist'),comment='12')
+            p=normalize_engagement(e,'room',1000,'comment');q.put(p)
+            self.assertEqual(len(q.pending()),1);self.assertEqual(q.pending()[0][1]['comment'],'12');q.close()
+
