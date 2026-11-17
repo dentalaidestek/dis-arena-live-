@@ -12,7 +12,7 @@ const gold='#d7b773',teal='#80d8cd';
 const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
 const sphere=new THREE.SphereGeometry(1,24,16),rootGeometry=new THREE.ConeGeometry(1,1,16),cariesColor=new THREE.Color('#8c783e');
 type ToothProps={id:number;rank?:number;username?:string;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
-function Tooth({id,rank,username,locked,condition,cue,mini=false,selected=false,onPick}:ToothProps){
+function Tooth({id,rank,username,condition,cue,mini=false,selected=false,onPick}:ToothProps){
  const upper=id<16,slot=upper?id-1:id-17,centered=Math.abs(slot-6.5),angle=(slot-6.5)/6.5*1.12;
  const kind=centered>4.5?'molar':centered>2.5?'premolar':centered>1.5?'canine':'incisor';
  const width=kind==='molar'?.235:kind==='premolar'?.222:kind==='canine'?.208:.20,height=kind==='molar'?.28:kind==='premolar'?.31:kind==='canine'?.37:.35;
