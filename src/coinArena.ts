@@ -44,7 +44,7 @@ function awardDoctor(state:CoinArena,side:'bad'|'good',gift:Gift):CoinArena{
  if(leader)doctors[side]={userId:leader.userId,username:leader.username,claimedAt:leader.updatedAt,giftName:leader.giftName,giftImage:leader.giftImage,giftCoins:leader.giftCoins,points:leader[key]};
  return {...state,doctorScores:scores,doctors};
 }
-function mutableTeeth(state:CoinArena){return toothStatesOf(state);}
+function mutableTeeth(state:CoinArena){const teeth=state.teeth??toothStatesOf(state);for(const tooth of teeth){const owner=state.players.find(p=>p.toothId===tooth.toothId);if(!owner)continue;const ownerHp=hpOf(owner);if(owner.condition==='extracted'||tooth.condition==='extracted'||ownerHp<=0||tooth.hp<=0){tooth.hp=0;tooth.condition='extracted';owner.hp=0;owner.condition='extracted';continue;}tooth.hp=Math.min(tooth.hp,ownerHp);if(tooth.hp<TOOTH_MAX_HP||owner.condition==='decayed'||tooth.condition==='decayed')tooth.condition='decayed';else delete tooth.condition;if(ownerHp>tooth.hp)owner.hp=tooth.hp;}return teeth;}
 function weakest(state:CoinArena){return mutableTeeth(state).filter(alive).sort((a,b)=>a.hp-b.hp||POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
 function extracted(state:CoinArena){return mutableTeeth(state).filter(t=>!alive(t)).sort((a,b)=>POSITIONS.indexOf(a.toothId)-POSITIONS.indexOf(b.toothId))[0];}
 export function finishRound(state:CoinArena,now:number):CoinArena {
