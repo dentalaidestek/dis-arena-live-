@@ -15,3 +15,5 @@ test('unmapped gifts score normally and duplicate gift IDs are rejected',()=>{le
 test('doctor leader is based on cumulative relevant treatment gifts',()=>{let s=players([100,100]);s=applyGift(s,gift('d1','bad-a',1,'decay')).state;s=applyGift(s,gift('d2','bad-b',1,'extract',start+2000)).state;assert.equal(s.doctors.bad?.username,'bad-b');s=applyGift(s,gift('d3','bad-a',1,'decay',start+3000)).state;assert.equal(s.doctors.bad?.username,'bad-a');});
 
 test('every numbered tooth can take damage before a participant owns it',()=>{const s=newCoinArena(start);const r=applyToothDamage(s,11,ENGAGEMENT_DAMAGE,start+1000);assert.equal(r.accepted,true);assert.equal(r.targetId,11);assert.equal(r.targetUserId,undefined);assert.equal(r.state.teeth?.find(t=>t.toothId===11)?.hp,70);});
+
+test('gift procedures mutate the authoritative HP of an unowned tooth',()=>{let s=newCoinArena(start);s.teeth=s.teeth!.map(t=>t.toothId===8?{...t,hp:20}:{...t});const r=applyGift(s,gift('unowned-decay','sender',1,'decay'));assert.equal(r.targetId,8);assert.equal(r.state.teeth?.find(t=>t.toothId===8)?.hp,10);});
