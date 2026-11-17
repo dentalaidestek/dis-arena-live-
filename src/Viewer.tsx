@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {DentalArenaScene} from './DentalArenaScene';
-import {ranked,timeLeft,toothOf,hpOf,ROUND_MS,type CoinArena} from './coinArena';
+import {ranked,timeLeft,toothOf,toothStatesOf,ROUND_MS,type CoinArena} from './coinArena';
 import {useArena} from './useArena';
 import {toothLabel} from './routes';
 import type {AnimationCue} from './ActionAnimation';
@@ -15,15 +15,15 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  // scene with active.before replayed stale 28-tooth snapshots and caused teeth to flash.
  const scene:CoinArena=state;
  const first=players[0],second=players[1];const share=first?Math.max(8,Math.min(92,first.coins/((first.coins+(second?.coins??0))||1)*100)):50;
- const target=active?.before.players.find(p=>p.userId===active.targetUserId);
- const events=metadata.events?.length?metadata.events:state.history.slice(0,3).map((message,i)=>({id:String(i),message}));const gifts=metadata.gifts??{};const giftRows=[['extract','DİŞ ÇEKİMİ'],['implant','İMPLANT'],['decay','ÇÜRÜTME'],['heal','İYİLEŞTİRME']];const aliveTeeth=state.players.filter(p=>p.condition!=='extracted'&&hpOf(p)>0).length;
+ 
+ const events=metadata.events?.length?metadata.events:state.history.slice(0,3).map((message,i)=>({id:String(i),message}));const gifts=metadata.gifts??{};const giftRows=[['extract','DİŞ ÇEKİMİ'],['implant','İMPLANT'],['decay','ÇÜRÜTME'],['heal','İYİLEŞTİRME']];const aliveTeeth=toothStatesOf(state).filter(t=>t.hp>0&&t.condition!=='extracted').length;
  return <main className={'broadcast-shell '+(obs?'broadcast-obs':'')} data-mode={mode} data-fps={fps} data-round={state.roundId} data-waiting={game.waiting}>
  <header className="broadcast-header"><div className="broadcast-brand"><span>♛</span><div><h1>DİŞ ARENA</h1><p>SON DİŞ AYAKTA!</p></div><small className={mode==='demo'?'mode-demo':'mode-live'}>{mode==='demo'?'DEMO':'LIVE'}</small></div><div className="broadcast-clock"><span>TUR {String(metadata.roundNumber??1).padStart(2,'0')}</span><strong>{clock}</strong><small>{state.finishedAt?'SONUÇLAR KAYDEDİLDİ':`${players.length} OYUNCU · ${aliveTeeth}/28 CANLI DİŞ`}</small></div>
  <div className="broadcast-leaders doctor-leaders">{(['bad','good'] as const).map(side=>{const doctor=state.doctors?.[side];return <div key={side} className={'leader-card leader-doctor leader-'+side} data-user={doctor?.userId}><span>{side==='bad'?'☣':'✚'}</span>{doctor?.giftImage&&<img src={doctor.giftImage} alt="" /> }<div><b>{side==='bad'?'KÖTÜ HEKİM · EN ÇOK ÇÜRÜTEN':'İYİ HEKİM · EN ÇOK İYİLEŞTİREN'}</b><strong>{doctor?.username?'@'+doctor.username:'HEKİM BEKLENİYOR'}</strong><em>{doctor?.points??0} İŞLEM</em></div></div>})}</div></header>
  <section className="broadcast-stage" aria-label="Canlı 3D diş kliniği"><DentalArenaScene state={scene} now={now} cue={cue} quality={metadata.graphics==='high'?'high':'low'} onFps={v=>{setFps(v);onFps?.(v)}}/>
  <div className="stage-corners"><span>KÖTÜ HEKİM</span><span>İYİ HEKİM</span></div>
  {leaderNotice&&<div className="leader-alert" role="status">♛ YENİ LİDER · {leaderNotice}</div>}
- {active&&<div className="procedure-target">{target?.username??active.targetUserId} <span>DİŞ {toothLabel(active.targetId)}</span></div>}
+ {active&&<div className="procedure-target">İŞLEM HEDEFİ <span>DİŞ {toothLabel(active.targetId)}</span></div>}
  {state.finishedAt&&<div className="round-finished">♛ TUR TAMAMLANDI <small>İLK DÖRT KAZANDI</small></div>}
  {!game.online&&<span className="viewer-connection">Yayın bağlantısı bekleniyor</span>}
  </section>
