@@ -68,10 +68,11 @@ export function PatientActor({cue,children}:{cue?:AnimationCue;children:React.Re
   <group position={MOUTH_VIEWS.patient.position} scale={MOUTH_VIEWS.patient.scale}>{children}</group>
  </>;
 }
-function TreatmentArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:AnimationCue}){
+function TreatmentArm({bad,active,cue,paused=false}:{bad:boolean;active:boolean;cue?:AnimationCue;paused?:boolean}){
  const root=useRef<THREE.Group>(null),upper=useRef<THREE.Mesh>(null),forearm=useRef<THREE.Mesh>(null),hand=useRef<THREE.Group>(null),start=useRef(0),last=useRef<number|undefined>(undefined);
  const v=useMemo(()=>({shoulder:new THREE.Vector3(bad?.58:-.58,2.03,.10),elbow:new THREE.Vector3(),wrist:new THREE.Vector3(),target:new THREE.Vector3(),rest:new THREE.Vector3(bad?.82:-.82,1.03,.5),direction:new THREE.Vector3()}),[bad]);
  useFrame(({clock})=>{
+  if(paused)return;
   if(cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,phase=procedurePhase(t);
   v.target.set(...toothWorldPosition(cue?.targetId??7,'patient'));v.target.z+=.32;
@@ -86,9 +87,10 @@ function TreatmentArm({bad,active,cue}:{bad:boolean;active:boolean;cue?:Animatio
   <group ref={hand}><Orb position={[0,0,0]} scale={[.15,.18,.10]} color="#b7d9d8"/><mesh position={[0,.05,-.18]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.025,.035,.30,12]}/><meshStandardMaterial color="#a1b8c3" metalness={.8} roughness={.25}/></mesh></group>
  </group>;
 }
-export function Clinician({bad,cue,ownerName,giftImage,giftName,giftCoins}:{bad:boolean;cue?:AnimationCue;ownerName?:string;giftImage?:string;giftName?:string;giftCoins?:number}){
- const root=useRef<THREE.Group>(null),head=useRef<THREE.Group>(null),forceps=useRef<THREE.Group>(null),jawLeft=useRef<THREE.Group>(null),jawRight=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0);const active=!!cue&&(bad?['extract','decay']:['implant','heal']).includes(cue.action),side=bad?-1:1;
+export function Clinician({bad,cue,ownerName,giftImage,giftName,giftCoins,paused=false}:{bad:boolean;cue?:AnimationCue;ownerName?:string;giftImage?:string;giftName?:string;giftCoins?:number;paused?:boolean}){
+ const root=useRef<THREE.Group>(null),head=useRef<THREE.Group>(null),forceps=useRef<THREE.Group>(null),jawLeft=useRef<THREE.Group>(null),jawRight=useRef<THREE.Group>(null),last=useRef<number|undefined>(undefined),start=useRef(0);const active=!paused&&!!cue&&(bad?['extract','decay']:['implant','heal']).includes(cue.action),side=bad?-1:1;
  useFrame(({clock},delta)=>{
+  if(bad&&paused)return;
   if(cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,reach=active?procedurePhase(t).reach:0;
   if(root.current){root.current.position.x=side*(3.40-reach*1.75);root.current.position.y=.15+(!bad?Math.sin(clock.elapsedTime*3.4)*.10:0);root.current.rotation.z=!bad?Math.sin(clock.elapsedTime*2.5)*.035:0;}
@@ -111,7 +113,7 @@ export function Clinician({bad,cue,ownerName,giftImage,giftName,giftCoins}:{bad:
   {giftImage&&/^https:\/\//i.test(giftImage)&&<Image url={giftImage} position={[0,4.18,.38]} scale={[.58,.58]} transparent/>}
   {ownerName&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.76,.38]} fontSize={.19} maxWidth={3.1} anchorX="center" color={bad?'#ffcfb5':'#b9fff0'} outlineWidth={.018} outlineColor="#101f2d">@{ownerName.replace(/^@+/,'')}</Text>}
   {giftName&&giftCoins!==undefined&&<Text font="/fonts/DejaVuSans.ttf" position={[0,3.48,.38]} fontSize={.12} maxWidth={3.2} anchorX="center" color="#e6d9aa" outlineWidth={.012} outlineColor="#101f2d">{giftName} · {giftCoins} ÇİP</Text>}
-  <TreatmentArm bad={bad} active={active} cue={cue}/>
+  <TreatmentArm bad={bad} active={active} cue={cue} paused={bad&&paused}/>
  </group>;
 }
 export function ClinicRoom(){return <>
