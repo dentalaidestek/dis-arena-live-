@@ -75,9 +75,9 @@
 .leader-doctor>span{font-size:3.1cqw;flex:0 0 auto;color:#d2b77a}
 .leader-doctor img{width:4.8cqw;height:4.8cqw;object-fit:contain;flex:0 0 auto}
 .leader-doctor>div{min-width:0;display:flex;flex-direction:column;gap:.12cqh}
-.leader-doctor b{font-size:1.7cqw!important;line-height:1.1;color:#c8d9d8;white-space:normal}
-.leader-doctor strong{font-size:2.5cqw!important;line-height:1.1;color:#f0e8d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.leader-doctor em{font-size:1.6cqw;color:#9fc7c0}
+ .leader-doctor b{font-size:2.2cqw!important;line-height:1.1;color:#c8d9d8;white-space:normal}
+.leader-doctor strong{font-size:2.8cqw!important;line-height:1.1;color:#f0e8d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leader-doctor em{font-size:1.8cqw;color:#9fc7c0}
 .leader-bad{border-color:#b9798a70;background:linear-gradient(120deg,#3a2936,#172b38)}
 .leader-good{border-color:#80c4b970;background:linear-gradient(120deg,#173b3c,#172b38)}
 .broadcast-guide h2{font-size:3.1cqw;color:#e1f0ec;text-shadow:0 1px 0 #0008}
