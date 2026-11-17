@@ -78,3 +78,9 @@ test('30 HP engagement hit extracts a zero-HP tooth and ends the arena when it i
  assert.equal(r.action,'extract');assert.equal(s.state().players[0].hp,0);assert.ok(s.state().finishedAt);
  s.close();
 });
+
+test('comment target can be an unowned tooth and still receives 30 HP damage',()=>{
+ const s=new ArenaStore(':memory:',1000);s.engage({type:'comment',eventId:'c-unowned',roomId:'live',userId:'x',username:'X',comment:'11',timestamp:1001},1001);
+ const r=s.engage({type:'follow',eventId:'f-unowned',roomId:'live',userId:'x',username:'X',timestamp:1002},1002);
+ assert.equal(r.delta,1);assert.equal(s.state().teeth?.find(t=>t.toothId===11)?.hp,70);assert.equal(s.state().players.length,0);s.close();
+});
