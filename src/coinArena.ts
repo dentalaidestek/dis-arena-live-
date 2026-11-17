@@ -84,7 +84,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
   sender={userId:gift.userId,username:gift.username,coins:0,joinedAt:gift.timestamp,lockedUntil:0,toothId,hp:TOOTH_MAX_HP};players.push(sender);
  }
  if(!Number.isSafeInteger(sender.coins)||sender.coins+gift.coins>Number.MAX_SAFE_INTEGER)return fail('Jeton sınırı aşıldı');
- sender.username=gift.username;
+ sender.username=gift.username;sender.coins+=gift.coins;
  let action:GiftResult['action']='score',targetId:number|null=null,targetUserId:string|undefined,message='';
  const nextBase:CoinArena={...state,players,startedAt:state.startedAt||gift.timestamp,processedIds:[...state.processedIds,gift.eventId]};
  if(procedure==='decay'){
@@ -104,7 +104,7 @@ export function applyGift(state:CoinArena,gift:Gift):GiftResult {
   if(target){target.hp=TOOTH_MAX_HP;delete target.condition;action='implant';targetId=toothOf(nextBase,target.userId);targetUserId=target.userId;message='🔩 '+targetId+' numaralı dişe implant yapıldı · 100 HP';}
   Object.assign(nextBase,awardDoctor(nextBase,'good',gift));
  }else{
-  sender.coins+=gift.coins;message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
+  message='🪙 @'+sender.username+' +'+gift.coins+' jeton';
  }
  if(procedure!=='score'&&targetId===null)message=message||'Uygun diş bulunamadı';
  const finalState={...nextBase,history:[message,...state.history].slice(0,12)};
