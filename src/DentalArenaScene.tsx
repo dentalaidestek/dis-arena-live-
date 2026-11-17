@@ -2,7 +2,7 @@ import React,{useMemo,useRef,useState} from 'react';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {RoundedBox,Text} from '@react-three/drei';
 import * as THREE from 'three';
-import {POSITIONS,ranked,hpOf,type CoinArena} from './coinArena';
+import {POSITIONS,ranked,hpOf,TOOTH_MAX_HP,type CoinArena} from './coinArena';
 import type {AnimationCue} from './ActionAnimation';
 import {MOUTH_VIEWS,sceneToothPosition,procedurePhase} from './procedureMotion';
 import {createCrownGeometry} from './toothGeometry';
@@ -22,7 +22,7 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
   if(affected&&cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=affected&&cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,work=procedurePhase(t).work;
   const extracting=affected&&cue?.action==='extract',implanting=affected&&cue?.action==='implant';
-  const disease=affected&&cue?.action==='decay'?work:affected&&cue?.action==='heal'?1-work:condition==='decayed'?1:0;
+  const damageRatio=1-hp/TOOTH_MAX_HP;const disease=affected&&cue?.action==='decay'?Math.min(1,damageRatio+work*.1):affected&&cue?.action==='heal'?damageRatio*(1-work):condition==='decayed'?damageRatio:0;
   if(enamel.current)enamel.current.color.set('#e9e4d7').lerp(cariesColor,disease*.82);
   if(lesion.current){lesion.current.visible=disease>.04;lesion.current.scale.set(width*.62*disease,.13*disease,.025);}
   if(healing.current){healing.current.visible=affected&&cue?.action==='heal'&&t>.2&&t<.9;healing.current.rotation.z+=delta*1.7;}
