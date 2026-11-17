@@ -13,6 +13,7 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  const cue:AnimationCue|undefined=active?{id:active.id,action:active.action,targetId:active.targetId,team:active.targetUserId??'unowned',user:active.user,blocked:false,durationMs:active.durationMs}:undefined;
  // Render the latest authoritative mouth state while animations play. Replacing the whole
  // scene with active.before replayed stale 28-tooth snapshots and caused teeth to flash.
+ const target=active?.before.players.find(p=>p.userId===active.targetUserId);
  const scene:CoinArena=state;
  const first=players[0],second=players[1];const share=first?Math.max(8,Math.min(92,first.coins/((first.coins+(second?.coins??0))||1)*100)):50;
  
@@ -23,7 +24,7 @@ export function Viewer({mode,obs=false,onFps}:{mode:'live'|'demo';obs?:boolean;o
  <section className="broadcast-stage" aria-label="Canlı 3D diş kliniği"><DentalArenaScene state={scene} now={now} cue={cue} quality={metadata.graphics==='high'?'high':'low'} onFps={v=>{setFps(v);onFps?.(v)}}/>
  <div className="stage-corners"><span>KÖTÜ HEKİM</span><span>İYİ HEKİM</span></div>
  {leaderNotice&&<div className="leader-alert" role="status">♛ YENİ LİDER · {leaderNotice}</div>}
- {active&&<div className="procedure-target">İŞLEM HEDEFİ <span>DİŞ {toothLabel(active.targetId)}</span></div>}
+ {active&&<div className="procedure-target">{target?.username??'TOPLULUK'} <span>DİŞ {toothLabel(active.targetId)}</span></div>}
  {state.finishedAt&&<div className="round-finished">♛ TUR TAMAMLANDI <small>İLK DÖRT KAZANDI</small></div>}
  {!game.online&&<span className="viewer-connection">Yayın bağlantısı bekleniyor</span>}
  </section>
