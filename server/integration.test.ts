@@ -68,10 +68,10 @@ test('authenticated TikTok comments select teeth; follow and every 100 likes dea
   const comment={type:'comment',eventId:'comment-1',roomId:'live-room',userId:'follower',username:'Follower',comment:'11',timestamp:Date.now()};
   assert.equal((await send(comment,'wrong')).status,401);assert.equal((await (await send(comment)).json()).accepted,true);
   const follow={type:'follow',eventId:'follow-1',roomId:'live-room',userId:'follower',username:'Follower',timestamp:Date.now()};
-  const f=await (await send(follow)).json();assert.equal(f.delta,1);assert.equal(app.stores.live.state().teeth.find((t:any)=>t.toothId===11).hp,70);
+  const f=await (await send(follow)).json();assert.equal(f.delta,1);assert.equal(app.stores.live.state().teeth?.find((t:any)=>t.toothId===11)?.hp,70);
   const likeComment={...comment,eventId:'comment-2',userId:'liker',username:'Liker',comment:'12'};await send(likeComment);
   const likes={type:'like',eventId:'likes-1',roomId:'live-room',userId:'liker',username:'Liker',count:100,timestamp:Date.now()};
-  const l=await (await send(likes)).json();assert.equal(l.delta,1);assert.equal(app.stores.live.state().teeth.find((t:any)=>t.toothId===12).hp,70);assert.equal(app.stores.live.state().players.length,0);
+  const l=await (await send(likes)).json();assert.equal(l.delta,1);assert.equal(app.stores.live.state().teeth?.find((t:any)=>t.toothId===12)?.hp,70);assert.equal(app.stores.live.state().players.length,0);
   assert.equal((await (await send(likes)).json()).duplicate,true);
  }finally{app.close();rmSync(dir,{recursive:true,force:true})}
 });
