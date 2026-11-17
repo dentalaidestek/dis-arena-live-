@@ -10,21 +10,21 @@ import {toothLabel} from './routes';
 import {ClinicRoom,PatientActor,Clinician} from './ClinicActors';
 const gold='#d7b773',teal='#80d8cd';
 const crowns={incisor:createCrownGeometry('incisor'),canine:createCrownGeometry('canine'),premolar:createCrownGeometry('premolar'),molar:createCrownGeometry('molar')};
-const sphere=new THREE.SphereGeometry(1,24,16),rootGeometry=new THREE.ConeGeometry(1,1,16),cariesColor=new THREE.Color('#8c783e');
+const sphere=new THREE.SphereGeometry(1,24,16),rootGeometry=new THREE.ConeGeometry(1,1,16),cariesColor=new THREE.Color('#211512');
 type ToothProps={id:number;rank?:number;hp?:number;condition?:'decayed'|'extracted';cue?:AnimationCue;mini?:boolean;selected?:boolean;onPick?:(id:number)=>void};
 function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:ToothProps){
  const upper=id<16,slot=upper?id-1:id-17,centered=Math.abs(slot-6.5),angle=(slot-6.5)/6.5*1.12;
  const kind=centered>4.5?'molar':centered>2.5?'premolar':centered>1.5?'canine':'incisor';
- const width=kind==='molar'?.235:kind==='premolar'?.222:kind==='canine'?.208:.20,height=kind==='molar'?.28:kind==='premolar'?.31:kind==='canine'?.37:.35;
+ const width=(kind==='molar'?.235:kind==='premolar'?.222:kind==='canine'?.208:.20)*1.12,height=(kind==='molar'?.28:kind==='premolar'?.31:kind==='canine'?.37:.35)*1.12;
  const champion=rank!==undefined&&rank<4,affected=cue?.targetId===id;
  const tooth=useRef<THREE.Group>(null),root=useRef<THREE.Mesh>(null),screw=useRef<THREE.Group>(null),lesion=useRef<THREE.Mesh>(null),healing=useRef<THREE.Mesh>(null),enamel=useRef<THREE.MeshPhysicalMaterial>(null),start=useRef(0),last=useRef<number|undefined>(undefined);
  useFrame(({clock},delta)=>{
   if(affected&&cue&&last.current!==cue.id){last.current=cue.id;start.current=clock.elapsedTime;}
   const t=affected&&cue?Math.min(1,(clock.elapsedTime-start.current)/((cue.durationMs??3800)/1000)):0,work=procedurePhase(t).work;
   const extracting=affected&&cue?.action==='extract',implanting=affected&&cue?.action==='implant';
-  const damageRatio=1-hp/TOOTH_MAX_HP;const disease=affected&&cue?.action==='decay'?Math.min(1,damageRatio+work*.1):affected&&cue?.action==='heal'?damageRatio*(1-work):condition==='decayed'?damageRatio:0;
-  if(enamel.current)enamel.current.color.set('#e9e4d7').lerp(cariesColor,disease*.82);
-  if(lesion.current){lesion.current.visible=disease>.04;lesion.current.scale.set(width*.62*disease,.13*disease,.025);}
+  const damageRatio=1-hp/TOOTH_MAX_HP;const disease=affected&&cue?.action==='decay'?Math.min(1,Math.pow(Math.max(0,damageRatio+work*.18),.72)):affected&&cue?.action==='heal'?Math.pow(damageRatio,.72)*(1-work):condition==='decayed'?Math.pow(damageRatio,.72):0;
+  if(enamel.current)enamel.current.color.set('#f0e9dc').lerp(cariesColor,Math.min(.98,disease*.98));
+  if(lesion.current){lesion.current.visible=disease>.035;lesion.current.scale.set(width*.88*disease,.19*disease,.035);}
   if(healing.current){healing.current.visible=affected&&cue?.action==='heal'&&t>.2&&t<.9;healing.current.rotation.z+=delta*1.7;}
   if(tooth.current){tooth.current.position.y=extracting?(upper?1:-1)*work*.72:0;tooth.current.position.z=extracting?work*.62:0;tooth.current.rotation.z=extracting?Math.sin(t*15)*.06:0;tooth.current.scale.setScalar(implanting?Math.max(.001,work):1);tooth.current.visible=implanting?work>.18:extracting?t<.86:condition!=='extracted';}
   if(root.current)root.current.visible=!!extracting&&work>.18;
@@ -44,7 +44,8 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
-   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.18:-1.18,.02]} fontSize={.105} color={hp<=30?'#ffaaa9':hp<=60?'#f0d18a':'#9dd8c9'} anchorX="center" anchorY="middle">{hp} HP</Text>
+   <mesh position={[0,upper?1.19:-1.19,.005]}><circleGeometry args={[.255,32]}/><meshBasicMaterial color={hp<=30?'#642d38':hp<=60?'#59472c':'#17433f'} transparent opacity={.96}/></mesh>
+   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.19:-1.19,.035]} fontSize={.145} color={hp<=30?'#fff0f0':hp<=60?'#fff0c8':'#e4fff8'} anchorX="center" anchorY="middle" outlineWidth={.009} outlineColor="#101820">{hp} HP</Text>
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
