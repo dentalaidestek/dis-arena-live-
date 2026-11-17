@@ -44,7 +44,7 @@ function Tooth({id,rank,hp=100,condition,cue,mini=false,selected=false,onPick}:T
   {!mini&&<>
    <mesh position={[0,upper?.72:-.72,.0]}><circleGeometry args={[.16,20]}/><meshBasicMaterial color={selected||affected?'#376e77':champion?'#6e6241':'#29414f'}/></mesh>
    <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?.72:-.72,.02]} fontSize={.20} color={champion?'#f5d58c':'#d5e2e4'}>{toothLabel(id)}</Text>
-   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.03:-1.03,.02]} fontSize={.105} color={hp<=30?'#ffaaa9':hp<=60?'#f0d18a':'#9dd8c9'} anchorX="center" anchorY="middle">{hp} HP</Text>
+   <Text font="/fonts/DejaVuSans.ttf" position={[0,upper?1.18:-1.18,.02]} fontSize={.105} color={hp<=30?'#ffaaa9':hp<=60?'#f0d18a':'#9dd8c9'} anchorX="center" anchorY="middle">{hp} HP</Text>
    {champion&&<mesh position={[0,upper?.96:-.96,0]} rotation={[0,0,Math.PI/4]}><planeGeometry args={[.075,.075]}/><meshBasicMaterial color={gold}/></mesh>}
    {(selected||affected)&&<mesh position={[0,0,.25]}><torusGeometry args={[.27,.016,8,32]}/><meshBasicMaterial color={cue?.action==='extract'?'#e5a1a4':teal}/></mesh>}
   </>}
