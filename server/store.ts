@@ -21,7 +21,7 @@ export class ArenaStore {
    CREATE TABLE IF NOT EXISTS catalogs(version TEXT PRIMARY KEY,verified INTEGER NOT NULL,gifts TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS mappings(gift_id TEXT PRIMARY KEY,procedure TEXT UNIQUE NOT NULL);
   `);
-  this.db.exec("DELETE FROM mappings WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key='mapping-name:'||mappings.procedure)");
+  this.db.exec("DELETE FROM mappings WHERE procedure IN ('decay','heal','claimBad','claimGood') OR NOT EXISTS (SELECT 1 FROM settings WHERE key='mapping-name:'||mappings.procedure)");
   if(!this.db.prepare('SELECT id FROM rounds LIMIT 1').get())this.newRound(now);
  }
  state():CoinArena{const s=parse<CoinArena>(this.db.prepare('SELECT state FROM rounds ORDER BY rowid DESC LIMIT 1').get()!.state);let changed=false;const used=new Set<number>();for(const p of ranked(s)){if(Number.isInteger(p.toothId)&&POSITIONS.includes(p.toothId!)){used.add(p.toothId!);continue;}const id=POSITIONS.find(x=>!used.has(x));if(id!==undefined){p.toothId=id;used.add(id);changed=true;}}if(changed)this.save(s);return s}
