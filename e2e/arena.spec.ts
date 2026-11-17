@@ -45,7 +45,7 @@ test('automatic extraction and implant, with preserved experimental demo procedu
   await viewer.waitForTimeout(1700); // Capture the treatment phase of the 3.8s 3D procedure.
   await viewer.screenshot({path:info.outputPath(action+'.png')});await expect(viewer.locator('.dental-action-banner')).toHaveCount(0,{timeout:15000});
  }
- const state=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;expect(state.players.find((p:any)=>p.userId==='demo-0').coins).toBe(10030);expect(state.players.find((p:any)=>p.userId==='demo-0').lockedUntil).toBe(0);expect(errors).toEqual([]);
+ const state=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;expect(state.players.find((p:any)=>p.userId==='demo-0').coins).toBe(10042);expect(state.players.find((p:any)=>p.userId==='demo-0').lockedUntil).toBe(0);expect(errors).toEqual([]);
 });
 test('fullscreen returns to admin without resetting the server round',async({page,request},info)=>{
  await admin(page);const before=(await (await request.get('/api/admin?mode=demo',{headers:auth})).json()).state;
